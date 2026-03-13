@@ -333,7 +333,7 @@ export const tools = {
     if (!hand || hand.activePlayer !== bot.name) return null;
 
     const p = hand.players[bot.name];
-    if (p.folded) return null;
+    if (!p || p.folded) return null;
     if (p.bet < hand.currentBet) return null; // can't check when facing a bet
 
     p.acted = true;
@@ -351,7 +351,7 @@ export const tools = {
     if (!hand || hand.activePlayer !== bot.name) return null;
 
     const p = hand.players[bot.name];
-    if (p.folded) return null;
+    if (!p || p.folded) return null;
 
     const toCall = Math.min(hand.currentBet - p.bet, p.chips);
     if (toCall <= 0) return null; // nothing to call
@@ -378,7 +378,7 @@ export const tools = {
     if (!hand || hand.activePlayer !== bot.name) return null;
 
     const p = hand.players[bot.name];
-    if (p.folded) return null;
+    if (!p || p.folded) return null;
 
     let amount = params?.amount;
     if (typeof amount !== 'number' || amount <= 0) return null;
@@ -426,7 +426,7 @@ export const tools = {
     if (!hand || hand.activePlayer !== bot.name) return null;
 
     const p = hand.players[bot.name];
-    if (p.folded) return null;
+    if (!p || p.folded) return null;
 
     p.folded = true;
     p.acted = true;
