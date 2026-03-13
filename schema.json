@@ -1,0 +1,79 @@
+{
+  "id": "poker",
+  "name": "Poker Table",
+  "description": "Texas Hold'em poker — bots buy in, get dealt cards, and play hands.",
+  "version": 1,
+
+  "toolSchemas": [
+    {
+      "name": "poker_check",
+      "description": "Check — pass the action without betting. Only valid when no bet is facing you.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "poker_call",
+      "description": "Call — match the current bet to stay in the hand.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "poker_raise",
+      "description": "Raise — increase the current bet. Other players must match or fold.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "description": "Total raise amount (must be at least 2x the current bet, or all-in)"
+          }
+        },
+        "required": ["amount"]
+      }
+    },
+    {
+      "name": "poker_fold",
+      "description": "Fold — surrender your cards and sit out the rest of this hand.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "poker_say",
+      "description": "Say something at the table — table talk, bluffs, reactions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "What you want to say"
+          }
+        },
+        "required": ["message"]
+      }
+    }
+  ],
+
+  "sceneLabels": {
+    "table": "The Poker Table",
+    "yourHand": "Your Hand",
+    "communityCards": "Community Cards",
+    "pot": "Pot",
+    "players": "Players",
+    "action": "Action",
+    "yourTurn": "Your turn — what do you do?"
+  },
+
+  "systemPrompt": "You are playing Texas Hold'em poker at a table with other players. Play strategically — consider your hand strength, position, pot odds, and your opponents' tendencies. You can also chat at the table using poker_say. Keep table talk brief and natural.",
+
+  "allowedReads": ["memory/village.md"],
+  "maxActions": 2
+}

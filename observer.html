@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poker Table</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a472a;
+      color: #e8e8e8;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { text-align: center; color: #ffd700; margin-bottom: 20px; font-size: 1.5em; }
+
+    .status {
+      text-align: center;
+      padding: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 0.9em;
+    }
+    .status .phase { color: #ffd700; font-weight: bold; }
+    .status .tick { color: #aaa; }
+
+    .table {
+      max-width: 700px;
+      margin: 0 auto 20px;
+      background: #2d6b3f;
+      border: 8px solid #5c3a1e;
+      border-radius: 120px;
+      padding: 30px;
+      min-height: 200px;
+      position: relative;
+    }
+
+    .community {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .community .cards {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pot {
+      text-align: center;
+      font-size: 1.2em;
+      color: #ffd700;
+      margin: 10px 0;
+    }
+
+    .card {
+      display: inline-block;
+      background: white;
+      color: #333;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 1.1em;
+      font-weight: bold;
+      min-width: 36px;
+      text-align: center;
+      box-shadow: 1px 2px 4px rgba(0,0,0,0.3);
+    }
+    .card.red { color: #cc0000; }
+    .card.back {
+      background: #2244aa;
+      color: white;
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.1) 5px, rgba(255,255,255,0.1) 10px);
+    }
+
+    .players {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .player {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-width: 120px;
+      text-align: center;
+    }
+    .player.active { border: 2px solid #ffd700; }
+    .player.folded { opacity: 0.5; }
+    .player .name { font-weight: bold; margin-bottom: 4px; }
+    .player .chips { color: #ffd700; font-size: 0.9em; }
+    .player .bet { color: #ff9; font-size: 0.85em; }
+    .player .dealer-chip {
+      display: inline-block;
+      background: white;
+      color: #333;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      font-size: 0.7em;
+      font-weight: bold;
+      margin-left: 4px;
+    }
+
+    .log {
+      max-width: 700px;
+      margin: 0 auto;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.9em;
+    }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry .action-type {
+      color: #aaa;
+      font-size: 0.8em;
+    }
+    .log-entry.say { color: #b8d4e3; }
+    .log-entry.result { color: #ffd700; font-weight: bold; }
+    .log-entry.deal { color: #98fb98; }
+    .log-entry.join { color: #90ee90; font-style: italic; }
+    .log-entry.leave { color: #ffb6b6; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>🃏 Poker Table</h1>
+  <div class="status" id="status">Connecting...</div>
+
+  <div class="table">
+    <div class="pot" id="pot"></div>
+    <div class="community" id="community"></div>
+    <div class="players" id="players"></div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <script>
+    const potEl = document.getElementById('pot');
+    const communityEl = document.getElementById('community');
+    const playersEl = document.getElementById('players');
+    const logEl = document.getElementById('log');
+    const statusEl = document.getElementById('status');
+
+    let currentState = { bots: [], log: [], hand: null, phase: 'waiting' };
+
+    function renderCard(card) {
+      const suit = card.slice(1);
+      const isRed = suit === '♥' || suit === '♦';
+      return `<span class="card${isRed ? ' red' : ''}">${card}</span>`;
+    }
+
+    function renderBackCard() {
+      return `<span class="card back">?</span>`;
+    }
+
+    function render() {
+      // Status
+      statusEl.innerHTML = `<span class="phase">${currentState.phase || 'waiting'}</span> · <span class="tick">Tick ${currentState.tick || 0}</span> · ${currentState.bots?.length || 0} players`;
+
+      // We don't have full hand state in the observer — render from log events
+    }
+
+    function addLogEntry(entry) {
+      const div = document.createElement('div');
+      div.className = `log-entry ${entry.action || ''}`;
+
+      const name = entry.displayName || entry.bot || '';
+      let text = '';
+
+      switch (entry.action) {
+        case 'say':
+          text = `<b>${name}:</b> ${escapeHtml(entry.message || '')}`;
+          break;
+        case 'check':
+        case 'call':
+        case 'fold':
+        case 'raise':
+        case 'blind':
+          text = `<b>${name}</b> ${escapeHtml(entry.message || entry.action)}`;
+          break;
+        case 'deal':
+          text = `🎴 ${escapeHtml(entry.message || '')}`;
+          break;
+        case 'result':
+          text = `🏆 ${escapeHtml(entry.message || '')}`;
+          break;
+        case 'join':
+          text = `→ ${escapeHtml(entry.message || `${name} joined`)}`;
+          break;
+        case 'leave':
+          text = `← ${escapeHtml(entry.message || `${name} left`)}`;
+          break;
+        default:
+          text = `<b>${name}</b> ${escapeHtml(entry.message || entry.action || '')}`;
+      }
+
+      div.innerHTML = text;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // SSE
+    const events = new EventSource('/events');
+
+    events.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+
+      if (data.type === 'init') {
+        currentState.tick = data.tick;
+        currentState.bots = data.bots || [];
+        for (const entry of (data.log || [])) {
+          addLogEntry(entry);
+        }
+        render();
+        return;
+      }
+
+      if (data.type === 'tick_start') {
+        currentState.tick = data.tick;
+        currentState.phase = data.phase || currentState.phase;
+        currentState.bots = (data.bots || []).map(name => ({ name, displayName: name }));
+        render();
+        return;
+      }
+
+      if (data.type === 'phase_change') {
+        currentState.phase = data.to;
+        const div = document.createElement('div');
+        div.className = 'log-entry deal';
+        div.innerHTML = `— <em>${data.from} → ${data.to}</em> —`;
+        logEl.appendChild(div);
+        render();
+        return;
+      }
+
+      // World events
+      if (data.type?.startsWith('poker_')) {
+        addLogEntry(data);
+        render();
+      }
+    };
+
+    events.onerror = () => {
+      statusEl.textContent = 'Connection lost — reconnecting...';
+    };
+
+    render();
+  </script>
+</body>
+</html>
