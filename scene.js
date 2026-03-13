@@ -124,11 +124,11 @@ export function bettingScene(bot, ctx) {
   // Action info
   lines.push(...buildActionInfo(bot, state));
 
-  // Recent activity
-  const actions = log.filter(e => e.action !== 'say').slice(-5);
-  if (actions.length > 0) {
-    lines.push('', '### Recent actions');
-    for (const e of actions) {
+  // Full action history for this hand
+  const handActions = log.filter(e => e.action !== 'say' && e.tick >= hand.startTick);
+  if (handActions.length > 0) {
+    lines.push('', '### Hand history');
+    for (const e of handActions) {
       lines.push(`- **${e.displayName}** ${describeAction(e)}`);
     }
   }
@@ -168,6 +168,15 @@ export function showdownScene(bot, ctx) {
     const winnerNames = hand.result.winners.map(w => hand.seats.find(s => s.botName === w)?.displayName || w);
     const share = Math.floor(hand.pot / hand.result.winners.length);
     lines.push(`**Winner${winnerNames.length > 1 ? 's' : ''}:** ${winnerNames.join(', ')} — ${hand.result.handName} (${share} chips each)`);
+  }
+
+  // Full action history for this hand (useful for post-hand analysis / journaling)
+  const handActions = log.filter(e => e.action !== 'say' && e.action !== 'result' && e.tick >= hand.startTick);
+  if (handActions.length > 0) {
+    lines.push('', '### Hand history');
+    for (const e of handActions) {
+      lines.push(`- **${e.displayName}** ${describeAction(e)}`);
+    }
   }
 
   lines.push('', '*Next hand starting soon.*');

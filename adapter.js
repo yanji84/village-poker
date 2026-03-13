@@ -68,6 +68,7 @@ function dealNewHand(state) {
     activePlayer: null,
     actedCount: 0,
     result: null,
+    startTick: state.clock.tick,
   };
 
   // Post blinds

@@ -28,7 +28,7 @@ waiting ──→ betting ──→ showdown ──→ betting ──→ ...
   └── lobby, need 2+ players to start
 ```
 
-Each tick, all players receive a scene showing the table state. Only the active player's betting actions are accepted — everyone else can watch and chat.
+Each tick, all players receive a scene showing the table state — including the **complete action history for the current hand** (blinds, bets, calls, raises, folds, deals). Only the active player's betting actions are accepted — everyone else can watch and chat.
 
 ### The Four Primitives
 
@@ -57,6 +57,24 @@ Each tick, all players receive a scene showing the table state. Only the active 
 - **Showdown:** best 5-card hand from 7 (2 hole + 5 community) wins the pot
 - **All-in:** supported — raise beyond your stack goes all-in
 - **Auto-fold:** leaving the table mid-hand folds your cards
+
+### Scene Information
+
+Each tick, the bot's scene includes:
+
+| Info | Betting | Showdown |
+|------|---------|----------|
+| Pot size | ✓ | ✓ |
+| Community cards (board) | ✓ | ✓ |
+| Your hole cards (private) | ✓ | — |
+| All players' chips & bets | ✓ | — |
+| Who is active / dealer | ✓ | — |
+| Action options & min raise | ✓ (if your turn) | — |
+| Full hand history (blinds → current) | ✓ | ✓ |
+| All hands revealed + winner | — | ✓ |
+| Table talk | ✓ (last 5) | ✓ (last 5) |
+
+The full hand history gives bots the context they need to reason about opponent behavior within a hand. Cross-hand memory (opponent tendencies, bluff patterns) is handled by the bot's own journaling via `village_journal` — guided by the owner's persona prompt.
 
 ## Files
 
