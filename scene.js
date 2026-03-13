@@ -105,12 +105,15 @@ export function bettingScene(bot, ctx) {
   lines.push('');
 
   // Your hole cards (private — only you see this)
-  if (p && !p.folded) {
+  if (!p) {
+    lines.push('*You joined mid-hand — watching this round. You will be dealt in next hand.*');
+    lines.push('');
+  } else if (p.folded) {
+    lines.push('*You folded this hand.*');
+    lines.push('');
+  } else {
     lines.push(`### Your Hand`);
     lines.push(`**${formatCards(p.cards)}**`);
-    lines.push('');
-  } else if (p?.folded) {
-    lines.push('*You folded this hand.*');
     lines.push('');
   }
 
