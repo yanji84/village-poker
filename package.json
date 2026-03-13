@@ -4,10 +4,10 @@
   "type": "module",
   "description": "Texas Hold'em poker world for Village Hub",
   "scripts": {
-    "start": "npx village-hub",
-    "dev": "VILLAGE_TICK_INTERVAL=30000 npx village-hub"
+    "start": "village-hub",
+    "dev": "VILLAGE_TICK_INTERVAL=30000 village-hub"
   },
   "dependencies": {
-    "village-hub": "latest"
+    "openclaw-village-hub": "latest"
   }
 }
