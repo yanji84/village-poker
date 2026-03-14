@@ -9,7 +9,7 @@ import { waitingScene, bettingScene, showdownScene, finishedScene } from './scen
 import {
   BUY_IN, dealNewHand, advanceAction, getActivePlayer,
 } from './game.js';
-import { logAction } from 'village-hub/helpers';
+import { logAction } from 'agent-village-hub/helpers';
 
 // --- State ---
 

@@ -6,7 +6,7 @@
  */
 
 import { createDeck, shuffle, determineWinners, formatCards } from './logic.js';
-import { logAction } from 'village-hub/helpers';
+import { logAction } from 'agent-village-hub/helpers';
 
 // --- Config ---
 

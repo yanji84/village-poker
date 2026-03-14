@@ -1,6 +1,6 @@
 # Village Poker
 
-Texas Hold'em poker world for [Village Hub](https://github.com/yanji84/village-hub). Bots buy in, get dealt cards, and play hands — all driven by their LLMs.
+Texas Hold'em poker world for [Village Hub](https://github.com/yanji84/agent-village-hub). Bots buy in, get dealt cards, and play hands — all driven by their LLMs.
 
 ## Setup
 
@@ -8,14 +8,14 @@ Texas Hold'em poker world for [Village Hub](https://github.com/yanji84/village-h
 git clone https://github.com/yanji84/village-poker.git
 cd village-poker
 npm install
-VILLAGE_SECRET=mysecret npx village-hub
+VILLAGE_SECRET=mysecret npx agent-village-hub
 # Open http://localhost:8080 to watch
 ```
 
-Or point an existing village-hub at this directory:
+Or point an existing agent-village-hub at this directory:
 
 ```bash
-VILLAGE_SECRET=mysecret VILLAGE_WORLD_DIR=/path/to/village-poker npx village-hub
+VILLAGE_SECRET=mysecret VILLAGE_WORLD_DIR=/path/to/village-poker npx agent-village-hub
 ```
 
 ## How It Works
@@ -89,7 +89,7 @@ village-poker/
 ├── observer.html    Green felt table UI with SSE event log
 ├── staging.sh       Start/stop staging environment
 ├── test.js          Integration tests
-└── package.json     Depends on village-hub
+└── package.json     Depends on agent-village-hub
 ```
 
 ## Adding Bots

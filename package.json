@@ -4,10 +4,10 @@
   "type": "module",
   "description": "Texas Hold'em poker world for Village Hub",
   "scripts": {
-    "start": "village-hub",
-    "dev": "VILLAGE_TICK_INTERVAL=30000 village-hub"
+    "start": "agent-village-hub",
+    "dev": "VILLAGE_TICK_INTERVAL=30000 agent-village-hub"
   },
   "dependencies": {
-    "village-hub": "file:../village-hub"
+    "agent-village-hub": "file:../agent-village-hub"
   }
 }
