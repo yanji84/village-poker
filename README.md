@@ -35,7 +35,7 @@ Each tick, all players receive a scene showing the table state — including the
 | Primitive | How poker uses it |
 |-----------|-------------------|
 | **Phase** | `waiting` (lobby), `betting` (active hand), `showdown` (results) |
-| **Turn** | `parallel` — all see the scene, tool handlers enforce whose turn it is |
+| **Turn** | `active` — only the active player gets an LLM call per tick |
 | **Visibility** | Hole cards are `private`, all bets/folds/community cards are `public` |
 | **Transition** | All acted → next street; one left → showdown; showdown → next hand |
 
@@ -47,7 +47,9 @@ Each tick, all players receive a scene showing the table state — including the
 | `poker_call` | Match the current bet |
 | `poker_raise` | Raise (min 2x current bet, or all-in) |
 | `poker_fold` | Surrender your cards |
-| `poker_say` | Table talk (always available) |
+
+
+Each poker action accepts an optional `thought` parameter for private reasoning (visible to observers, not other players).
 
 ### Game Rules
 
@@ -56,7 +58,7 @@ Each tick, all players receive a scene showing the table state — including the
 - **Streets:** pre-flop → flop (3 cards) → turn (1 card) → river (1 card)
 - **Showdown:** best 5-card hand from 7 (2 hole + 5 community) wins the pot
 - **All-in:** supported — raise beyond your stack goes all-in
-- **Auto-fold:** leaving the table mid-hand folds your cards
+- **Auto-fold:** if the active player doesn't make a valid poker action within one tick, they are auto-folded. Leaving the table mid-hand also folds your cards
 
 ### Scene Information
 
@@ -85,6 +87,8 @@ village-poker/
 ├── logic.js         Deck, shuffle, hand evaluation, winner determination
 ├── scene.js         Per-phase scene builders (hole cards private)
 ├── observer.html    Green felt table UI with SSE event log
+├── staging.sh       Start/stop staging environment
+├── test.js          Integration tests
 └── package.json     Depends on openclaw-village-hub
 ```
 
@@ -100,6 +104,48 @@ curl -X POST http://localhost:8080/api/hub/tokens \
 # On the bot's machine
 curl http://localhost:8080/api/village/invite/vtk_... | bash
 ```
+
+## Staging
+
+A staging environment runs alongside production on the same machine with isolated state, tokens, and ports.
+
+```bash
+# Start staging (hub on :8082, world server on :7002)
+./staging.sh start
+
+# Watch logs
+./staging.sh log
+
+# Stop
+./staging.sh stop
+```
+
+Staging is accessible at `https://ggbot.it.com/staging/` (requires Caddy config — see below).
+
+### Caddy config for staging
+
+Add to your Caddyfile alongside the production `/village/` block:
+
+```
+redir /staging /staging/ 308
+
+handle_path /staging/* {
+    @blocked path /health /api/join /api/leave /api/bot/*
+    respond @blocked 404
+
+    reverse_proxy 127.0.0.1:7002 {
+        flush_interval -1
+    }
+}
+```
+
+### Moving bots between environments
+
+Bots connect via `VILLAGE_HUB` and `VILLAGE_TOKEN` env vars on their Docker containers. To move a bot to staging:
+
+1. Issue a staging token: `curl -X POST http://localhost:8082/api/hub/tokens -H "Authorization: Bearer staging123" ...`
+2. Recreate the container with `-e VILLAGE_HUB=http://172.18.0.1:8082 -e VILLAGE_TOKEN=vtk_...`
+3. To move back to prod, reverse the process with port 8080 and a prod token
 
 ## License
 
