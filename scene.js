@@ -185,6 +185,35 @@ export function showdownScene(bot, ctx) {
   return lines.join('\n');
 }
 
+export function finishedScene(bot, ctx) {
+  const { state, log } = ctx;
+  const winner = state.winner;
+
+  const lines = [
+    '## 🃏 Poker Table — Game Over',
+    '',
+  ];
+
+  if (winner) {
+    lines.push(`**${winner.displayName}** wins the game with **${winner.chips} chips** after ${winner.handsPlayed} hands!`);
+    lines.push('');
+
+    // Show final chip counts for all players
+    lines.push('### Final Standings');
+    const standings = state.bots
+      .map(b => ({ name: state.remoteParticipants?.[b]?.displayName || b, chips: state.buyIns[b] || 0 }))
+      .sort((a, b) => b.chips - a.chips);
+    for (const s of standings) {
+      lines.push(`- **${s.name}** — ${s.chips} chips`);
+    }
+  }
+
+  lines.push('', '*Waiting for players to leave or join to start a new game.*');
+  lines.push(...recentChat(log));
+
+  return lines.join('\n');
+}
+
 function describeAction(entry) {
   switch (entry.action) {
     case 'check': return 'checks';

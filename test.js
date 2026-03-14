@@ -7,7 +7,9 @@
 
 import { createDeck, shuffle, evaluateHand, compareHands, determineWinners, formatCards } from './logic.js';
 import { initState, phases, tools, onJoin, onLeave } from './adapter.js';
-import { waitingScene, bettingScene, showdownScene } from './scene.js';
+import { waitingScene, bettingScene, showdownScene, finishedScene } from './scene.js';
+import { getActivePlayer, dealNewHand, advanceAction, BUY_IN } from './game.js';
+import { logAction } from 'openclaw-village-hub/helpers';
 
 let passed = 0;
 let failed = 0;
@@ -50,16 +52,30 @@ function freshState() {
 
 function addPlayer(state, name, displayName) {
   displayName = displayName || name.charAt(0).toUpperCase() + name.slice(1);
-  onJoin(state, name, displayName);
+  const extra = onJoin(state, name, displayName) || {};
   state.bots.push(name);
   state.remoteParticipants[name] = { displayName };
+  // Simulate runtime auto-logging of join
+  state.log.push({
+    bot: name, displayName, action: 'join',
+    message: extra.message || `${displayName} joined.`,
+    visibility: 'public',
+    tick: state.clock.tick, timestamp: new Date().toISOString(),
+  });
 }
 
 function removePlayer(state, name) {
   const displayName = state.remoteParticipants[name]?.displayName || name;
-  onLeave(state, name, displayName);
+  const extra = onLeave(state, name, displayName) || {};
   state.bots = state.bots.filter(b => b !== name);
   delete state.remoteParticipants[name];
+  // Simulate runtime auto-logging of leave
+  state.log.push({
+    bot: name, displayName, action: 'leave',
+    message: extra.message || `${displayName} left.`,
+    visibility: 'public',
+    tick: state.clock.tick, timestamp: new Date().toISOString(),
+  });
 }
 
 function bot(name) {
@@ -303,18 +319,28 @@ section('Phase Transitions — showdown to betting');
   const state = freshState();
   addPlayer(state, 'alice', 'Alice');
   addPlayer(state, 'bob', 'Bob');
-  // Both have chips
-  assert(phases.showdown.transitions[0].when(state), 'showdown → betting when 2+ have chips');
+  // Both have chips — should go to betting (not finished)
+  assert(!phases.showdown.transitions[0].when(state), 'not finished when 2 have chips');
+  assert(phases.showdown.transitions[1].when(state), 'showdown → betting when 2+ have chips');
 }
 
-section('Phase Transitions — showdown to waiting (not enough chips)');
+section('Phase Transitions — showdown to finished (one player left with chips)');
 {
   const state = freshState();
   addPlayer(state, 'alice', 'Alice');
   addPlayer(state, 'bob', 'Bob');
   state.buyIns.bob = 0;
-  assert(!phases.showdown.transitions[0].when(state), 'no betting with 1 player with chips');
-  assert(phases.showdown.transitions[1].when(state), 'fallback to waiting');
+  assert(phases.showdown.transitions[0].when(state), 'finished when 1 player has chips and 2+ at table');
+}
+
+section('Phase Transitions — showdown to waiting (not enough players)');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  // Only 1 player at table — not a finish, just waiting for players
+  assert(!phases.showdown.transitions[0].when(state), 'not finished with only 1 player at table');
+  assert(!phases.showdown.transitions[1].when(state), 'not betting with 1 player');
+  assert(phases.showdown.transitions[2].when(state), 'fallback to waiting');
 }
 
 // ============================================================
@@ -1235,11 +1261,11 @@ section('Edge — single player with chips after hand');
   // Play to completion
   playToShowdown(state);
 
-  // One player may be busted
+  // One player may be busted — game should end
   const playersWithChips = state.bots.filter(b => (state.buyIns[b] || 0) > 0);
   if (playersWithChips.length < 2) {
-    assert(!phases.showdown.transitions[0].when(state), 'cannot start new hand');
-    assert(phases.showdown.transitions[1].when(state), 'falls back to waiting');
+    assert(phases.showdown.transitions[0].when(state), 'transitions to finished');
+    assert(!phases.showdown.transitions[1].when(state), 'does not transition to betting');
   }
 }
 
@@ -1366,6 +1392,347 @@ section('Edge — chip conservation across many random hands');
   }
 
   assertEq(totalChips(state), initialChips, 'chips conserved across 20 random hands');
+}
+
+// ============================================================
+// FINISHED PHASE — game ending
+// ============================================================
+
+section('Finished — onEnter sets winner state');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  state.buyIns.alice = 2000;
+  state.buyIns.bob = 0;
+  state.handsPlayed = 15;
+
+  phases.finished.onEnter(state);
+  assert(state.winner != null, 'winner state set');
+  assertEq(state.winner.botName, 'alice', 'winner is alice');
+  assertEq(state.winner.displayName, 'Alice', 'winner display name');
+  assertEq(state.winner.chips, 2000, 'winner chips');
+  assertEq(state.winner.handsPlayed, 15, 'hands played recorded');
+  assert(state.log.some(e => e.action === 'game_over'), 'game_over logged');
+}
+
+section('Finished — transitions to waiting when winner leaves');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  state.buyIns.alice = 2000;
+  state.buyIns.bob = 0;
+
+  // Game is finished — 1 player with chips, 2 at table
+  assert(!phases.finished.transitions[0].when(state), 'stays in finished');
+
+  // Alice leaves — no longer 1 winner at the table
+  removePlayer(state, 'alice');
+  assert(phases.finished.transitions[0].when(state), 'transitions to waiting after winner leaves');
+}
+
+section('Finished — transitions to waiting when new player joins');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  state.buyIns.alice = 2000;
+  state.buyIns.bob = 0;
+
+  // Remove bob (busted), now only 1 player at table
+  removePlayer(state, 'bob');
+  assert(phases.finished.transitions[0].when(state), 'transitions when <2 players at table');
+}
+
+section('Finished — full game: play until one player wins');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+
+  // Bob folds every hand — alice wins blinds each time until bob is busted
+  let safety = 200;
+  while (safety-- > 0) {
+    dealHand(state);
+    if (!state.hand) break;
+
+    // Bob folds if active, alice calls/checks
+    const active = state.hand.activePlayer;
+    if (active === 'bob') {
+      playAction(state, 'bob', 'poker_fold');
+    } else {
+      playAction(state, 'alice', 'poker_call');
+      if (state.hand.activePlayer === 'bob' && !state.hand.result) {
+        playAction(state, 'bob', 'poker_fold');
+      }
+    }
+
+    const playersWithChips = state.bots.filter(b => (state.buyIns[b] || 0) > 0);
+    if (playersWithChips.length <= 1) break;
+  }
+
+  const playersWithChips = state.bots.filter(b => (state.buyIns[b] || 0) > 0);
+  assertEq(playersWithChips.length, 1, 'one player has all chips');
+
+  const winner = playersWithChips[0];
+  assertEq(state.buyIns[winner], 2000, 'winner has total buy-in amount');
+
+  // Verify finished transition would fire
+  assert(phases.showdown.transitions[0].when(state), 'showdown → finished fires');
+}
+
+section('Finished — no auto-rebuy of busted players');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  state.buyIns.bob = 0;
+
+  // Trigger waiting transition — should NOT rebuy bob
+  phases.waiting.transitions[0].when(state);
+  assertEq(state.buyIns.bob, 0, 'busted player not rebuyed');
+}
+
+section('Finished scene — shows winner and standings');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  state.buyIns.alice = 2000;
+  state.buyIns.bob = 0;
+  state.winner = { botName: 'alice', displayName: 'Alice', chips: 2000, handsPlayed: 10 };
+
+  const ctx = { allBots: [bot('alice'), bot('bob')], state, worldConfig: { sceneLabels: {}, raw: {} }, phase: 'finished', log: [] };
+  const scene = finishedScene(bot('alice'), ctx);
+  assertIncludes(scene, 'Game Over', 'scene shows game over');
+  assertIncludes(scene, 'Alice', 'scene shows winner name');
+  assertIncludes(scene, '2000', 'scene shows winner chips');
+}
+
+// ============================================================
+// GAME.JS — getActivePlayer guard
+// ============================================================
+
+section('getActivePlayer — returns hand and player for active bot');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  dealHand(state);
+
+  const active = state.hand.activePlayer;
+  const result = getActivePlayer(state, bot(active));
+  assert(result !== null, 'returns non-null for active player');
+  assertEq(result.hand, state.hand, 'returns the hand');
+  assert(result.player !== undefined, 'returns the player');
+  assertEq(result.player.folded, false, 'player not folded');
+}
+
+section('getActivePlayer — returns null for non-active bot');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  dealHand(state);
+
+  const active = state.hand.activePlayer;
+  const other = active === 'alice' ? 'bob' : 'alice';
+  const result = getActivePlayer(state, bot(other));
+  assertEq(result, null, 'null for non-active bot');
+}
+
+section('getActivePlayer — returns null when no hand');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  const result = getActivePlayer(state, bot('alice'));
+  assertEq(result, null, 'null when no hand exists');
+}
+
+section('getActivePlayer — returns null for folded player');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  dealHand(state);
+
+  const active = state.hand.activePlayer;
+  // Fold the active player manually
+  state.hand.players[active].folded = true;
+  const result = getActivePlayer(state, bot(active));
+  assertEq(result, null, 'null for folded player');
+}
+
+// ============================================================
+// GAME.JS — logAction helper
+// ============================================================
+
+section('logAction — stamps tick and timestamp');
+{
+  const state = freshState();
+  state.clock.tick = 42;
+  logAction(state, { action: 'test', message: 'hello', visibility: 'public' });
+
+  const entry = state.log[state.log.length - 1];
+  assertEq(entry.action, 'test', 'action preserved');
+  assertEq(entry.message, 'hello', 'message preserved');
+  assertEq(entry.tick, 42, 'tick stamped from state.clock');
+  assert(typeof entry.timestamp === 'string', 'timestamp is a string');
+  assert(entry.timestamp.includes('T'), 'timestamp is ISO format');
+}
+
+section('logAction — does not overwrite explicit fields');
+{
+  const state = freshState();
+  state.clock.tick = 5;
+  logAction(state, { action: 'deal', bot: 'dealer', displayName: 'Dealer', visibility: 'public' });
+
+  const entry = state.log[state.log.length - 1];
+  assertEq(entry.bot, 'dealer', 'bot field preserved');
+  assertEq(entry.displayName, 'Dealer', 'displayName preserved');
+}
+
+// ============================================================
+// GAME.JS — direct imports
+// ============================================================
+
+section('game.js — BUY_IN export');
+{
+  assertEq(BUY_IN, 1000, 'BUY_IN is 1000');
+}
+
+section('game.js — dealNewHand works independently');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  const result = dealNewHand(state);
+  assertEq(result, true, 'deals successfully with 2 players');
+  assert(state.hand !== undefined, 'hand state created');
+  assertEq(state.hand.seats.length, 2, '2 seats');
+  assert(state.hand.activePlayer !== null, 'active player set');
+}
+
+section('game.js — dealNewHand fails with < 2 players');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  const result = dealNewHand(state);
+  assertEq(result, false, 'fails with 1 player');
+}
+
+// ============================================================
+// ADAPTER — onJoin/onLeave don't log (runtime handles it)
+// ============================================================
+
+section('onJoin — returns message but does not push to log');
+{
+  const state = freshState();
+  const logBefore = state.log.length;
+  const result = onJoin(state, 'alice', 'Alice');
+
+  assert(result.message !== undefined, 'returns a message');
+  assert(result.message.includes('Alice'), 'message includes display name');
+  assertEq(state.log.length, logBefore, 'log unchanged — runtime handles logging');
+  assertEq(state.buyIns.alice, 1000, 'chips still set');
+}
+
+section('onLeave — returns message but does not push to log');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  const logBefore = state.log.length;
+  const result = onLeave(state, 'alice', 'Alice');
+
+  assert(result.message !== undefined, 'returns a message');
+  assert(result.message.includes('Alice'), 'message includes display name');
+  assertEq(state.log.length, logBefore, 'log unchanged — runtime handles logging');
+  assertEq(state.buyIns.alice, undefined, 'chips cleaned up');
+}
+
+// ============================================================
+// TOOL HANDLERS — thought pass-through
+// ============================================================
+
+section('poker_check — includes thought when provided');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  dealHand(state);
+
+  // Find and set up a player who can check (BB after everyone calls)
+  const active = state.hand.activePlayer;
+  // Call first so next player can check
+  playAction(state, active, 'poker_call');
+
+  const nextActive = state.hand.activePlayer;
+  if (nextActive) {
+    const result = playAction(state, nextActive, 'poker_check', { thought: 'testing thoughts' });
+    if (result) {
+      assertEq(result.thought, 'testing thoughts', 'thought field included in return');
+      assertEq(result.action, 'check', 'action is still check');
+    }
+  }
+}
+
+section('poker_fold — includes thought when provided');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  dealHand(state);
+
+  const active = state.hand.activePlayer;
+  const result = playAction(state, active, 'poker_fold', { thought: 'I should fold' });
+  assert(result !== null, 'fold returns result');
+  assertEq(result.thought, 'I should fold', 'thought on fold');
+}
+
+section('poker_call — includes thought when provided');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  dealHand(state);
+
+  const active = state.hand.activePlayer;
+  const result = playAction(state, active, 'poker_call', { thought: 'pot odds are good' });
+  assert(result !== null, 'call returns result');
+  assertEq(result.thought, 'pot odds are good', 'thought on call');
+}
+
+section('poker_raise — includes thought when provided');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  dealHand(state);
+
+  const active = state.hand.activePlayer;
+  const result = playAction(state, active, 'poker_raise', { amount: 40, thought: 'strong hand' });
+  assert(result !== null, 'raise returns result');
+  assertEq(result.thought, 'strong hand', 'thought on raise');
+}
+
+section('poker_check — no thought field when not provided');
+{
+  const state = freshState();
+  addPlayer(state, 'alice', 'Alice');
+  addPlayer(state, 'bob', 'Bob');
+  dealHand(state);
+
+  const active = state.hand.activePlayer;
+  playAction(state, active, 'poker_call');
+
+  const nextActive = state.hand.activePlayer;
+  if (nextActive) {
+    const result = playAction(state, nextActive, 'poker_check', {});
+    if (result) {
+      assert(!('thought' in result), 'no thought field when not provided');
+    }
+  }
 }
 
 // ============================================================

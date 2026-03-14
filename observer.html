@@ -430,27 +430,24 @@
           break;
         }
         case 'think':
+        case 'thought':
           text = `💭 <b>${esc(name)}:</b> ${esc(entry.message || '')}`;
           className = 'think';
           break;
         case 'check':
           text = `${esc(name)} checks`;
-          if (entry.thought) text += ` <span class="thought">💭 ${esc(entry.thought)}</span>`;
           className = 'action';
           break;
         case 'call':
           text = `${esc(name)} calls ${entry.amount || ''}`;
-          if (entry.thought) text += ` <span class="thought">💭 ${esc(entry.thought)}</span>`;
           className = 'action';
           break;
         case 'raise':
           text = `${esc(name)} raises to ${entry.amount || ''} ⬆`;
-          if (entry.thought) text += ` <span class="thought">💭 ${esc(entry.thought)}</span>`;
           className = 'action';
           break;
         case 'fold':
           text = `${esc(name)} folds`;
-          if (entry.thought) text += ` <span class="thought">💭 ${esc(entry.thought)}</span>`;
           className = 'action';
           break;
         case 'result': {
@@ -481,6 +478,10 @@
           className = 'result';
           break;
         }
+        case 'game_over':
+          text = `🏆 ${esc(entry.message || '')}`;
+          className = 'result';
+          break;
         case 'join':
           text = `→ ${esc(name)} joined`;
           className = 'join';
