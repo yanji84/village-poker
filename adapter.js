@@ -44,8 +44,9 @@ function dealNewHand(state) {
   // Deal hole cards
   const players = {};
   for (const seat of seats) {
+    const cards = [deck.pop(), deck.pop()];
     players[seat.botName] = {
-      cards: [deck.pop(), deck.pop()],
+      cards,
       chips: state.buyIns[seat.botName],
       bet: 0,
       totalBet: 0,
@@ -70,6 +71,20 @@ function dealNewHand(state) {
     result: null,
     startTick: state.clock.tick,
   };
+
+  // Log hole cards (private per player — observer sees via SSE, bots don't)
+  for (const seat of seats) {
+    state.log.push({
+      bot: seat.botName,
+      displayName: seat.displayName,
+      action: 'deal_hole',
+      cards: players[seat.botName].cards.slice(),
+      message: `is dealt ${formatCards(players[seat.botName].cards)}`,
+      visibility: 'private',
+      tick: state.clock.tick,
+      timestamp: new Date().toISOString(),
+    });
+  }
 
   // Post blinds
   const sbIndex = seats.length === 2 ? dealerIndex : (dealerIndex + 1) % seats.length;
@@ -188,6 +203,35 @@ function advanceStreet(state) {
     timestamp: new Date().toISOString(),
   });
 
+  // Check if all remaining players are all-in — skip to showdown
+  const activePlayers = hand.seats.filter(s => !hand.players[s.botName].folded);
+  const allAllIn = activePlayers.every(s => hand.players[s.botName].chips === 0);
+  if (allAllIn) {
+    // Deal remaining streets and resolve
+    while (hand.community.length < 5) {
+      const streetsLeft = ['flop', 'turn', 'river'];
+      const nextS = hand.community.length === 0 ? 'flop' : (hand.community.length === 3 ? 'turn' : 'river');
+      hand.deck.pop(); // burn
+      if (hand.community.length === 0) {
+        hand.community.push(hand.deck.pop(), hand.deck.pop(), hand.deck.pop());
+      } else {
+        hand.community.push(hand.deck.pop());
+      }
+      state.log.push({
+        bot: 'dealer',
+        displayName: 'Dealer',
+        action: 'deal',
+        message: `deals the ${nextS}: ${formatCards(hand.community)}`,
+        visibility: 'public',
+        tick: state.clock.tick,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    hand.street = 'river';
+    resolveHand(state, activePlayers);
+    return 'showdown';
+  }
+
   // First to act post-flop: first non-folded player after dealer
   const seats = hand.seats;
   for (let i = 1; i <= seats.length; i++) {
@@ -258,12 +302,26 @@ function resolveHand(state, activePlayers) {
 export const phases = {
   waiting: {
     turn: 'none',
-    tools: ['poker_say'],
+    tools: ['poker_say', 'poker_think'],
     scene: waitingScene,
     transitions: [
-      { to: 'betting', when: (state) => state.bots.length >= 2 },
+      {
+        to: 'betting',
+        when: (state) => {
+          // Auto rebuy busted players
+          for (const bot of state.bots) {
+            if ((state.buyIns[bot] || 0) <= 0) {
+              state.buyIns[bot] = BUY_IN;
+            }
+          }
+          const playersWithChips = state.bots.filter(b => (state.buyIns[b] || 0) > 0);
+          return playersWithChips.length >= 2;
+        },
+      },
     ],
     onEnter(state) {
+      // Clear stale hand result
+      if (state.hand) state.hand.result = null;
       // Try to deal a new hand
       if (!dealNewHand(state)) {
         // Not enough players with chips — will stay in waiting
@@ -273,7 +331,7 @@ export const phases = {
 
   betting: {
     turn: 'parallel',
-    tools: ['poker_check', 'poker_call', 'poker_raise', 'poker_fold', 'poker_say'],
+    tools: ['poker_check', 'poker_call', 'poker_raise', 'poker_fold', 'poker_think', 'poker_say'],
     scene: bettingScene,
     transitions: [
       // Transition to showdown is triggered by advanceAction returning 'showdown'
@@ -283,7 +341,7 @@ export const phases = {
 
   showdown: {
     turn: 'none',
-    tools: ['poker_say'],
+    tools: ['poker_say', 'poker_think'],
     scene: showdownScene,
     transitions: [
       // After one tick of showdown, start next hand
@@ -438,6 +496,15 @@ export const tools = {
       action: 'fold',
       message: 'folds',
       visibility: 'public',
+    };
+  },
+
+  poker_think(bot, params, state) {
+    if (!params?.thought) return null;
+    return {
+      action: 'think',
+      message: params.thought,
+      visibility: 'private',
     };
   },
 

@@ -13,33 +13,45 @@
       min-height: 100vh;
       padding: 20px;
     }
-    h1 { text-align: center; color: #ffd700; margin-bottom: 20px; font-size: 1.5em; }
+    h1 { text-align: center; color: #ffd700; margin-bottom: 16px; font-size: 1.5em; }
 
     .status {
       text-align: center;
-      padding: 8px;
+      padding: 8px 12px;
       background: rgba(0,0,0,0.3);
       border-radius: 8px;
-      margin-bottom: 16px;
+      margin: 0 auto 16px;
+      max-width: 700px;
       font-size: 0.9em;
     }
-    .status .phase { color: #ffd700; font-weight: bold; }
+    .status .phase { color: #ffd700; font-weight: bold; text-transform: uppercase; }
     .status .tick { color: #aaa; }
+    .status .connected { color: #90ee90; }
+    .status .disconnected { color: #ff6b6b; }
 
+    /* --- Table --- */
     .table {
       max-width: 700px;
       margin: 0 auto 20px;
       background: #2d6b3f;
       border: 8px solid #5c3a1e;
       border-radius: 120px;
-      padding: 30px;
-      min-height: 200px;
-      position: relative;
+      padding: 30px 30px 20px;
+      min-height: 220px;
     }
+
+    .pot {
+      text-align: center;
+      font-size: 1.3em;
+      color: #ffd700;
+      margin-bottom: 8px;
+    }
+    .pot .label { font-size: 0.7em; color: #ccc; text-transform: uppercase; letter-spacing: 1px; }
 
     .community {
       text-align: center;
-      margin: 20px 0;
+      margin: 12px 0 16px;
+      min-height: 50px;
     }
     .community .cards {
       display: flex;
@@ -47,11 +59,12 @@
       gap: 8px;
       flex-wrap: wrap;
     }
-    .pot {
-      text-align: center;
-      font-size: 1.2em;
-      color: #ffd700;
-      margin: 10px 0;
+    .community .street-label {
+      font-size: 0.75em;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
     }
 
     .card {
@@ -59,39 +72,74 @@
       background: white;
       color: #333;
       border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 1.1em;
+      padding: 8px 10px;
+      font-size: 1.15em;
       font-weight: bold;
-      min-width: 36px;
+      min-width: 40px;
       text-align: center;
       box-shadow: 1px 2px 4px rgba(0,0,0,0.3);
     }
     .card.red { color: #cc0000; }
-    .card.back {
-      background: #2244aa;
-      color: white;
-      background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.1) 5px, rgba(255,255,255,0.1) 10px);
+    .card.empty {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.3);
+      border: 1px dashed rgba(255,255,255,0.2);
+      box-shadow: none;
     }
 
+    /* --- Players --- */
     .players {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 12px;
-      margin: 16px 0;
+      margin: 16px 0 8px;
     }
     .player {
-      background: rgba(0,0,0,0.3);
-      border-radius: 10px;
-      padding: 10px 14px;
-      min-width: 120px;
+      background: rgba(0,0,0,0.35);
+      border-radius: 12px;
+      padding: 12px 16px;
+      min-width: 140px;
       text-align: center;
+      border: 2px solid transparent;
+      transition: border-color 0.3s, opacity 0.3s;
     }
-    .player.active { border: 2px solid #ffd700; }
-    .player.folded { opacity: 0.5; }
-    .player .name { font-weight: bold; margin-bottom: 4px; }
-    .player .chips { color: #ffd700; font-size: 0.9em; }
-    .player .bet { color: #ff9; font-size: 0.85em; }
+    .player.active {
+      border-color: #ffd700;
+      box-shadow: 0 0 12px rgba(255,215,0,0.3);
+    }
+    .player.folded { opacity: 0.4; }
+    .player.winner {
+      border-color: #ffd700;
+      background: rgba(255,215,0,0.15);
+    }
+    .player .name {
+      font-weight: bold;
+      font-size: 1em;
+      margin-bottom: 4px;
+    }
+    .player .chips {
+      color: #ffd700;
+      font-size: 0.95em;
+      margin-bottom: 2px;
+    }
+    .player .bet {
+      color: #ff9;
+      font-size: 0.8em;
+    }
+    .player .hole-cards {
+      margin-top: 4px;
+    }
+    .player .hole-cards .card {
+      font-size: 0.85em;
+      padding: 4px 6px;
+      min-width: 30px;
+    }
+    .player .role {
+      font-size: 0.7em;
+      color: #aaa;
+      margin-top: 2px;
+    }
     .player .dealer-chip {
       display: inline-block;
       background: white;
@@ -102,33 +150,87 @@
       line-height: 20px;
       font-size: 0.7em;
       font-weight: bold;
-      margin-left: 4px;
     }
 
-    .log {
+    /* --- Action feed --- */
+    .feed {
       max-width: 700px;
       margin: 0 auto;
+    }
+    .feed h2 {
+      font-size: 0.85em;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .feed-scroll {
       background: rgba(0,0,0,0.3);
       border-radius: 8px;
-      padding: 12px;
-      max-height: 300px;
+      padding: 10px 14px;
+      max-height: 350px;
       overflow-y: auto;
     }
-    .log-entry {
+    .feed-entry {
       padding: 4px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
       font-size: 0.9em;
+      line-height: 1.4;
     }
-    .log-entry:last-child { border-bottom: none; }
-    .log-entry .action-type {
-      color: #aaa;
+    .feed-entry.think {
+      color: #c0a0d0;
+      font-size: 0.82em;
+      padding: 3px 8px;
+      margin: 2px 0;
+      background: rgba(180,140,220,0.08);
+      border-left: 2px solid rgba(180,140,220,0.3);
+      font-style: italic;
+    }
+    .feed-entry.say {
+      color: #7a9aaa;
       font-size: 0.8em;
+      padding: 2px 0 2px 12px;
+      border-left: 2px solid rgba(255,255,255,0.08);
     }
-    .log-entry.say { color: #b8d4e3; }
-    .log-entry.result { color: #ffd700; font-weight: bold; }
-    .log-entry.deal { color: #98fb98; }
-    .log-entry.join { color: #90ee90; font-style: italic; }
-    .log-entry.leave { color: #ffb6b6; font-style: italic; }
+    .feed-entry.result {
+      color: #ffd700;
+      font-weight: bold;
+      padding: 6px 8px;
+      background: rgba(255,215,0,0.08);
+      border-radius: 4px;
+      margin: 4px 0;
+    }
+    .feed-entry.result .card { font-size: 0.8em; padding: 2px 4px; min-width: auto; }
+    .feed-entry.deal { color: #98fb98; }
+    .feed-entry.street-header {
+      color: #98fb98;
+      font-size: 0.75em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 6px 0 2px;
+      margin-top: 4px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .feed-entry.action { color: #e8e8e8; }
+    .feed-entry.join { color: #90ee90; font-size: 0.8em; font-style: italic; }
+    .feed-entry.leave { color: #ffb6b6; font-size: 0.8em; font-style: italic; }
+    .feed-entry.phase-change { display: none; }
+    .hand-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0 4px;
+      margin-top: 6px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      font-size: 0.8em;
+      color: #aaa;
+    }
+    .hand-header:first-child { border-top: none; margin-top: 0; }
+    .hand-header .hand-num {
+      color: #ffd700;
+      font-weight: bold;
+      font-size: 1em;
+    }
+    .hand-header .hand-cards .card { font-size: 0.7em; padding: 1px 3px; min-width: auto; }
   </style>
 </head>
 <body>
@@ -141,125 +243,439 @@
     <div class="players" id="players"></div>
   </div>
 
-  <div class="log" id="log"></div>
+  <div class="feed">
+    <h2>Live Feed</h2>
+    <div class="feed-scroll" id="feed"></div>
+  </div>
 
   <script>
     const potEl = document.getElementById('pot');
     const communityEl = document.getElementById('community');
     const playersEl = document.getElementById('players');
-    const logEl = document.getElementById('log');
+    const feedEl = document.getElementById('feed');
     const statusEl = document.getElementById('status');
 
-    let currentState = { bots: [], log: [], hand: null, phase: 'waiting' };
+    // Reconstructed state from events
+    const state = {
+      phase: 'waiting',
+      tick: 0,
+      bots: [],           // [{ name, displayName }]
+      chips: {},          // name → chips (reconstructed from blinds/results)
+      pot: 0,
+      community: [],
+      street: '',
+      activePlayers: new Set(),
+      foldedPlayers: new Set(),
+      currentBets: {},    // name → bet this street
+      lastResult: null,   // { winners, handName, message }
+      holeCards: {},      // name → [card, card]
+      handNumber: 0,
+      nextTickAt: 0,     // epoch ms of next tick
+      tickIntervalMs: 30000,
+    };
 
     function renderCard(card) {
-      const suit = card.slice(1);
+      const suit = card.slice(-1);
       const isRed = suit === '♥' || suit === '♦';
       return `<span class="card${isRed ? ' red' : ''}">${card}</span>`;
     }
 
-    function renderBackCard() {
-      return `<span class="card back">?</span>`;
+    function renderEmptyCard() {
+      return `<span class="card empty">·</span>`;
     }
 
     function render() {
-      // Status
-      statusEl.innerHTML = `<span class="phase">${currentState.phase || 'waiting'}</span> · <span class="tick">Tick ${currentState.tick || 0}</span> · ${currentState.bots?.length || 0} players`;
+      // Status bar
+      const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown' };
+      const phaseLabel = phaseLabels[state.phase] || state.phase;
+      const countdown = Math.max(0, Math.ceil((state.nextTickAt - Date.now()) / 1000));
+      statusEl.innerHTML = `
+        <span class="phase">${phaseLabel}</span> ·
+        <span class="tick">Hand #${state.handNumber}</span> ·
+        ${state.bots.length} player${state.bots.length !== 1 ? 's' : ''} ·
+        <span id="countdown">Next tick: ${countdown}s</span>
+        <span class="connected" id="conn-status">● Connected</span>
+      `;
 
-      // We don't have full hand state in the observer — render from log events
+      // Pot
+      if (state.pot > 0) {
+        potEl.innerHTML = `<div class="label">Pot</div>${state.pot}`;
+      } else {
+        potEl.innerHTML = '';
+      }
+
+      // Community cards
+      if (state.phase === 'betting' || state.phase === 'showdown') {
+        const streetLabels = { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', '': '' };
+        const streetLabel = streetLabels[state.street] || state.street;
+        let cardsHtml = '';
+        for (let i = 0; i < 5; i++) {
+          cardsHtml += state.community[i] ? renderCard(state.community[i]) : renderEmptyCard();
+        }
+        communityEl.innerHTML = `
+          ${streetLabel ? `<div class="street-label">${streetLabel}</div>` : ''}
+          <div class="cards">${cardsHtml}</div>
+        `;
+      } else {
+        communityEl.innerHTML = '';
+      }
+
+      // Players
+      let playersHtml = '';
+      for (const bot of state.bots) {
+        const chips = state.chips[bot.name] ?? '?';
+        const isFolded = state.foldedPlayers.has(bot.name);
+        const isActive = state.activePlayers.has(bot.name);
+        const isWinner = state.lastResult?.winners?.includes(bot.name) && state.phase === 'showdown';
+        const bet = state.currentBets[bot.name] || 0;
+
+        let classes = 'player';
+        if (isActive) classes += ' active';
+        if (isFolded) classes += ' folded';
+        if (isWinner) classes += ' winner';
+
+        const cards = state.holeCards[bot.name];
+        let cardsHtml = '';
+        if (cards && cards.length === 2) {
+          cardsHtml = `<div class="hole-cards">${renderCard(cards[0])} ${renderCard(cards[1])}</div>`;
+        }
+
+        playersHtml += `
+          <div class="${classes}">
+            <div class="name">${escapeHtml(bot.displayName || bot.name)}${isWinner ? ' 🏆' : ''}</div>
+            ${cardsHtml}
+            <div class="chips">💰 ${chips}</div>
+            ${bet > 0 ? `<div class="bet">Bet: ${bet}</div>` : ''}
+            ${isFolded ? '<div class="role">Folded</div>' : ''}
+            ${isActive ? '<div class="role" style="color:#ffd700">← Acting</div>' : ''}
+          </div>
+        `;
+      }
+      playersEl.innerHTML = playersHtml;
     }
 
-    function addLogEntry(entry) {
-      const div = document.createElement('div');
-      div.className = `log-entry ${entry.action || ''}`;
+    // Pending hand header: collect deal_hole + blind entries, emit one combined header
+    let pendingHand = null; // { number, players: [{ name, cards }], blinds: string }
 
+    function flushHandHeader() {
+      if (!pendingHand) return;
+      const h = pendingHand;
+      pendingHand = null;
+      const div = document.createElement('div');
+      div.className = 'hand-header';
+      let cardsHtml = h.players.map(p => {
+        const cards = p.cards.map(c => renderCard(c)).join(' ');
+        return `<span>${esc(p.name)}: ${cards}</span>`;
+      }).join(' &nbsp;vs&nbsp; ');
+      div.innerHTML = `<span class="hand-num">Hand #${h.number}</span> <span class="hand-cards">${cardsHtml}</span> <span style="margin-left:auto">${h.blinds}</span>`;
+      feedEl.appendChild(div);
+    }
+
+    function addFeedEntry(entry, isInit) {
       const name = entry.displayName || entry.bot || '';
+
+      // Collect deal_hole into pending hand header
+      if (entry.action === 'deal_hole') {
+        if (!pendingHand) {
+          pendingHand = { number: state.handNumber, players: [], blinds: '' };
+        }
+        pendingHand.players.push({ name, cards: entry.cards || [] });
+        return;
+      }
+
+      // Collect blinds into pending hand header
+      if (entry.action === 'blind') {
+        if (!pendingHand) {
+          pendingHand = { number: state.handNumber, players: [], blinds: '' };
+        }
+        if (entry.blindType === 'big') {
+          pendingHand.blinds = `Blinds ${entry.amount / 2}/${entry.amount}`;
+          flushHandHeader();
+        }
+        return;
+      }
+
+      // Flush any pending header before other entries
+      flushHandHeader();
+
+      const div = document.createElement('div');
       let text = '';
+      let className = '';
 
       switch (entry.action) {
         case 'say':
-          text = `<b>${name}:</b> ${escapeHtml(entry.message || '')}`;
+          text = `${esc(name)}: ${esc(entry.message || '')}`;
+          className = 'say';
+          break;
+        case 'deal': {
+          // Show as street header
+          const streetMatch = entry.message?.match(/deals the (\w+): (.+)/);
+          if (streetMatch) {
+            const streetName = streetMatch[1];
+            const cards = streetMatch[2].split(/\s+/).map(c => renderCard(c)).join(' ');
+            text = `${streetName} &nbsp;${cards}`;
+          } else {
+            text = esc(entry.message || '');
+          }
+          className = 'street-header';
+          break;
+        }
+        case 'think':
+          text = `💭 <b>${esc(name)}:</b> ${esc(entry.message || '')}`;
+          className = 'think';
           break;
         case 'check':
+          text = `${esc(name)} checks`;
+          className = 'action';
+          break;
         case 'call':
-        case 'fold':
+          text = `${esc(name)} calls ${entry.amount || ''}`;
+          className = 'action';
+          break;
         case 'raise':
-        case 'blind':
-          text = `<b>${name}</b> ${escapeHtml(entry.message || entry.action)}`;
+          text = `${esc(name)} raises to ${entry.amount || ''} ⬆`;
+          className = 'action';
           break;
-        case 'deal':
-          text = `🎴 ${escapeHtml(entry.message || '')}`;
+        case 'fold':
+          text = `${esc(name)} folds`;
+          className = 'action';
           break;
-        case 'result':
-          text = `🏆 ${escapeHtml(entry.message || '')}`;
+        case 'result': {
+          // Rich result line with hole cards
+          let resultHtml = `🏆 `;
+          const resultMatch = entry.message?.match(/^(.+?) wins? (\d+) chips with (.+?)!?$/);
+          if (resultMatch) {
+            const winnerName = resultMatch[1];
+            const amount = resultMatch[2];
+            const handName = resultMatch[3];
+            // Build cards for each player
+            const playerCards = state.bots.map(b => {
+              const cards = state.holeCards[b.name];
+              const dn = b.displayName || b.name;
+              const isWinner = winnerName.includes(dn);
+              if (!cards || cards.length !== 2) return null;
+              const rendered = cards.map(c => renderCard(c)).join(' ');
+              return `${isWinner ? '<b>' : ''}${esc(dn)}${isWinner ? '</b>' : ''} ${rendered}`;
+            }).filter(Boolean);
+            resultHtml += `${esc(winnerName)} wins ${amount} — ${esc(handName)}`;
+            if (playerCards.length > 0) {
+              resultHtml += `<br><span style="font-weight:normal;font-size:0.9em">${playerCards.join(' &nbsp;vs&nbsp; ')}</span>`;
+            }
+          } else {
+            resultHtml += esc(entry.message || '');
+          }
+          text = resultHtml;
+          className = 'result';
           break;
+        }
         case 'join':
-          text = `→ ${escapeHtml(entry.message || `${name} joined`)}`;
+          text = `→ ${esc(name)} joined`;
+          className = 'join';
           break;
         case 'leave':
-          text = `← ${escapeHtml(entry.message || `${name} left`)}`;
+          text = `← ${esc(name)} left`;
+          className = 'leave';
           break;
         default:
-          text = `<b>${name}</b> ${escapeHtml(entry.message || entry.action || '')}`;
+          text = `${esc(name)} ${esc(entry.message || entry.action || '')}`;
+          className = 'action';
       }
 
+      div.className = `feed-entry ${className}`;
       div.innerHTML = text;
-      logEl.appendChild(div);
-      logEl.scrollTop = logEl.scrollHeight;
+      feedEl.appendChild(div);
+      if (!isInit) feedEl.scrollTop = feedEl.scrollHeight;
     }
 
+    // Process events to reconstruct state
+    function processEvent(entry) {
+      switch (entry.action) {
+        case 'join':
+          if (!state.bots.find(b => b.name === entry.bot)) {
+            state.bots.push({ name: entry.bot, displayName: entry.displayName });
+          }
+          // Parse chips from join message: "... (1000 chips)."
+          const chipMatch = entry.message?.match(/\((\d+) chips\)/);
+          if (chipMatch) state.chips[entry.bot] = parseInt(chipMatch[1]);
+          break;
+
+        case 'leave':
+          state.bots = state.bots.filter(b => b.name !== entry.bot);
+          delete state.chips[entry.bot];
+          break;
+
+        case 'deal_hole':
+          state.holeCards[entry.bot] = entry.cards || [];
+          break;
+
+        case 'blind':
+          state.pot += (entry.amount || 0);
+          state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
+          if (state.chips[entry.bot] != null) {
+            state.chips[entry.bot] -= (entry.amount || 0);
+          }
+          state.activePlayers.add(entry.bot);
+          // First blind of a new hand
+          if (entry.blindType === 'small') {
+            state.handNumber++;
+            state.pot = entry.amount || 0;
+            state.community = [];
+            state.street = 'preflop';
+            state.foldedPlayers.clear();
+            state.activePlayers.clear();
+            state.currentBets = {};
+            state.currentBets[entry.bot] = entry.amount || 0;
+            state.lastResult = null;
+            state.activePlayers.add(entry.bot);
+          }
+          break;
+
+        case 'call':
+          state.pot += (entry.amount || 0);
+          state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
+          if (state.chips[entry.bot] != null) {
+            state.chips[entry.bot] -= (entry.amount || 0);
+          }
+          break;
+
+        case 'raise':
+          {
+            const prevBet = state.currentBets[entry.bot] || 0;
+            const cost = (entry.amount || 0) - prevBet;
+            state.pot += cost;
+            state.currentBets[entry.bot] = entry.amount || 0;
+            if (state.chips[entry.bot] != null) {
+              state.chips[entry.bot] -= cost;
+            }
+          }
+          break;
+
+        case 'fold':
+          state.foldedPlayers.add(entry.bot);
+          state.activePlayers.delete(entry.bot);
+          break;
+
+        case 'deal':
+          // Parse community cards from deal message: "deals the flop: 6♠ 5♥ 2♣"
+          const dealMatch = entry.message?.match(/deals the (\w+): (.+)/);
+          if (dealMatch) {
+            state.street = dealMatch[1];
+            const cards = dealMatch[2].split(/\s+/);
+            state.community = cards;
+            // Reset bets for new street
+            state.currentBets = {};
+          }
+          break;
+
+        case 'result':
+          // Parse result: "Name wins X chips with HandName!"
+          const resultMatch = entry.message?.match(/^(.+?) wins? (\d+) chips with (.+?)!?$/);
+          if (resultMatch) {
+            const winnerNames = resultMatch[1].split(', ');
+            const amount = parseInt(resultMatch[2]);
+            const handName = resultMatch[3];
+            // Map display names back to bot names
+            const winnerBots = winnerNames.map(wn => {
+              const bot = state.bots.find(b => b.displayName === wn);
+              return bot?.name || wn;
+            });
+            state.lastResult = { winners: winnerBots, handName, amount };
+            // Update chips
+            for (const w of winnerBots) {
+              if (state.chips[w] != null) state.chips[w] += amount;
+            }
+            state.pot = 0;
+            state.currentBets = {};
+          }
+          break;
+      }
+    }
+
+    function esc(s) { return escapeHtml(s); }
     function escapeHtml(str) {
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
     }
 
-    // SSE
-    const events = new EventSource('/events');
+    // --- SSE ---
+    const basePath = window.location.pathname.replace(/\/+$/, '');
+    const events = new EventSource(basePath + '/events');
 
     events.onmessage = (e) => {
       const data = JSON.parse(e.data);
 
       if (data.type === 'init') {
-        currentState.tick = data.tick;
-        currentState.bots = data.bots || [];
+        state.tick = data.tick;
+        state.phase = data.phase || 'waiting';
+        state.nextTickAt = data.nextTickAt || 0;
+        state.tickIntervalMs = data.tickIntervalMs || 30000;
+        state.bots = (data.bots || []).map(b => ({ name: b.name, displayName: b.displayName || b.name }));
+        // Replay log to reconstruct state
+        feedEl.innerHTML = '';
+        let lastHandTick = 0;
         for (const entry of (data.log || [])) {
-          addLogEntry(entry);
+          processEvent(entry);
+          addFeedEntry(entry, true);
         }
+        feedEl.scrollTop = feedEl.scrollHeight;
         render();
         return;
       }
 
       if (data.type === 'tick_start') {
-        currentState.tick = data.tick;
-        currentState.phase = data.phase || currentState.phase;
-        currentState.bots = (data.bots || []).map(name => ({ name, displayName: name }));
+        state.tick = data.tick;
+        state.phase = data.phase || state.phase;
+        state.nextTickAt = Date.now() + state.tickIntervalMs;
         render();
         return;
       }
 
       if (data.type === 'phase_change') {
-        currentState.phase = data.to;
+        state.phase = data.to;
         const div = document.createElement('div');
-        div.className = 'log-entry deal';
-        div.innerHTML = `— <em>${data.from} → ${data.to}</em> —`;
-        logEl.appendChild(div);
+        div.className = 'feed-entry phase-change';
+        div.innerHTML = `— ${data.from} → ${data.to} —`;
+        feedEl.appendChild(div);
+        feedEl.scrollTop = feedEl.scrollHeight;
         render();
         return;
       }
 
-      // World events
+      // World events (poker_say, poker_fold, etc.)
       if (data.type?.startsWith('poker_')) {
-        addLogEntry(data);
+        processEvent(data);
+        addFeedEntry(data, false);
         render();
       }
     };
 
     events.onerror = () => {
-      statusEl.textContent = 'Connection lost — reconnecting...';
+      const el = document.getElementById('conn-status');
+      if (el) {
+        el.className = 'disconnected';
+        el.textContent = '● Reconnecting...';
+      }
+    };
+
+    events.onopen = () => {
+      const el = document.getElementById('conn-status');
+      if (el) {
+        el.className = 'connected';
+        el.textContent = '● Connected';
+      }
     };
 
     render();
+
+    // Update countdown every second
+    setInterval(() => {
+      const el = document.getElementById('countdown');
+      if (el && state.nextTickAt) {
+        const secs = Math.max(0, Math.ceil((state.nextTickAt - Date.now()) / 1000));
+        el.textContent = `Next tick: ${secs}s`;
+      }
+    }, 1000);
   </script>
 </body>
 </html>

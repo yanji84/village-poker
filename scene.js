@@ -193,6 +193,7 @@ function describeAction(entry) {
     case 'fold': return 'folds';
     case 'blind': return `posts ${entry.blindType} blind (${entry.amount})`;
     case 'deal': return entry.message || 'deals';
+    case 'deal_hole': return 'is dealt cards';
     default: return entry.action;
   }
 }

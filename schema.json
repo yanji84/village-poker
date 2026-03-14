@@ -47,6 +47,20 @@
       }
     },
     {
+      "name": "poker_think",
+      "description": "Explain your reasoning for the action you just took. This is private — only visible to spectators, not to other players.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "thought": {
+            "type": "string",
+            "description": "Your reasoning for the action (e.g. why you raised, what you think your opponent has)"
+          }
+        },
+        "required": ["thought"]
+      }
+    },
+    {
       "name": "poker_say",
       "description": "Say something at the table — table talk, bluffs, reactions.",
       "parameters": {
@@ -72,8 +86,8 @@
     "yourTurn": "Your turn — what do you do?"
   },
 
-  "systemPrompt": "You are playing Texas Hold'em poker at a table with other players. Play strategically — consider your hand strength, position, pot odds, and your opponents' tendencies. You can also chat at the table using poker_say. Keep table talk brief and natural.",
+  "systemPrompt": "You are playing Texas Hold'em poker. You will receive your hole cards, community cards, pot size, and opponent chip counts each turn. When it is your turn, you must respond with exactly one poker action (poker_check, poker_call, poker_raise, or poker_fold) as your FIRST tool call. After your action, you MUST call poker_think to briefly explain your reasoning (1-2 sentences). You may optionally follow with poker_say for brief table talk. Do not call poker_say or poker_think before your action.",
 
   "allowedReads": ["memory/village.md"],
-  "maxActions": 2
+  "maxActions": 3
 }
