@@ -272,6 +272,7 @@
       street: '',
       activePlayer: null,
       foldedPlayers: new Set(),
+      blinds: {},         // name → 'small' | 'big'
       currentBets: {},    // name → bet this street
       lastResult: null,   // { winners, handName, message }
       holeCards: {},      // name → [card, card]
@@ -352,6 +353,8 @@
             ${cardsHtml}
             <div class="chips">💰 ${chips}</div>
             ${bet > 0 ? `<div class="bet">Bet: ${bet}</div>` : ''}
+            ${state.blinds[bot.name] === 'small' ? '<div class="role">SB</div>' : ''}
+            ${state.blinds[bot.name] === 'big' ? '<div class="role">BB</div>' : ''}
             ${isFolded ? '<div class="role">Folded</div>' : ''}
             ${isActive ? '<div class="role" style="color:#ffd700">← Acting</div>' : ''}
           </div>
@@ -526,6 +529,7 @@
         case 'blind':
           state.pot += (entry.amount || 0);
           state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
+          state.blinds[entry.bot] = entry.blindType;
           // First blind of a new hand
           if (entry.blindType === 'small') {
             state.handNumber++;
@@ -537,6 +541,8 @@
             state.currentBets = {};
             state.currentBets[entry.bot] = entry.amount || 0;
             state.lastResult = null;
+            state.blinds = {};
+            state.blinds[entry.bot] = 'small';
           }
           break;
 
