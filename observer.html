@@ -185,6 +185,12 @@
       border-left: 2px solid rgba(180,140,220,0.3);
       font-style: italic;
     }
+    .thought {
+      color: #c0a0d0;
+      font-size: 0.88em;
+      font-style: italic;
+      margin-left: 8px;
+    }
     .feed-entry.say {
       color: #7a9aaa;
       font-size: 0.8em;
@@ -264,7 +270,7 @@
       pot: 0,
       community: [],
       street: '',
-      activePlayers: new Set(),
+      activePlayer: null,
       foldedPlayers: new Set(),
       currentBets: {},    // name → bet this street
       lastResult: null,   // { winners, handName, message }
@@ -325,7 +331,7 @@
       for (const bot of state.bots) {
         const chips = state.chips[bot.name] ?? '?';
         const isFolded = state.foldedPlayers.has(bot.name);
-        const isActive = state.activePlayers.has(bot.name);
+        const isActive = state.activePlayer === bot.name;
         const isWinner = state.lastResult?.winners?.includes(bot.name) && state.phase === 'showdown';
         const bet = state.currentBets[bot.name] || 0;
 
@@ -426,18 +432,22 @@
           break;
         case 'check':
           text = `${esc(name)} checks`;
+          if (entry.thought) text += ` <span class="thought">💭 ${esc(entry.thought)}</span>`;
           className = 'action';
           break;
         case 'call':
           text = `${esc(name)} calls ${entry.amount || ''}`;
+          if (entry.thought) text += ` <span class="thought">💭 ${esc(entry.thought)}</span>`;
           className = 'action';
           break;
         case 'raise':
           text = `${esc(name)} raises to ${entry.amount || ''} ⬆`;
+          if (entry.thought) text += ` <span class="thought">💭 ${esc(entry.thought)}</span>`;
           className = 'action';
           break;
         case 'fold':
           text = `${esc(name)} folds`;
+          if (entry.thought) text += ` <span class="thought">💭 ${esc(entry.thought)}</span>`;
           className = 'action';
           break;
         case 'result': {
@@ -489,14 +499,19 @@
 
     // Process events to reconstruct state
     function processEvent(entry) {
+      // Track active player and chips from server
+      if ('activePlayer' in entry) state.activePlayer = entry.activePlayer;
+      if (entry.buyIns) {
+        for (const [name, chips] of Object.entries(entry.buyIns)) {
+          state.chips[name] = chips;
+        }
+      }
+
       switch (entry.action) {
         case 'join':
           if (!state.bots.find(b => b.name === entry.bot)) {
             state.bots.push({ name: entry.bot, displayName: entry.displayName });
           }
-          // Parse chips from join message: "... (1000 chips)."
-          const chipMatch = entry.message?.match(/\((\d+) chips\)/);
-          if (chipMatch) state.chips[entry.bot] = parseInt(chipMatch[1]);
           break;
 
         case 'leave':
@@ -511,10 +526,6 @@
         case 'blind':
           state.pot += (entry.amount || 0);
           state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
-          if (state.chips[entry.bot] != null) {
-            state.chips[entry.bot] -= (entry.amount || 0);
-          }
-          state.activePlayers.add(entry.bot);
           // First blind of a new hand
           if (entry.blindType === 'small') {
             state.handNumber++;
@@ -522,20 +533,16 @@
             state.community = [];
             state.street = 'preflop';
             state.foldedPlayers.clear();
-            state.activePlayers.clear();
+            state.activePlayer = null;
             state.currentBets = {};
             state.currentBets[entry.bot] = entry.amount || 0;
             state.lastResult = null;
-            state.activePlayers.add(entry.bot);
           }
           break;
 
         case 'call':
           state.pot += (entry.amount || 0);
           state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
-          if (state.chips[entry.bot] != null) {
-            state.chips[entry.bot] -= (entry.amount || 0);
-          }
           break;
 
         case 'raise':
@@ -544,15 +551,12 @@
             const cost = (entry.amount || 0) - prevBet;
             state.pot += cost;
             state.currentBets[entry.bot] = entry.amount || 0;
-            if (state.chips[entry.bot] != null) {
-              state.chips[entry.bot] -= cost;
-            }
           }
           break;
 
         case 'fold':
           state.foldedPlayers.add(entry.bot);
-          state.activePlayers.delete(entry.bot);
+          if (state.activePlayer === entry.bot) state.activePlayer = null;
           break;
 
         case 'deal':
@@ -580,10 +584,6 @@
               return bot?.name || wn;
             });
             state.lastResult = { winners: winnerBots, handName, amount };
-            // Update chips
-            for (const w of winnerBots) {
-              if (state.chips[w] != null) state.chips[w] += amount;
-            }
             state.pot = 0;
             state.currentBets = {};
           }
@@ -619,6 +619,14 @@
           addFeedEntry(entry, true);
         }
         feedEl.scrollTop = feedEl.scrollHeight;
+        // Override chips with authoritative server values (log replay may double-count)
+        if (data.buyIns) {
+          for (const [name, chips] of Object.entries(data.buyIns)) {
+            state.chips[name] = chips;
+          }
+        }
+        // Set active player from server state
+        state.activePlayer = data.activePlayer || null;
         render();
         return;
       }

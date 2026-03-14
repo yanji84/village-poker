@@ -14,6 +14,7 @@ import { waitingScene, bettingScene, showdownScene } from './scene.js';
 const BUY_IN = 1000;
 const SMALL_BLIND = 10;
 const BIG_BLIND = 20;
+const ACTION_TIMEOUT_TICKS = 1;
 
 // --- State ---
 
@@ -98,6 +99,7 @@ function dealNewHand(state) {
   // First to act: after BB in preflop
   const firstToAct = (bbIndex + 1) % seats.length;
   state.hand.activePlayer = seats[firstToAct].botName;
+  state.hand.activePlayerSince = state.clock.tick;
 
   // Reset acted flags (blinds don't count as acting)
   for (const p of Object.values(state.hand.players)) {
@@ -152,6 +154,7 @@ function advanceAction(state) {
     if (p.folded) continue;
     if (!p.acted || p.bet < hand.currentBet) {
       hand.activePlayer = seat.botName;
+      hand.activePlayerSince = state.clock.tick;
       return 'continue';
     }
   }
@@ -238,6 +241,7 @@ function advanceStreet(state) {
     const idx = (hand.dealerIndex + i) % seats.length;
     if (!hand.players[seats[idx].botName].folded) {
       hand.activePlayer = seats[idx].botName;
+      hand.activePlayerSince = state.clock.tick;
       break;
     }
   }
@@ -330,9 +334,36 @@ export const phases = {
   },
 
   betting: {
-    turn: 'parallel',
-    tools: ['poker_check', 'poker_call', 'poker_raise', 'poker_fold', 'poker_think', 'poker_say'],
+    turn: 'active',
+    tools: ['poker_check', 'poker_call', 'poker_raise', 'poker_fold'],
     scene: bettingScene,
+    getActiveBot(state) {
+      const hand = state.hand;
+      if (!hand?.activePlayer) return null;
+
+      // Auto-fold if active player hasn't acted within timeout
+      const since = hand.activePlayerSince || hand.startTick;
+      if (state.clock.tick - since >= ACTION_TIMEOUT_TICKS) {
+        const p = hand.players[hand.activePlayer];
+        if (p && !p.folded) {
+          const seat = hand.seats.find(s => s.botName === hand.activePlayer);
+          p.folded = true;
+          p.acted = true;
+          state.log.push({
+            bot: hand.activePlayer,
+            displayName: seat?.displayName || hand.activePlayer,
+            action: 'fold',
+            message: 'is auto-folded (timed out)',
+            visibility: 'public',
+            tick: state.clock.tick,
+            timestamp: new Date().toISOString(),
+          });
+          advanceAction(state);
+        }
+      }
+
+      return hand.activePlayer;
+    },
     transitions: [
       // Transition to showdown is triggered by advanceAction returning 'showdown'
       { to: 'showdown', when: (state) => state.hand?.result != null },
@@ -402,6 +433,7 @@ export const tools = {
       action: 'check',
       message: 'checks',
       visibility: 'public',
+      ...(params?.thought ? { thought: params.thought, thoughtVisibility: 'private' } : {}),
     };
   },
 
@@ -429,6 +461,7 @@ export const tools = {
       amount: toCall,
       message: `calls ${toCall}`,
       visibility: 'public',
+      ...(params?.thought ? { thought: params.thought, thoughtVisibility: 'private' } : {}),
     };
   },
 
@@ -477,6 +510,7 @@ export const tools = {
       amount,
       message: `raises to ${amount}${p.chips === 0 ? ' (all-in!)' : ''}`,
       visibility: 'public',
+      ...(params?.thought ? { thought: params.thought, thoughtVisibility: 'private' } : {}),
     };
   },
 
@@ -496,6 +530,7 @@ export const tools = {
       action: 'fold',
       message: 'folds',
       visibility: 'public',
+      ...(params?.thought ? { thought: params.thought, thoughtVisibility: 'private' } : {}),
     };
   },
 
