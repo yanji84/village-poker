@@ -111,7 +111,7 @@ export function dealNewHand(state) {
   return true;
 }
 
-export function postBlind(state, botName, amount, type) {
+function postBlind(state, botName, amount, type) {
   const p = state.hand.players[botName];
   const actual = Math.min(amount, p.chips);
   p.chips -= actual;
@@ -161,7 +161,7 @@ export function advanceAction(state) {
   return advanceStreet(state);
 }
 
-export function advanceStreet(state) {
+function advanceStreet(state) {
   const hand = state.hand;
 
   // Reset bets for new street
@@ -210,11 +210,7 @@ export function advanceStreet(state) {
     while (hand.community.length < 5) {
       const nextS = hand.community.length === 3 ? 'turn' : 'river';
       hand.deck.pop(); // burn
-      if (hand.community.length === 0) {
-        hand.community.push(hand.deck.pop(), hand.deck.pop(), hand.deck.pop());
-      } else {
-        hand.community.push(hand.deck.pop());
-      }
+      hand.community.push(hand.deck.pop());
       logAction(state, {
         bot: 'dealer',
         displayName: 'Dealer',

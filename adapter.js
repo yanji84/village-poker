@@ -44,8 +44,9 @@ export const phases = {
       },
     ],
     onEnter(state) {
-      // Clear stale hand result
+      // Clear stale state from previous game
       if (state.hand) state.hand.result = null;
+      state.winner = null;
       // Try to deal a new hand
       dealNewHand(state);
     },
