@@ -240,7 +240,7 @@ function advanceStreet(state) {
     const idx = (hand.dealerIndex + i) % seats.length;
     if (!hand.players[seats[idx].botName].folded) {
       hand.activePlayer = seats[idx].botName;
-      hand.activePlayerSince = state.clock.tick;
+      hand.activePlayerDispatched = false;
       break;
     }
   }
