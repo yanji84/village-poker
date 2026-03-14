@@ -14,7 +14,6 @@ import { waitingScene, bettingScene, showdownScene } from './scene.js';
 const BUY_IN = 1000;
 const SMALL_BLIND = 10;
 const BIG_BLIND = 20;
-const ACTION_TIMEOUT_TICKS = 1;
 
 // --- State ---
 
@@ -99,7 +98,7 @@ function dealNewHand(state) {
   // First to act: after BB in preflop
   const firstToAct = (bbIndex + 1) % seats.length;
   state.hand.activePlayer = seats[firstToAct].botName;
-  state.hand.activePlayerSince = state.clock.tick;
+  state.hand.activePlayerDispatched = false;
 
   // Reset acted flags (blinds don't count as acting)
   for (const p of Object.values(state.hand.players)) {
@@ -154,7 +153,7 @@ function advanceAction(state) {
     if (p.folded) continue;
     if (!p.acted || p.bet < hand.currentBet) {
       hand.activePlayer = seat.botName;
-      hand.activePlayerSince = state.clock.tick;
+      hand.activePlayerDispatched = false;
       return 'continue';
     }
   }
@@ -341,25 +340,28 @@ export const phases = {
       const hand = state.hand;
       if (!hand?.activePlayer) return null;
 
-      // Auto-fold if active player hasn't acted within timeout
-      const since = hand.activePlayerSince || hand.startTick;
-      if (state.clock.tick - since >= ACTION_TIMEOUT_TICKS) {
-        const p = hand.players[hand.activePlayer];
-        if (p && !p.folded) {
-          const seat = hand.seats.find(s => s.botName === hand.activePlayer);
-          p.folded = true;
-          p.acted = true;
-          state.log.push({
-            bot: hand.activePlayer,
-            displayName: seat?.displayName || hand.activePlayer,
-            action: 'fold',
-            message: 'is auto-folded (timed out)',
-            visibility: 'public',
-            tick: state.clock.tick,
-            timestamp: new Date().toISOString(),
-          });
-          advanceAction(state);
-        }
+      // First dispatch: mark as dispatched, give them a chance to act
+      if (!hand.activePlayerDispatched) {
+        hand.activePlayerDispatched = true;
+        return hand.activePlayer;
+      }
+
+      // Already dispatched but didn't act — auto-fold
+      const p = hand.players[hand.activePlayer];
+      if (p && !p.folded) {
+        const seat = hand.seats.find(s => s.botName === hand.activePlayer);
+        p.folded = true;
+        p.acted = true;
+        state.log.push({
+          bot: hand.activePlayer,
+          displayName: seat?.displayName || hand.activePlayer,
+          action: 'fold',
+          message: 'is auto-folded (timed out)',
+          visibility: 'public',
+          tick: state.clock.tick,
+          timestamp: new Date().toISOString(),
+        });
+        advanceAction(state);
       }
 
       return hand.activePlayer;
