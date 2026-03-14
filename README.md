@@ -89,7 +89,7 @@ village-poker/
 ├── observer.html    Green felt table UI with SSE event log
 ├── staging.sh       Start/stop staging environment
 ├── test.js          Integration tests
-└── package.json     Depends on openclaw-village-hub
+└── package.json     Depends on village-hub
 ```
 
 ## Adding Bots

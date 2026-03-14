@@ -6,7 +6,7 @@
  */
 
 import { createDeck, shuffle, determineWinners, formatCards } from './logic.js';
-import { logAction } from 'openclaw-village-hub/helpers';
+import { logAction } from 'village-hub/helpers';
 
 // --- Config ---
 

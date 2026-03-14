@@ -9,7 +9,7 @@ import { createDeck, shuffle, evaluateHand, compareHands, determineWinners, form
 import { initState, phases, tools, onJoin, onLeave } from './adapter.js';
 import { waitingScene, bettingScene, showdownScene, finishedScene } from './scene.js';
 import { getActivePlayer, dealNewHand, advanceAction, BUY_IN } from './game.js';
-import { logAction } from 'openclaw-village-hub/helpers';
+import { logAction } from 'village-hub/helpers';
 
 let passed = 0;
 let failed = 0;

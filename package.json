@@ -8,6 +8,6 @@
     "dev": "VILLAGE_TICK_INTERVAL=30000 village-hub"
   },
   "dependencies": {
-    "openclaw-village-hub": "file:../village-hub"
+    "village-hub": "file:../village-hub"
   }
 }
