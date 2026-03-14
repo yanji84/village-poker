@@ -688,7 +688,7 @@
       const el = document.getElementById('countdown');
       if (el && state.nextTickAt) {
         const secs = Math.max(0, Math.ceil((state.nextTickAt - Date.now()) / 1000));
-        el.textContent = `Next tick: ${secs}s`;
+        el.textContent = secs > 0 ? `Next tick: ${secs}s` : 'Tick in progress...';
       }
     }, 1000);
   </script>
