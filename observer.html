@@ -40,13 +40,57 @@
       min-height: 260px;
     }
 
+    /* --- Chip icon (reusable) --- */
+    .chip {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px dashed rgba(255,255,255,0.6);
+      text-align: center;
+      line-height: 22px;
+      font-size: 9px;
+      font-weight: bold;
+      color: rgba(255,255,255,0.9);
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .chip.gold { background: radial-gradient(circle at 35% 35%, #f0d060, #b8860b); }
+    .chip.red { background: radial-gradient(circle at 35% 35%, #ee5555, #991111); }
+    .chip.blue { background: radial-gradient(circle at 35% 35%, #5588dd, #223388); }
+    .chip.green { background: radial-gradient(circle at 35% 35%, #55bb66, #226633); }
+    .chip.sm { width: 20px; height: 20px; line-height: 14px; font-size: 7px; border-width: 2px; }
+
+    /* --- Pot --- */
     .pot {
       text-align: center;
-      font-size: 1.3em;
-      color: #ffd700;
       margin-bottom: 8px;
     }
-    .pot .label { font-size: 0.7em; color: #ccc; text-transform: uppercase; letter-spacing: 1px; }
+    .pot-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 20px;
+      padding: 6px 16px;
+    }
+    .pot-stack {
+      display: flex;
+      margin-left: -4px;
+    }
+    .pot-stack .chip { margin-left: -8px; }
+    .pot-stack .chip:first-child { margin-left: 0; }
+    .pot-amount {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #ffd700;
+    }
+    .pot-label {
+      font-size: 0.65em;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
     .community {
       text-align: center;
@@ -100,7 +144,7 @@
       background: rgba(0,0,0,0.35);
       border-radius: 12px;
       padding: 12px 16px;
-      min-width: 140px;
+      min-width: 150px;
       max-width: 220px;
       text-align: center;
       border: 2px solid transparent;
@@ -143,11 +187,21 @@
       font-size: 1em;
       margin-bottom: 4px;
     }
-    .player .chips {
+
+    /* --- Player chip display --- */
+    .player-chips {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin: 4px 0 2px;
+    }
+    .chip-amount {
       color: #ffd700;
       font-size: 0.95em;
-      margin-bottom: 2px;
+      font-weight: bold;
     }
+
     .player .bet {
       color: #ff9;
       font-size: 0.8em;
@@ -166,28 +220,48 @@
       margin-top: 2px;
     }
 
-    /* --- Speech bubble (bot reasoning) --- */
-    .speech-bubble {
-      background: rgba(180,140,220,0.12);
-      border: 1px solid rgba(180,140,220,0.25);
+    /* --- Blind chips --- */
+    .blind-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 3px;
+      font-size: 0.75em;
+      font-weight: bold;
+    }
+    .blind-chip.small .blind-label { color: #6699dd; }
+    .blind-chip.big .blind-label { color: #ee6666; }
+
+    /* --- Thoughts panel (below table) --- */
+    .thoughts-panel {
+      max-width: 800px;
+      margin: 0 auto 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .thoughts-panel:empty { display: none; }
+    .thought-card {
+      flex: 1;
+      min-width: 200px;
+      max-width: 300px;
+      background: rgba(180,140,220,0.08);
+      border: 1px solid rgba(180,140,220,0.2);
       border-radius: 8px;
-      padding: 5px 8px;
-      margin-top: 8px;
+      padding: 8px 12px;
+    }
+    .thought-card .thought-name {
       font-size: 0.72em;
+      font-weight: bold;
+      color: #b090d0;
+      margin-bottom: 3px;
+    }
+    .thought-card .thought-text {
+      font-size: 0.8em;
       color: #c0a0d0;
       font-style: italic;
-      line-height: 1.3;
-      text-align: left;
-      max-height: 52px;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-    }
-    .speech-bubble::before {
-      content: '💭';
-      margin-right: 3px;
-      font-style: normal;
+      line-height: 1.35;
     }
 
     /* --- Context bar --- */
@@ -253,12 +327,14 @@
     .feed-entry.deal { color: #98fb98; }
     .feed-entry.street-header {
       color: #98fb98;
-      font-size: 0.75em;
-      text-transform: uppercase;
+      font-size: 0.85em;
+      font-weight: bold;
       letter-spacing: 1px;
-      padding: 6px 0 2px;
-      margin-top: 4px;
-      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 8px 10px;
+      margin: 8px -4px 4px;
+      background: rgba(152,251,152,0.08);
+      border-left: 3px solid rgba(152,251,152,0.4);
+      border-radius: 0 4px 4px 0;
     }
     .feed-entry.action { color: #e8e8e8; }
     .feed-entry.join { color: #90ee90; font-size: 0.8em; font-style: italic; }
@@ -281,6 +357,13 @@
       font-size: 1em;
     }
     .hand-header .hand-cards .card { font-size: 0.7em; padding: 1px 3px; min-width: auto; }
+    .hand-header .blind-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.85em;
+      color: #aaa;
+    }
 
     /* --- Footer --- */
     .powered-by {
@@ -306,6 +389,8 @@
     <div class="players" id="players"></div>
   </div>
 
+  <div class="thoughts-panel" id="thoughts"></div>
+
   <div class="context-bar" id="context-bar"></div>
 
   <div class="feed">
@@ -324,6 +409,7 @@
     const feedEl = document.getElementById('feed');
     const statusEl = document.getElementById('status');
     const contextEl = document.getElementById('context-bar');
+    const thoughtsEl = document.getElementById('thoughts');
 
     // Reconstructed state from events
     const state = {
@@ -362,6 +448,44 @@
       return `<span class="card empty">·</span>`;
     }
 
+    // Pick chip color based on amount
+    function chipColor(amount) {
+      if (amount >= 500) return 'gold';
+      if (amount >= 100) return 'red';
+      if (amount >= 50) return 'blue';
+      return 'green';
+    }
+
+    // Render pot with stacked chip icons
+    function renderPot(amount) {
+      if (amount <= 0) { potEl.innerHTML = ''; return; }
+      const chipCount = Math.min(6, Math.max(1, Math.ceil(amount / 80)));
+      const colors = ['green', 'blue', 'red', 'gold'];
+      let stack = '';
+      for (let i = 0; i < chipCount; i++) {
+        stack += `<span class="chip sm ${colors[Math.min(i, colors.length - 1)]}"></span>`;
+      }
+      potEl.innerHTML = `
+        <div class="pot-inner">
+          <div class="pot-stack">${stack}</div>
+          <div>
+            <div class="pot-amount">${amount}</div>
+            <div class="pot-label">pot</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render player chip count with chip icon
+    function renderPlayerChips(chips) {
+      return `
+        <div class="player-chips">
+          <span class="chip sm ${chipColor(chips)}"></span>
+          <span class="chip-amount">${chips}</span>
+        </div>
+      `;
+    }
+
     function render() {
       // Status bar
       const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown', finished: 'Game Over' };
@@ -376,11 +500,7 @@
       `;
 
       // Pot
-      if (state.pot > 0) {
-        potEl.innerHTML = `<div class="label">Pot</div>${state.pot}`;
-      } else {
-        potEl.innerHTML = '';
-      }
+      renderPot(state.pot);
 
       // Community cards
       if (state.phase === 'betting' || state.phase === 'showdown') {
@@ -419,27 +539,38 @@
           cardsHtml = `<div class="hole-cards">${renderCard(cards[0])} ${renderCard(cards[1])}</div>`;
         }
 
-        const thought = state.lastThought[bot.name];
-        let bubbleHtml = '';
-        if (thought && !isFolded) {
-          bubbleHtml = `<div class="speech-bubble">${escapeHtml(thought)}</div>`;
+        // Blind indicator as colored chip
+        let blindHtml = '';
+        if (state.blinds[bot.name] === 'small') {
+          blindHtml = `<div class="blind-chip small"><span class="chip sm blue">S</span><span class="blind-label">Small 10</span></div>`;
+        } else if (state.blinds[bot.name] === 'big') {
+          blindHtml = `<div class="blind-chip big"><span class="chip sm red">B</span><span class="blind-label">Big 20</span></div>`;
         }
 
         playersHtml += `
           <div class="${classes}">
             <div class="name">${escapeHtml(bot.displayName || bot.name)}${isWinner ? ' 🏆' : ''}</div>
             ${cardsHtml}
-            <div class="chips">💰 ${chips}</div>
+            ${typeof chips === 'number' ? renderPlayerChips(chips) : `<div class="player-chips"><span class="chip-amount">${chips}</span></div>`}
             ${bet > 0 ? `<div class="bet">Bet: ${bet}</div>` : ''}
-            ${state.blinds[bot.name] === 'small' ? '<div class="role">SB</div>' : ''}
-            ${state.blinds[bot.name] === 'big' ? '<div class="role">BB</div>' : ''}
+            ${blindHtml}
             ${isFolded ? '<div class="role">Folded</div>' : ''}
             ${isActive ? '<div class="role" style="color:#ffd700">Acting</div>' : ''}
-            ${bubbleHtml}
           </div>
         `;
       }
       playersEl.innerHTML = playersHtml;
+
+      // Thoughts panel
+      const thoughtCards = state.bots
+        .filter(b => state.lastThought[b.name] && !state.foldedPlayers.has(b.name))
+        .map(b => `
+          <div class="thought-card">
+            <div class="thought-name">${escapeHtml(b.displayName || b.name)}</div>
+            <div class="thought-text">${escapeHtml(state.lastThought[b.name])}</div>
+          </div>
+        `).join('');
+      thoughtsEl.innerHTML = thoughtCards;
 
       // Context bar
       contextEl.innerHTML = state.contextMessage;
@@ -458,7 +589,11 @@
         const cards = p.cards.map(c => renderCard(c)).join(' ');
         return `<span>${esc(p.name)}: ${cards}</span>`;
       }).join(' &nbsp;vs&nbsp; ');
-      div.innerHTML = `<span class="hand-num">Hand #${h.number}</span> <span class="hand-cards">${cardsHtml}</span> <span style="margin-left:auto">${h.blinds}</span>`;
+      const blindInfo = h.sbName && h.bbName
+        ? `<span class="blind-info"><span class="chip sm blue" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">S</span>${esc(h.sbName)} <span class="chip sm red" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">B</span>${esc(h.bbName)}</span>`
+        : '';
+      // Use state.handNumber which is already incremented by processEvent(blind small)
+      div.innerHTML = `<span class="hand-num">Hand #${h.number}</span> <span class="hand-cards">${cardsHtml}</span> <span style="margin-left:auto">${blindInfo}</span>`;
       feedEl.appendChild(div);
     }
 
@@ -468,7 +603,7 @@
       // Collect deal_hole into pending hand header
       if (entry.action === 'deal_hole') {
         if (!pendingHand) {
-          pendingHand = { number: state.handNumber, players: [], blinds: '' };
+          pendingHand = { number: 0, players: [], sbName: '', bbName: '' };
         }
         pendingHand.players.push({ name, cards: entry.cards || [] });
         return;
@@ -477,16 +612,21 @@
       // Collect blinds into pending hand header
       if (entry.action === 'blind') {
         if (!pendingHand) {
-          pendingHand = { number: state.handNumber, players: [], blinds: '' };
+          pendingHand = { number: 0, players: [], sbName: '', bbName: '' };
+        }
+        if (entry.blindType === 'small') {
+          pendingHand.sbName = name;
+          // handNumber was already incremented by processEvent
+          pendingHand.number = state.handNumber;
         }
         if (entry.blindType === 'big') {
-          pendingHand.blinds = `Blinds ${entry.amount / 2}/${entry.amount}`;
+          pendingHand.bbName = name;
           flushHandHeader();
         }
         return;
       }
 
-      // Standalone thoughts are shown in speech bubbles, skip feed
+      // Standalone thoughts are shown in thoughts panel, skip feed
       if (entry.action === 'think' || entry.action === 'thought') {
         return;
       }
@@ -511,7 +651,7 @@
           if (streetMatch) {
             const streetName = streetMatch[1];
             const cards = streetMatch[2].split(/\s+/).map(c => renderCard(c)).join(' ');
-            text = `${streetName} &nbsp;${cards}`;
+            text = `━━ ${streetName.toUpperCase()} ━━ &nbsp;${cards}`;
           } else {
             text = esc(entry.message || '');
           }
@@ -708,17 +848,6 @@
           state.contextMessage = `🏆 ${esc(entry.message || 'Game over')}`;
           break;
       }
-
-      // Update context for active player waiting
-      if (state.activePlayer && !['result', 'game_over', 'deal', 'join', 'leave', 'blind'].includes(entry.action)) {
-        const active = botDisplayName(state.activePlayer);
-        if (entry.action !== 'check') {
-          // Don't override the action context for check (handled above)
-          if (['call', 'raise', 'fold'].includes(entry.action)) {
-            // Active player updated by server; show waiting message on next render
-          }
-        }
-      }
     }
 
     function esc(s) { return escapeHtml(s); }
@@ -755,7 +884,8 @@
           }
         }
         state.activePlayer = data.activePlayer || null;
-        // Set context for current state after replay
+        // Use server's authoritative hand count (init log is truncated to last 30 entries)
+        if (data.handsPlayed) state.handNumber = data.handsPlayed;
         if (state.phase === 'waiting') {
           state.contextMessage = state.bots.length < 2 ? 'Waiting for players to join...' : 'Starting soon...';
         } else if (state.activePlayer) {
