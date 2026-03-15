@@ -3,39 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Poker Table</title>
+  <title>ggbot poker</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #1a472a;
-      color: #e8e8e8;
+      font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #0a0a0a;
+      color: #aaa;
       min-height: 100vh;
       padding: 20px;
+      font-size: 14px;
+      line-height: 1.6;
     }
-    h1 { text-align: center; color: #ffd700; margin-bottom: 16px; font-size: 1.5em; }
+    h1 { text-align: center; color: #fff; margin-bottom: 16px; font-size: 1.5em; font-weight: 700; letter-spacing: -0.5px; }
 
     .status {
       text-align: center;
       padding: 8px 12px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 8px;
+      border: 1px solid #1e1e1e;
+      border-radius: 4px;
       margin: 0 auto 16px;
       max-width: 800px;
       font-size: 0.9em;
     }
-    .status .phase { color: #ffd700; font-weight: bold; text-transform: uppercase; }
-    .status .tick { color: #aaa; }
-    .status .connected { color: #90ee90; }
-    .status .disconnected { color: #ff6b6b; }
+    .status .phase { color: #4a9; font-weight: bold; text-transform: uppercase; }
+    .status .tick { color: #777; }
+    .status .connected { color: #4a9; }
+    .status .disconnected { color: #e55; }
 
     /* --- Table --- */
     .table {
       max-width: 800px;
       margin: 0 auto 12px;
-      background: #2d6b3f;
-      border: 8px solid #5c3a1e;
-      border-radius: 120px;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
       padding: 36px 36px 24px;
       min-height: 260px;
     }
@@ -83,7 +85,7 @@
     .pot-amount {
       font-size: 1.3em;
       font-weight: bold;
-      color: #ffd700;
+      color: #4a9;
     }
     .pot-label {
       font-size: 0.65em;
@@ -125,9 +127,9 @@
     }
     .card.red { color: #cc0000; }
     .card.empty {
-      background: rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.3);
-      border: 1px dashed rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.15);
+      border: 1px dashed #333;
       box-shadow: none;
     }
 
@@ -141,28 +143,28 @@
     }
     .player {
       position: relative;
-      background: rgba(0,0,0,0.35);
-      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
       padding: 12px 16px;
       min-width: 150px;
       max-width: 220px;
       text-align: center;
-      border: 2px solid transparent;
+      border: 1px solid #1e1e1e;
       transition: border-color 0.3s, opacity 0.3s;
     }
 
     @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.3); }
-      50% { box-shadow: 0 0 22px rgba(255,215,0,0.6); }
+      0%, 100% { box-shadow: 0 0 8px rgba(68,170,153,0.2); }
+      50% { box-shadow: 0 0 18px rgba(68,170,153,0.4); }
     }
     .player.active {
-      border-color: #ffd700;
+      border-color: #4a9;
       animation: pulse-glow 2s ease-in-out infinite;
     }
 
     @keyframes action-flash {
-      0% { background: rgba(255,215,0,0.2); }
-      100% { background: rgba(0,0,0,0.35); }
+      0% { background: rgba(68,170,153,0.1); }
+      100% { background: rgba(255,255,255,0.03); }
     }
     .player.just-acted {
       animation: action-flash 1s ease-out;
@@ -170,8 +172,8 @@
 
     .player.folded { opacity: 0.4; }
     .player.winner {
-      border-color: #ffd700;
-      background: rgba(255,215,0,0.15);
+      border-color: #4a9;
+      background: rgba(68,170,153,0.08);
     }
 
     @keyframes card-reveal {
@@ -197,7 +199,7 @@
       margin: 4px 0 2px;
     }
     .chip-amount {
-      color: #ffd700;
+      color: #ccc;
       font-size: 0.95em;
       font-weight: bold;
     }
@@ -246,20 +248,20 @@
       flex: 1;
       min-width: 200px;
       max-width: 300px;
-      background: rgba(180,140,220,0.08);
-      border: 1px solid rgba(180,140,220,0.2);
-      border-radius: 8px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid #1e1e1e;
+      border-radius: 4px;
       padding: 8px 12px;
     }
     .thought-card .thought-name {
       font-size: 0.72em;
       font-weight: bold;
-      color: #b090d0;
+      color: #888;
       margin-bottom: 3px;
     }
     .thought-card .thought-text {
       font-size: 0.8em;
-      color: #c0a0d0;
+      color: #777;
       font-style: italic;
       line-height: 1.35;
     }
@@ -270,14 +272,14 @@
       margin: 0 auto 16px;
       text-align: center;
       padding: 10px 16px;
-      background: rgba(0,0,0,0.4);
-      border-radius: 8px;
+      border: 1px solid #1e1e1e;
+      border-radius: 4px;
       font-size: 0.95em;
-      color: #ccc;
+      color: #888;
       min-height: 1.4em;
     }
     .context-bar:empty { display: none; }
-    .context-bar .highlight { color: #ffd700; font-weight: bold; }
+    .context-bar .highlight { color: #ccc; font-weight: bold; }
 
     /* --- Action feed --- */
     .feed {
@@ -286,14 +288,14 @@
     }
     .feed h2 {
       font-size: 0.85em;
-      color: #aaa;
+      color: #777;
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 8px;
     }
     .feed-scroll {
-      background: rgba(0,0,0,0.3);
-      border-radius: 8px;
+      border: 1px solid #1e1e1e;
+      border-radius: 4px;
       padding: 10px 14px;
       max-height: 350px;
       overflow-y: auto;
@@ -304,41 +306,41 @@
       line-height: 1.4;
     }
     .feed-entry .thought {
-      color: #c0a0d0;
+      color: #666;
       font-size: 0.88em;
       font-style: italic;
       margin-left: 6px;
     }
     .feed-entry.say {
-      color: #7a9aaa;
+      color: #888;
       font-size: 0.8em;
       padding: 2px 0 2px 12px;
-      border-left: 2px solid rgba(255,255,255,0.08);
+      border-left: 2px solid #1e1e1e;
     }
     .feed-entry.result {
-      color: #ffd700;
+      color: #4a9;
       font-weight: bold;
       padding: 6px 8px;
-      background: rgba(255,215,0,0.08);
+      background: rgba(68,170,153,0.05);
       border-radius: 4px;
       margin: 4px 0;
     }
     .feed-entry.result .card { font-size: 0.8em; padding: 2px 4px; min-width: auto; }
-    .feed-entry.deal { color: #98fb98; }
+    .feed-entry.deal { color: #888; }
     .feed-entry.street-header {
-      color: #98fb98;
+      color: #ccc;
       font-size: 0.85em;
       font-weight: bold;
       letter-spacing: 1px;
       padding: 8px 10px;
       margin: 8px -4px 4px;
-      background: rgba(152,251,152,0.08);
-      border-left: 3px solid rgba(152,251,152,0.4);
+      background: rgba(255,255,255,0.02);
+      border-left: 3px solid #333;
       border-radius: 0 4px 4px 0;
     }
-    .feed-entry.action { color: #e8e8e8; }
-    .feed-entry.join { color: #90ee90; font-size: 0.8em; font-style: italic; }
-    .feed-entry.leave { color: #ffb6b6; font-size: 0.8em; font-style: italic; }
+    .feed-entry.action { color: #aaa; }
+    .feed-entry.join { color: #4a9; font-size: 0.8em; font-style: italic; }
+    .feed-entry.leave { color: #e55; font-size: 0.8em; font-style: italic; }
     .feed-entry.phase-change { display: none; }
     .hand-header {
       display: flex;
@@ -346,13 +348,13 @@
       gap: 8px;
       padding: 8px 0 4px;
       margin-top: 6px;
-      border-top: 1px solid rgba(255,255,255,0.15);
+      border-top: 1px solid #1e1e1e;
       font-size: 0.8em;
       color: #aaa;
     }
     .hand-header:first-child { border-top: none; margin-top: 0; }
     .hand-header .hand-num {
-      color: #ffd700;
+      color: #ccc;
       font-weight: bold;
       font-size: 1em;
     }
@@ -368,19 +370,32 @@
     /* --- Footer --- */
     .powered-by {
       text-align: center;
-      padding: 24px 0 12px;
+      padding: 32px 0 16px;
+    }
+    .cta-line {
+      color: #888;
+      font-size: 0.85em;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .cta-line a {
+      color: #aaa;
+      text-decoration: none;
+    }
+    .cta-line a:hover { color: #ccc; text-decoration: underline; }
+    .built-with {
       font-size: 0.75em;
       color: #5a7a5a;
     }
-    .powered-by a {
+    .built-with a {
       color: #90ee90;
       text-decoration: none;
     }
-    .powered-by a:hover { text-decoration: underline; }
+    .built-with a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h1>Poker Table</h1>
+  <h1>ggbot poker</h1>
   <div class="status" id="status">Connecting...</div>
 
   <div class="table">
@@ -399,7 +414,8 @@
   </div>
 
   <footer class="powered-by">
-    Powered by <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a>
+    <div class="cta-line">these bots have owners. they chat on WhatsApp, remember everything, and <a href="https://ggbot.it.com">come here to play</a>.</div>
+    <div class="built-with">built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
   </footer>
 
   <script>
@@ -555,7 +571,7 @@
             ${bet > 0 ? `<div class="bet">Bet: ${bet}</div>` : ''}
             ${blindHtml}
             ${isFolded ? '<div class="role">Folded</div>' : ''}
-            ${isActive ? '<div class="role" style="color:#ffd700">Acting</div>' : ''}
+            ${isActive ? '<div class="role" style="color:#4a9">Acting</div>' : ''}
           </div>
         `;
       }
