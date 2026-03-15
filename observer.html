@@ -21,7 +21,7 @@
       background: rgba(0,0,0,0.3);
       border-radius: 8px;
       margin: 0 auto 16px;
-      max-width: 700px;
+      max-width: 800px;
       font-size: 0.9em;
     }
     .status .phase { color: #ffd700; font-weight: bold; text-transform: uppercase; }
@@ -31,13 +31,13 @@
 
     /* --- Table --- */
     .table {
-      max-width: 700px;
-      margin: 0 auto 20px;
+      max-width: 800px;
+      margin: 0 auto 12px;
       background: #2d6b3f;
       border: 8px solid #5c3a1e;
       border-radius: 120px;
-      padding: 30px 30px 20px;
-      min-height: 220px;
+      padding: 36px 36px 24px;
+      min-height: 260px;
     }
 
     .pot {
@@ -96,23 +96,48 @@
       margin: 16px 0 8px;
     }
     .player {
+      position: relative;
       background: rgba(0,0,0,0.35);
       border-radius: 12px;
       padding: 12px 16px;
       min-width: 140px;
+      max-width: 220px;
       text-align: center;
       border: 2px solid transparent;
       transition: border-color 0.3s, opacity 0.3s;
     }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.3); }
+      50% { box-shadow: 0 0 22px rgba(255,215,0,0.6); }
+    }
     .player.active {
       border-color: #ffd700;
-      box-shadow: 0 0 12px rgba(255,215,0,0.3);
+      animation: pulse-glow 2s ease-in-out infinite;
     }
+
+    @keyframes action-flash {
+      0% { background: rgba(255,215,0,0.2); }
+      100% { background: rgba(0,0,0,0.35); }
+    }
+    .player.just-acted {
+      animation: action-flash 1s ease-out;
+    }
+
     .player.folded { opacity: 0.4; }
     .player.winner {
       border-color: #ffd700;
       background: rgba(255,215,0,0.15);
     }
+
+    @keyframes card-reveal {
+      0% { transform: rotateY(90deg); opacity: 0; }
+      100% { transform: rotateY(0deg); opacity: 1; }
+    }
+    .player.winner .hole-cards .card {
+      animation: card-reveal 0.6s ease-out;
+    }
+
     .player .name {
       font-weight: bold;
       font-size: 1em;
@@ -140,21 +165,49 @@
       color: #aaa;
       margin-top: 2px;
     }
-    .player .dealer-chip {
-      display: inline-block;
-      background: white;
-      color: #333;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      line-height: 20px;
-      font-size: 0.7em;
-      font-weight: bold;
+
+    /* --- Speech bubble (bot reasoning) --- */
+    .speech-bubble {
+      background: rgba(180,140,220,0.12);
+      border: 1px solid rgba(180,140,220,0.25);
+      border-radius: 8px;
+      padding: 5px 8px;
+      margin-top: 8px;
+      font-size: 0.72em;
+      color: #c0a0d0;
+      font-style: italic;
+      line-height: 1.3;
+      text-align: left;
+      max-height: 52px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
     }
+    .speech-bubble::before {
+      content: '💭';
+      margin-right: 3px;
+      font-style: normal;
+    }
+
+    /* --- Context bar --- */
+    .context-bar {
+      max-width: 800px;
+      margin: 0 auto 16px;
+      text-align: center;
+      padding: 10px 16px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 8px;
+      font-size: 0.95em;
+      color: #ccc;
+      min-height: 1.4em;
+    }
+    .context-bar:empty { display: none; }
+    .context-bar .highlight { color: #ffd700; font-weight: bold; }
 
     /* --- Action feed --- */
     .feed {
-      max-width: 700px;
+      max-width: 800px;
       margin: 0 auto;
     }
     .feed h2 {
@@ -176,20 +229,11 @@
       font-size: 0.9em;
       line-height: 1.4;
     }
-    .feed-entry.think {
-      color: #c0a0d0;
-      font-size: 0.82em;
-      padding: 3px 8px;
-      margin: 2px 0;
-      background: rgba(180,140,220,0.08);
-      border-left: 2px solid rgba(180,140,220,0.3);
-      font-style: italic;
-    }
-    .thought {
+    .feed-entry .thought {
       color: #c0a0d0;
       font-size: 0.88em;
       font-style: italic;
-      margin-left: 8px;
+      margin-left: 6px;
     }
     .feed-entry.say {
       color: #7a9aaa;
@@ -237,10 +281,23 @@
       font-size: 1em;
     }
     .hand-header .hand-cards .card { font-size: 0.7em; padding: 1px 3px; min-width: auto; }
+
+    /* --- Footer --- */
+    .powered-by {
+      text-align: center;
+      padding: 24px 0 12px;
+      font-size: 0.75em;
+      color: #5a7a5a;
+    }
+    .powered-by a {
+      color: #90ee90;
+      text-decoration: none;
+    }
+    .powered-by a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h1>🃏 Poker Table</h1>
+  <h1>Poker Table</h1>
   <div class="status" id="status">Connecting...</div>
 
   <div class="table">
@@ -249,10 +306,16 @@
     <div class="players" id="players"></div>
   </div>
 
+  <div class="context-bar" id="context-bar"></div>
+
   <div class="feed">
     <h2>Live Feed</h2>
     <div class="feed-scroll" id="feed"></div>
   </div>
+
+  <footer class="powered-by">
+    Powered by <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a>
+  </footer>
 
   <script>
     const potEl = document.getElementById('pot');
@@ -260,26 +323,34 @@
     const playersEl = document.getElementById('players');
     const feedEl = document.getElementById('feed');
     const statusEl = document.getElementById('status');
+    const contextEl = document.getElementById('context-bar');
 
     // Reconstructed state from events
     const state = {
       phase: 'waiting',
       tick: 0,
       bots: [],           // [{ name, displayName }]
-      chips: {},          // name → chips (reconstructed from blinds/results)
+      chips: {},          // name -> chips
       pot: 0,
       community: [],
       street: '',
       activePlayer: null,
       foldedPlayers: new Set(),
-      blinds: {},         // name → 'small' | 'big'
-      currentBets: {},    // name → bet this street
+      blinds: {},         // name -> 'small' | 'big'
+      currentBets: {},    // name -> bet this street
       lastResult: null,   // { winners, handName, message }
-      holeCards: {},      // name → [card, card]
+      holeCards: {},      // name -> [card, card]
       handNumber: 0,
-      nextTickAt: 0,     // epoch ms of next tick
+      nextTickAt: 0,
       tickIntervalMs: 30000,
+      lastThought: {},    // name -> thought string
+      lastActed: null,    // bot name that just acted
+      contextMessage: '', // narration line
     };
+
+    function botDisplayName(name) {
+      return state.bots.find(b => b.name === name)?.displayName || name;
+    }
 
     function renderCard(card) {
       const suit = card.slice(-1);
@@ -293,7 +364,7 @@
 
     function render() {
       // Status bar
-      const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown' };
+      const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown', finished: 'Game Over' };
       const phaseLabel = phaseLabels[state.phase] || state.phase;
       const countdown = Math.max(0, Math.ceil((state.nextTickAt - Date.now()) / 1000));
       statusEl.innerHTML = `
@@ -340,11 +411,18 @@
         if (isActive) classes += ' active';
         if (isFolded) classes += ' folded';
         if (isWinner) classes += ' winner';
+        if (state.lastActed === bot.name) classes += ' just-acted';
 
         const cards = state.holeCards[bot.name];
         let cardsHtml = '';
         if (cards && cards.length === 2) {
           cardsHtml = `<div class="hole-cards">${renderCard(cards[0])} ${renderCard(cards[1])}</div>`;
+        }
+
+        const thought = state.lastThought[bot.name];
+        let bubbleHtml = '';
+        if (thought && !isFolded) {
+          bubbleHtml = `<div class="speech-bubble">${escapeHtml(thought)}</div>`;
         }
 
         playersHtml += `
@@ -356,15 +434,19 @@
             ${state.blinds[bot.name] === 'small' ? '<div class="role">SB</div>' : ''}
             ${state.blinds[bot.name] === 'big' ? '<div class="role">BB</div>' : ''}
             ${isFolded ? '<div class="role">Folded</div>' : ''}
-            ${isActive ? '<div class="role" style="color:#ffd700">← Acting</div>' : ''}
+            ${isActive ? '<div class="role" style="color:#ffd700">Acting</div>' : ''}
+            ${bubbleHtml}
           </div>
         `;
       }
       playersEl.innerHTML = playersHtml;
+
+      // Context bar
+      contextEl.innerHTML = state.contextMessage;
     }
 
     // Pending hand header: collect deal_hole + blind entries, emit one combined header
-    let pendingHand = null; // { number, players: [{ name, cards }], blinds: string }
+    let pendingHand = null;
 
     function flushHandHeader() {
       if (!pendingHand) return;
@@ -404,6 +486,11 @@
         return;
       }
 
+      // Standalone thoughts are shown in speech bubbles, skip feed
+      if (entry.action === 'think' || entry.action === 'thought') {
+        return;
+      }
+
       // Flush any pending header before other entries
       flushHandHeader();
 
@@ -411,13 +498,15 @@
       let text = '';
       let className = '';
 
+      // Helper to append inline thought
+      const thoughtSuffix = entry.thought ? ` <span class="thought">— ${esc(entry.thought)}</span>` : '';
+
       switch (entry.action) {
         case 'say':
           text = `${esc(name)}: ${esc(entry.message || '')}`;
           className = 'say';
           break;
         case 'deal': {
-          // Show as street header
           const streetMatch = entry.message?.match(/deals the (\w+): (.+)/);
           if (streetMatch) {
             const streetName = streetMatch[1];
@@ -429,36 +518,29 @@
           className = 'street-header';
           break;
         }
-        case 'think':
-        case 'thought':
-          text = `💭 <b>${esc(name)}:</b> ${esc(entry.message || '')}`;
-          className = 'think';
-          break;
         case 'check':
-          text = `${esc(name)} checks`;
+          text = `${esc(name)} checks${thoughtSuffix}`;
           className = 'action';
           break;
         case 'call':
-          text = `${esc(name)} calls ${entry.amount || ''}`;
+          text = `${esc(name)} calls ${entry.amount || ''}${thoughtSuffix}`;
           className = 'action';
           break;
         case 'raise':
-          text = `${esc(name)} raises to ${entry.amount || ''} ⬆`;
+          text = `${esc(name)} raises to ${entry.amount || ''}${thoughtSuffix}`;
           className = 'action';
           break;
         case 'fold':
-          text = `${esc(name)} folds`;
+          text = `${esc(name)} folds${thoughtSuffix}`;
           className = 'action';
           break;
         case 'result': {
-          // Rich result line with hole cards
           let resultHtml = `🏆 `;
           const resultMatch = entry.message?.match(/^(.+?) wins? (\d+) chips with (.+?)!?$/);
           if (resultMatch) {
             const winnerName = resultMatch[1];
             const amount = resultMatch[2];
             const handName = resultMatch[3];
-            // Build cards for each player
             const playerCards = state.bots.map(b => {
               const cards = state.holeCards[b.name];
               const dn = b.displayName || b.name;
@@ -511,16 +593,31 @@
         }
       }
 
+      // Track thoughts from any event
+      if (entry.thought && entry.bot) {
+        state.lastThought[entry.bot] = entry.thought;
+      }
+      if ((entry.action === 'think' || entry.action === 'thought') && entry.bot) {
+        state.lastThought[entry.bot] = entry.message || '';
+      }
+
+      // Track last acted for animation
+      if (['check', 'call', 'raise', 'fold'].includes(entry.action) && entry.bot) {
+        state.lastActed = entry.bot;
+      }
+
       switch (entry.action) {
         case 'join':
           if (!state.bots.find(b => b.name === entry.bot)) {
             state.bots.push({ name: entry.bot, displayName: entry.displayName });
           }
+          state.contextMessage = `<span class="highlight">${esc(entry.displayName || entry.bot)}</span> joined the table`;
           break;
 
         case 'leave':
           state.bots = state.bots.filter(b => b.name !== entry.bot);
           delete state.chips[entry.bot];
+          state.contextMessage = `${esc(entry.displayName || entry.bot)} left the table`;
           break;
 
         case 'deal_hole':
@@ -531,7 +628,6 @@
           state.pot += (entry.amount || 0);
           state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
           state.blinds[entry.bot] = entry.blindType;
-          // First blind of a new hand
           if (entry.blindType === 'small') {
             state.handNumber++;
             state.pot = entry.amount || 0;
@@ -544,12 +640,23 @@
             state.lastResult = null;
             state.blinds = {};
             state.blinds[entry.bot] = 'small';
+            state.lastThought = {};
+            state.lastActed = null;
+            state.contextMessage = `Hand #${state.handNumber} starting...`;
+          }
+          break;
+
+        case 'check':
+          state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> checks`;
+          if (state.activePlayer) {
+            state.contextMessage += ` &middot; waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span>`;
           }
           break;
 
         case 'call':
           state.pot += (entry.amount || 0);
           state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
+          state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
           break;
 
         case 'raise':
@@ -559,33 +666,33 @@
             state.pot += cost;
             state.currentBets[entry.bot] = entry.amount || 0;
           }
+          state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
           break;
 
         case 'fold':
           state.foldedPlayers.add(entry.bot);
           if (state.activePlayer === entry.bot) state.activePlayer = null;
+          state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
           break;
 
         case 'deal':
-          // Parse community cards from deal message: "deals the flop: 6♠ 5♥ 2♣"
           const dealMatch = entry.message?.match(/deals the (\w+): (.+)/);
           if (dealMatch) {
             state.street = dealMatch[1];
             const cards = dealMatch[2].split(/\s+/);
             state.community = cards;
-            // Reset bets for new street
             state.currentBets = {};
+            const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
+            state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
           }
           break;
 
         case 'result':
-          // Parse result: "Name wins X chips with HandName!"
           const resultMatch = entry.message?.match(/^(.+?) wins? (\d+) chips with (.+?)!?$/);
           if (resultMatch) {
             const winnerNames = resultMatch[1].split(', ');
             const amount = parseInt(resultMatch[2]);
             const handName = resultMatch[3];
-            // Map display names back to bot names
             const winnerBots = winnerNames.map(wn => {
               const bot = state.bots.find(b => b.displayName === wn);
               return bot?.name || wn;
@@ -593,8 +700,24 @@
             state.lastResult = { winners: winnerBots, handName, amount };
             state.pot = 0;
             state.currentBets = {};
+            state.contextMessage = `🏆 <span class="highlight">${esc(resultMatch[1])}</span> wins ${amount} with ${esc(handName)}`;
           }
           break;
+
+        case 'game_over':
+          state.contextMessage = `🏆 ${esc(entry.message || 'Game over')}`;
+          break;
+      }
+
+      // Update context for active player waiting
+      if (state.activePlayer && !['result', 'game_over', 'deal', 'join', 'leave', 'blind'].includes(entry.action)) {
+        const active = botDisplayName(state.activePlayer);
+        if (entry.action !== 'check') {
+          // Don't override the action context for check (handled above)
+          if (['call', 'raise', 'fold'].includes(entry.action)) {
+            // Active player updated by server; show waiting message on next render
+          }
+        }
       }
     }
 
@@ -609,6 +732,8 @@
     const basePath = window.location.pathname.replace(/\/+$/, '');
     const events = new EventSource(basePath + '/events');
 
+    let actionFlashTimer = null;
+
     events.onmessage = (e) => {
       const data = JSON.parse(e.data);
 
@@ -618,22 +743,24 @@
         state.nextTickAt = data.nextTickAt || 0;
         state.tickIntervalMs = data.tickIntervalMs || 30000;
         state.bots = (data.bots || []).map(b => ({ name: b.name, displayName: b.displayName || b.name }));
-        // Replay log to reconstruct state
         feedEl.innerHTML = '';
-        let lastHandTick = 0;
         for (const entry of (data.log || [])) {
           processEvent(entry);
           addFeedEntry(entry, true);
         }
         feedEl.scrollTop = feedEl.scrollHeight;
-        // Override chips with authoritative server values (log replay may double-count)
         if (data.buyIns) {
           for (const [name, chips] of Object.entries(data.buyIns)) {
             state.chips[name] = chips;
           }
         }
-        // Set active player from server state
         state.activePlayer = data.activePlayer || null;
+        // Set context for current state after replay
+        if (state.phase === 'waiting') {
+          state.contextMessage = state.bots.length < 2 ? 'Waiting for players to join...' : 'Starting soon...';
+        } else if (state.activePlayer) {
+          state.contextMessage = `Waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span> to act...`;
+        }
         render();
         return;
       }
@@ -642,6 +769,9 @@
         state.tick = data.tick;
         state.phase = data.phase || state.phase;
         state.nextTickAt = Date.now() + state.tickIntervalMs;
+        if (state.activePlayer) {
+          state.contextMessage = `Waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span> to act...`;
+        }
         render();
         return;
       }
@@ -653,6 +783,11 @@
         div.innerHTML = `— ${data.from} → ${data.to} —`;
         feedEl.appendChild(div);
         feedEl.scrollTop = feedEl.scrollHeight;
+        if (data.to === 'waiting') {
+          state.contextMessage = 'Waiting for next hand...';
+        } else if (data.to === 'showdown') {
+          state.contextMessage = 'Showdown!';
+        }
         render();
         return;
       }
@@ -662,6 +797,15 @@
         processEvent(data);
         addFeedEntry(data, false);
         render();
+
+        // Clear action flash after animation completes
+        if (state.lastActed) {
+          clearTimeout(actionFlashTimer);
+          actionFlashTimer = setTimeout(() => {
+            state.lastActed = null;
+            render();
+          }, 1000);
+        }
       }
     };
 
