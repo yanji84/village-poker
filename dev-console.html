@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dev Console</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --orange: #db6d28;
+    --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--mono); font-size: 13px; background: var(--bg); color: var(--text); height: 100vh; height: 100dvh; overflow: hidden; }
+
+  .app { display: grid; grid-template-columns: 260px 1fr 380px; grid-template-rows: 42px 1fr; height: 100vh; height: 100dvh; }
+  .header { grid-column: 1 / -1; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 16px; }
+  .sidebar { grid-row: 2; border-right: 1px solid var(--border); overflow-y: auto; background: var(--surface); display: flex; flex-direction: column; }
+  .main { grid-row: 2; overflow-y: auto; }
+  .detail { grid-row: 2; border-left: 1px solid var(--border); overflow-y: auto; background: var(--surface); }
+
+
+  .header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
+  .header .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .badge-ok { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-warn { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .badge-err { background: rgba(248,81,73,0.15); color: var(--red); }
+  .badge-progress { background: rgba(88,166,255,0.15); color: var(--accent); animation: pulse 1s infinite; }
+  .header .spacer { flex: 1; }
+  .header .meta { color: var(--text-dim); font-size: 11px; }
+
+  .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .sidebar-tab { flex: 1; padding: 8px 0; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; }
+  .sidebar-tab:hover { color: var(--text); }
+  .sidebar-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .sidebar-content { flex: 1; overflow-y: auto; }
+
+  .bot-card { padding: 8px 12px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .bot-card:hover { background: rgba(88,166,255,0.06); }
+  .bot-card.selected { background: rgba(88,166,255,0.1); border-left: 2px solid var(--accent); }
+  .bot-card .name { font-weight: 600; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+  .bot-card .name .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-green { background: var(--green); }
+  .dot-yellow { background: var(--yellow); }
+  .dot-red { background: var(--red); }
+  .dot-gray { background: #484f58; }
+  .bot-card .info { color: var(--text-dim); font-size: 10px; margin-top: 2px; }
+
+  .world-section { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .world-section h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px; }
+  .world-loc { padding: 3px 0; font-size: 11px; }
+  .world-loc .loc-name { color: var(--accent); font-weight: 600; }
+  .world-loc .loc-bots { color: var(--text-dim); font-size: 10px; }
+  .world-kv { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 1px; }
+  .world-kv .k { color: var(--text-dim); }
+  .world-log-entry { font-size: 10px; color: var(--text-dim); padding: 2px 0; line-height: 1.3; }
+  .world-log-entry .wl-bot { color: var(--accent); }
+
+  .tick-group { border-bottom: 1px solid var(--border); }
+  .tick-header { padding: 8px 16px; background: rgba(88,166,255,0.04); font-size: 11px; color: var(--text-dim); display: flex; gap: 12px; align-items: center; position: sticky; top: 0; z-index: 1; backdrop-filter: blur(4px); }
+  .tick-header .tick-num { color: var(--accent); font-weight: 700; }
+  .tick-body { padding: 0; }
+  .bot-row { padding: 6px 16px 6px 28px; font-size: 12px; border-top: 1px solid rgba(48,54,61,0.5); }
+  .bot-row:hover { background: rgba(88,166,255,0.04); }
+  .bot-row-summary { display: grid; grid-template-columns: 130px 110px 1fr; gap: 8px; align-items: start; cursor: pointer; }
+  .bot-row .br-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bot-row .br-status { font-size: 11px; }
+  .status-ok { color: var(--green); }
+  .status-timeout { color: var(--red); }
+  .status-error { color: var(--orange); }
+  .bot-row .br-actions { color: var(--text-dim); font-size: 11px; word-break: break-word; }
+  .action-tag { display: inline-block; padding: 1px 5px; border-radius: 3px; background: rgba(88,166,255,0.1); color: var(--accent); margin-right: 4px; font-size: 10px; }
+  .action-msg { color: var(--text); }
+
+  .payload-toggle { font-size: 10px; color: var(--text-dim); cursor: pointer; margin-top: 4px; user-select: none; }
+  .payload-toggle:hover { color: var(--accent); }
+  .payload-toggle::before { content: '\25B8 '; }
+  .payload-toggle.open::before { content: '\25BE '; }
+  .payload-box { display: none; margin-top: 4px; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; font-size: 10px; line-height: 1.4; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; color: var(--text-dim); }
+  .payload-box.show { display: block; }
+
+  /* In-progress banner */
+  .tick-progress { padding: 10px 16px; font-size: 12px; color: var(--accent); background: rgba(88,166,255,0.06); border-bottom: 1px solid var(--border); }
+  .tick-progress .spinner { display: inline-block; animation: spin 1s linear infinite; }
+  .tick-progress .elapsed { color: var(--text-dim); font-size: 11px; margin-left: 8px; }
+  .tick-idle { padding: 10px 16px; font-size: 12px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .progress-bot { padding: 3px 16px 3px 32px; font-size: 11px; display: flex; gap: 10px; align-items: center; }
+  .progress-bot .pb-name { color: var(--text); font-weight: 600; width: 120px; flex-shrink: 0; }
+  .progress-bot .pb-status { flex: 1; }
+  .pb-sending { color: var(--text-dim); }
+  .pb-delivered { color: var(--accent); }
+  .pb-queued { color: var(--yellow); }
+  .pb-processing { color: var(--accent); animation: pulse 1.5s infinite; }
+  .pb-done { color: var(--green); }
+  .transport-line { font-size: 10px; color: var(--text-dim); padding: 2px 16px 2px 32px; }
+  .transport-line .t-event { font-weight: 600; }
+  .transport-line .t-bot { color: var(--accent); }
+  .transport-line .t-time { color: var(--text-dim); }
+
+  /* Live action stream */
+  .action-line { font-size: 11px; padding: 3px 16px 3px 32px; display: flex; gap: 8px; align-items: baseline; border-top: 1px solid rgba(48,54,61,0.3); }
+  .action-line .al-bot { color: var(--accent); font-weight: 600; flex-shrink: 0; width: 100px; overflow: hidden; text-overflow: ellipsis; }
+  .action-line .al-action { font-size: 10px; padding: 1px 4px; border-radius: 3px; background: rgba(88,166,255,0.1); color: var(--accent); flex-shrink: 0; }
+  .action-line .al-msg { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .action-line .al-loc { color: var(--text-dim); font-size: 10px; flex-shrink: 0; }
+
+  /* Governance/notable event lines */
+  .notable-line { font-size: 11px; padding: 4px 16px; color: var(--yellow); border-top: 1px solid rgba(48,54,61,0.3); }
+  .notable-line.gov { color: var(--yellow); }
+  .notable-line.news { color: var(--green); }
+  .notable-line.move { color: var(--text-dim); }
+
+  .detail-section { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .detail-section h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 6px; }
+  .detail-kv { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px; }
+  .detail-kv .k { color: var(--text-dim); }
+  .detail-kv .v { color: var(--text); text-align: right; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+  .memory-entry { font-size: 11px; color: var(--text); padding: 4px 0; border-bottom: 1px solid rgba(48,54,61,0.3); line-height: 1.4; word-break: break-word; }
+  .memory-entry:last-child { border-bottom: none; }
+  .memory-summary { font-size: 11px; color: var(--text-dim); padding: 4px 0; line-height: 1.4; font-style: italic; word-break: break-word; }
+  .detail-empty { color: var(--text-dim); font-size: 11px; padding: 8px 0; }
+  .conn-badge { display: inline-block; font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+  .conn-healthy { background: rgba(63,185,80,0.15); color: var(--green); }
+  .conn-stale { background: rgba(210,153,34,0.15); color: var(--yellow); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .sse-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .sse-connected { background: var(--green); animation: pulse 2s infinite; }
+  .sse-disconnected { background: var(--red); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* Architecture view */
+  .arch-view { padding: 12px; }
+  .arch-box { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; background: var(--bg); }
+  .arch-box .arch-label { font-weight: 700; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+  .arch-box .arch-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; line-height: 1.4; }
+  .arch-connector { width: 2px; height: 28px; margin: 0 auto; background: var(--border); position: relative; }
+  .arch-connector.active { background: linear-gradient(180deg, var(--accent), transparent, var(--accent)); background-size: 100% 200%; animation: archFlow 1s linear infinite; }
+  .arch-connector.respond { background: linear-gradient(0deg, var(--accent), transparent, var(--accent)); background-size: 100% 200%; animation: archFlow 1s linear infinite; }
+  .arch-connector-label { text-align: center; font-size: 9px; color: var(--text-dim); margin: -2px 0; }
+  @keyframes archFlow { 0% { background-position: 0 0; } 100% { background-position: 0 200%; } }
+  .arch-bot-list { border: 1px solid var(--border); border-radius: 6px; background: var(--bg); overflow: hidden; }
+  .arch-bot-row { display: flex; align-items: center; gap: 6px; padding: 4px 10px; font-size: 11px; border-bottom: 1px solid rgba(48,54,61,0.4); }
+  .arch-bot-row:last-child { border-bottom: none; }
+  .arch-bot-row .arch-bot-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .arch-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; transition: background 0.3s; }
+  .arch-dot.ad-gray { background: #484f58; }
+  .arch-dot.ad-green { background: var(--green); }
+  .arch-dot.ad-green-dim { background: var(--green); opacity: 0.4; }
+  .arch-dot.ad-accent { background: var(--accent); }
+  .arch-dot.ad-yellow { background: var(--yellow); }
+  .arch-dot.ad-pulse { animation: archPulse 1s infinite; }
+  .arch-dot.ad-flash { animation: archFlash 0.6s ease-out; }
+  @keyframes archPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @keyframes archFlash { 0% { background: var(--green); box-shadow: 0 0 6px var(--green); } 100% { background: var(--green); box-shadow: none; } }
+  .arch-status { font-size: 9px; color: var(--text-dim); flex-shrink: 0; }
+
+  /* Mobile tabs — hidden on desktop */
+  .mobile-tabs { display: none; }
+
+  @media (max-width: 768px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 42px 1fr 40px; }
+    .sidebar, .main, .detail { grid-column: 1; grid-row: 2; }
+    .sidebar { border-right: none; }
+    .detail { border-left: none; }
+    .mobile-tabs { display: flex; grid-column: 1; grid-row: 3; background: var(--surface); border-top: 1px solid var(--border); }
+    .mobile-tab { flex: 1; text-align: center; padding: 10px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); cursor: pointer; border-top: 2px solid transparent; }
+    .mobile-tab.active { color: var(--accent); border-top-color: var(--accent); }
+    .app.m-log .sidebar, .app.m-log .detail { display: none; }
+    .app.m-sidebar .main, .app.m-sidebar .detail { display: none; }
+    .app.m-detail .main, .app.m-detail .sidebar { display: none; }
+    .header .title { font-size: 12px; }
+    .header .meta { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app m-log">
+  <div class="header">
+    <span class="title">Dev Console</span>
+    <span class="sse-dot sse-disconnected" id="sseDot"></span>
+    <span class="badge badge-ok" id="tickBadge">--</span>
+    <span class="meta" id="clockInfo"></span>
+    <span class="spacer"></span>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-tabs">
+      <div class="sidebar-tab active" onclick="switchTab('bots')" id="tabBots">Bots</div>
+      <div class="sidebar-tab" onclick="switchTab('world')" id="tabWorld">World</div>
+      <div class="sidebar-tab" onclick="switchTab('arch')" id="tabArch">Arch</div>
+    </div>
+    <div class="sidebar-content" id="sidebarContent"></div>
+  </div>
+
+  <div class="main" id="tickLog"></div>
+
+  <div class="detail" id="detailPanel">
+    <div class="detail-section"><h3>Select a bot</h3><div class="detail-empty">Click a bot in the sidebar or tick log</div></div>
+  </div>
+
+  <div class="mobile-tabs" id="mobileTabs">
+    <div class="mobile-tab active" onclick="switchMobilePanel('log')" id="mTabLog">Log</div>
+    <div class="mobile-tab" onclick="switchMobilePanel('sidebar')" id="mTabSidebar">Bots</div>
+    <div class="mobile-tab" onclick="switchMobilePanel('detail')" id="mTabDetail">Detail</div>
+  </div>
+</div>
+
+<script>
+const MAX_TICKS = 50;
+let tickHistory = [];
+let latestTickEvent = null;
+let healthData = {};
+let hubStatus = {}; // { bots: { name: { polling, sceneQueued, pendingRelay, lastHeartbeat } } }
+let hubSummary = { pendingScenes: 0, pollWaiters: 0, sceneQueue: 0 };
+let hubStatusFetchedAt = 0; // Date.now() when hubStatus was last fetched
+let selectedBot = null;
+let mobilePanel = 'log';
+let sidebarTab = 'bots';
+let tickInProgress = false;
+let tickStartTime = null;     // Date.now() when tick_start received
+let tickStartBots = [];       // bot names from tick_start
+let relayTimeoutMs = 120000;  // relay timeout from server
+let currentTickTransport = []; // transport events during current tick
+let currentTickBotState = {};  // botName → { status, detail, elapsed } built from transport events
+let currentTickActions = []; // live action events during current tick
+let notableEvents = [];      // governance, news, movement events (rolling, cap 50)
+let serverMeta = null;       // from /api/dev/server-meta
+
+const basePath = (() => { const m = location.pathname.match(/^(\/[^/]+)\//); return m ? m[1] : ''; })();
+
+// ---- World-agnostic bot extraction ----
+// Social-village sends: locations: { [slug]: [{name, displayName}] }
+// Tavern/campfire send: bots: [{name, displayName}]
+// Returns Map<name, {location, displayName}>
+function getAllBots(e) {
+  const bots = new Map();
+  if (e.locations && Object.keys(e.locations).length) {
+    for (const [loc, list] of Object.entries(e.locations)) {
+      for (const b of list) bots.set(b.name, { location: loc, displayName: b.displayName || b.name });
+    }
+  } else if (e.bots) {
+    for (const b of e.bots) {
+      const name = typeof b === 'string' ? b : b.name;
+      const displayName = typeof b === 'string' ? b : (b.displayName || b.name);
+      bots.set(name, { location: e.world?.name || '--', displayName });
+    }
+  }
+  return bots;
+}
+
+// Returns Map<name, displayName> (no NPCs)
+function getRealBots(e) {
+  const all = getAllBots(e);
+  const result = new Map();
+  for (const [name, info] of all) {
+    if (!name.startsWith('npc-')) result.set(name, info.displayName);
+  }
+  return result;
+}
+
+// ---- SSE ----
+function connectSSE() {
+  const es = new EventSource(basePath + '/events');
+  es.onopen = () => { document.getElementById('sseDot').className = 'sse-dot sse-connected'; };
+  es.onerror = () => { document.getElementById('sseDot').className = 'sse-dot sse-disconnected'; };
+  es.onmessage = (e) => { try { handleEvent(JSON.parse(e.data)); } catch {} };
+}
+
+function handleEvent(event) {
+  if (event.type === 'tick' || event.type === 'init') {
+    latestTickEvent = event;
+    // Update title with world name if available
+    if (event.world?.name) document.querySelector('.title').textContent = event.world.name + ' Dev Console';
+    // init may indicate a tick is already in progress (late join)
+    if (event.type === 'init' && event.tickInProgress) {
+      const alreadyTracking = tickInProgress && tickStartTime;
+      tickInProgress = true;
+      if (!alreadyTracking) tickStartTime = Date.now();
+      if (event.nextTickAt) latestTickEvent.nextTickAt = event.nextTickAt;
+      tickStartBots = event.tickStartBots || [];
+      if (event.relayTimeoutMs) relayTimeoutMs = event.relayTimeoutMs;
+      tickStartBots = tickStartBots.filter(b => !b.startsWith('npc-'));
+      if (!alreadyTracking) {
+        currentTickBotState = {};
+        for (const b of tickStartBots) {
+          currentTickBotState[b] = { status: 'sending', detail: 'joined mid-tick' };
+        }
+      }
+      clearInterval(window._tickElapsed);
+      window._tickElapsed = setInterval(() => { renderTickLog(); renderSidebar(); }, 1000);
+    } else {
+      tickInProgress = false;
+    }
+    updateHeader();
+    renderSidebar();
+    updateDetail();
+    saveSession();
+    if (event.type === 'init') {
+      // Backfill any missed tick_detail events from server ring buffer
+      fetchRecentTicks();
+      if (event.tickInProgress) renderTickLog();
+    }
+  }
+  if (event.type === 'tick_start') {
+    tickInProgress = true;
+    tickStartTime = Date.now();
+    tickStartBots = (event.bots || []).filter(b => !b.startsWith('npc-'));
+    if (event.relayTimeoutMs) relayTimeoutMs = event.relayTimeoutMs;
+    if (event.nextTickAt && latestTickEvent) latestTickEvent.nextTickAt = event.nextTickAt;
+    currentTickTransport = [];
+    currentTickActions = [];
+    currentTickBotState = {};
+    for (const b of tickStartBots) {
+      currentTickBotState[b] = { status: 'sending', detail: '' };
+    }
+    updateHeader();
+    renderTickLog();
+    saveSession();
+    // Live-update elapsed time every second
+    clearInterval(window._tickElapsed);
+    window._tickElapsed = setInterval(() => { renderTickLog(); renderSidebar(); }, 1000);
+  }
+  if (event.type === 'tick_detail') {
+    // Don't reset tickInProgress — wait for 'tick' event which has nextTickAt
+    // Attach collected transport events
+    event.transport = currentTickTransport;
+    currentTickTransport = [];
+    tickHistory.unshift(event);
+    if (tickHistory.length > MAX_TICKS) tickHistory.pop();
+    renderTickLog();
+    renderSidebar();
+    updateDetail();
+  }
+  if (event.type === 'transport') {
+    currentTickTransport.push(event);
+    // Update per-bot state from transport events
+    const bn = event.botName;
+    if (bn && currentTickBotState[bn] !== undefined) {
+      if (event.event === 'relay_delivered') {
+        currentTickBotState[bn] = { status: 'delivered', detail: event.immediate ? 'immediate' : '' };
+      } else if (event.event === 'relay_queued') {
+        currentTickBotState[bn] = { status: 'queued', detail: 'bot not polling' };
+      } else if (event.event === 'poll_pickup') {
+        currentTickBotState[bn] = { status: 'processing', detail: 'bot has scene' };
+      } else if (event.event === 'respond') {
+        const acts = event.actions ? event.actions.map(a => (a||'').replace('village_','')).join(', ') : '';
+        currentTickBotState[bn] = { status: 'done', detail: acts };
+      }
+    }
+    if (tickInProgress) { renderTickLog(); renderSidebar(); saveSession(); }
+  }
+  // Live action events during tick
+  if (event.type === 'action') {
+    currentTickActions.push(event);
+    if (tickInProgress) renderTickLog();
+  }
+  // Governance events (only present in social-village)
+  if (event.type === 'proposal_resolved') {
+    addNotable('gov', `Proposal "${esc(event.description||event.proposalType||'?')}" ${event.result}`, event.tick);
+  }
+  if (event.type === 'mayor_term_expired') {
+    addNotable('gov', `Mayor term expired: ${esc(event.mayorName||'?')}`, event.tick);
+  }
+  // Movement / join / leave
+  if (event.type === 'movement') {
+    const verb = event.action === 'leave' ? 'left' : event.action === 'join' ? 'joined' : event.action;
+    addNotable('move', `${esc(event.displayName||event.bot)} ${verb} ${esc(event.location||'')}`, event.tick);
+    renderSidebar();
+  }
+  // News bulletins (only present in social-village)
+  if (event.type === 'news_bulletin') {
+    addNotable('news', `${esc(event.headline||'')}`, event.tick);
+  }
+}
+
+function addNotable(cls, text, tick) {
+  notableEvents.unshift({ cls, text, tick, time: new Date().toLocaleTimeString() });
+  if (notableEvents.length > 50) notableEvents.length = 50;
+  renderTickLog();
+  saveSession();
+}
+
+// ---- Health & Hub Status ----
+async function fetchHealth() {
+  try {
+    const r = await fetch(basePath + '/api/dev/health');
+    const d = await r.json();
+    healthData = d.bots || {};
+    renderSidebar();
+    updateDetail();
+  } catch {}
+}
+
+async function fetchHubStatus() {
+  try {
+    const r = await fetch(basePath + '/api/dev/hub-status');
+    const d = await r.json();
+    hubStatus = d.bots || {};
+    hubStatusFetchedAt = Date.now();
+    hubSummary = { pendingScenes: d.pendingScenes || 0, pollWaiters: d.pollWaiters || 0, uptimeMs: d.uptimeMs || 0 };
+    renderSidebar();
+    updateDetail();
+  } catch {}
+}
+
+async function fetchServerMeta() {
+  try {
+    const r = await fetch(basePath + '/api/dev/server-meta');
+    const d = await r.json();
+    if (d.ok) {
+      serverMeta = d;
+      renderSidebar();
+      updateDetail();
+    }
+  } catch {}
+}
+
+// ---- Header ----
+function updateHeader() {
+  if (!latestTickEvent && !tickInProgress) return;
+  const e = latestTickEvent || {};
+  const badge = document.getElementById('tickBadge');
+  if (tickInProgress) {
+    badge.textContent = `Tick #${(e.tick||0)+1}`;
+    badge.className = 'badge badge-progress';
+  } else {
+    badge.textContent = `Tick #${e.tick || '--'}`;
+    badge.className = 'badge badge-ok';
+  }
+  // Show phase/time only if present (social-village has these, others may not)
+  const parts = [];
+  if (e.phase) parts.push(e.phase);
+  if (e.villageTime) parts.push(e.villageTime);
+  document.getElementById('clockInfo').textContent = parts.length ? parts.join(' \u00B7 ') : '';
+}
+
+// ---- Sidebar ----
+function switchTab(tab) {
+  sidebarTab = tab;
+  document.getElementById('tabBots').className = 'sidebar-tab' + (tab === 'bots' ? ' active' : '');
+  document.getElementById('tabWorld').className = 'sidebar-tab' + (tab === 'world' ? ' active' : '');
+  document.getElementById('tabArch').className = 'sidebar-tab' + (tab === 'arch' ? ' active' : '');
+  // Update mobile sidebar tab label to match
+  document.getElementById('mTabSidebar').textContent = tab.charAt(0).toUpperCase() + tab.slice(1);
+  renderSidebar();
+}
+
+function switchMobilePanel(panel) {
+  mobilePanel = panel;
+  const app = document.querySelector('.app');
+  app.className = 'app m-' + panel;
+  document.getElementById('mTabLog').className = 'mobile-tab' + (panel === 'log' ? ' active' : '');
+  document.getElementById('mTabSidebar').className = 'mobile-tab' + (panel === 'sidebar' ? ' active' : '');
+  document.getElementById('mTabDetail').className = 'mobile-tab' + (panel === 'detail' ? ' active' : '');
+}
+
+function renderSidebar() {
+  const el = document.getElementById('sidebarContent');
+  if (sidebarTab === 'arch') el.innerHTML = renderArchView();
+  else el.innerHTML = sidebarTab === 'bots' ? renderBotRoster() : renderWorldState();
+}
+
+function renderBotRoster() {
+  if (!latestTickEvent) return '';
+  const bots = getAllBots(latestTickEvent);
+  const sorted = [...bots.entries()].filter(([n]) => !n.startsWith('npc-')).sort((a, b) => a[0].localeCompare(b[0]));
+  let html = '';
+  for (const [name, info] of sorted) {
+    const health = healthData[name];
+    let dot = 'dot-gray', status = 'no data', ver = '';
+    if (health) {
+      dot = health.status === 'healthy' ? 'dot-green' : 'dot-yellow';
+      status = `\u2665 ${Math.round((health.ageMs||0)/1000)}s`;
+      ver = health.version ? ` \u00B7 v${health.version}` : '';
+    }
+    const ld = tickHistory[0]?.bots?.find(b => b.name === name);
+    if (ld?.deliveryStatus === 'timeout') dot = 'dot-red';
+    else if (ld?.deliveryStatus === 'error') dot = 'dot-yellow';
+    const sel = selectedBot === name ? ' selected' : '';
+    const ag = latestTickEvent.agendas?.[name]?.goal ? ' \uD83C\uDFAF' : '';
+    const hbNext = hbCountdown(hubStatus[name], healthData[name]);
+    const hbStr = hbNext != null ? ` \u00B7 hb ${hbNext}s` : '';
+    html += `<div class="bot-card${sel}" onclick="selectBot('${name}')">
+      <div class="name"><span class="dot ${dot}"></span>${esc(info.displayName)}${ag}</div>
+      <div class="info">${esc(info.location)}${ver} \u00B7 ${status}${hbStr}</div>
+    </div>`;
+  }
+  return html;
+}
+
+function renderWorldState() {
+  if (!latestTickEvent) return '<div style="padding:12px;color:var(--text-dim)">Waiting...</div>';
+  const e = latestTickEvent;
+  let html = '';
+
+  // World info (always available from init event)
+  if (e.world) {
+    html += '<div class="world-section"><h4>World</h4>';
+    html += `<div class="world-kv"><span class="k">name</span><span>${esc(e.world.name||e.world.id||'?')}</span></div>`;
+    if (e.world.description) html += `<div style="font-size:10px;color:var(--text-dim);margin-top:4px;line-height:1.3">${esc(e.world.description)}</div>`;
+    html += '</div>';
+  }
+
+  // Participants count
+  const allBots = getAllBots(e);
+  const realCount = [...allBots.keys()].filter(n => !n.startsWith('npc-')).length;
+  html += '<div class="world-section"><h4>Participants</h4>';
+  html += `<div class="world-kv"><span class="k">bots</span><span>${realCount}</span></div>`;
+  html += `<div class="world-kv"><span class="k">tick</span><span>${e.tick || 0}</span></div>`;
+  if (e.phase) html += `<div class="world-kv"><span class="k">phase</span><span>${esc(e.phase)}</span></div>`;
+  html += '</div>';
+
+  // Locations — only if locations data is present (social-village shape)
+  if (e.locations && Object.keys(e.locations).length) {
+    html += '<div class="world-section"><h4>Locations</h4>';
+    for (const [loc, bots] of Object.entries(e.locations)) {
+      const remote = bots.filter(b => !b.name.startsWith('npc-'));
+      const names = remote.map(b => b.displayName || b.name).join(', ') || '(empty)';
+      const customInfo = e.customLocations?.[loc];
+      const suffix = customInfo ? ` <span style="color:var(--text-dim);font-size:10px">(built by ${esc(customInfo.builtBy||'?')})</span>` : '';
+      html += `<div class="world-loc"><span class="loc-name">${esc(customInfo?.name || loc)}</span>${suffix} <span class="loc-bots">${esc(names)}</span></div>`;
+    }
+    // Custom locations not yet in main locations list
+    for (const [slug, info] of Object.entries(e.customLocations || {})) {
+      if (!e.locations?.[slug]) {
+        html += `<div class="world-loc"><span class="loc-name">${esc(info.name||slug)}</span> <span style="color:var(--text-dim);font-size:10px">(built by ${esc(info.builtBy||'?')})</span> <span class="loc-bots">(empty)</span></div>`;
+      }
+    }
+    html += '</div>';
+  }
+
+  // Log entries — for worlds that send a log array (tavern/campfire)
+  if (e.log?.length) {
+    html += '<div class="world-section"><h4>Recent Log</h4>';
+    for (const entry of e.log.slice(-20).reverse()) {
+      const who = entry.displayName || entry.bot || '';
+      const action = entry.action || '';
+      const msg = entry.message || '';
+      html += `<div class="world-log-entry"><span class="wl-bot">${esc(who)}</span> <span style="color:var(--accent);font-size:10px">${esc(action)}</span> ${esc(msg)}</div>`;
+    }
+    html += '</div>';
+  }
+
+  // Governance — only if present (social-village)
+  if (e.governance) {
+    const gov = e.governance;
+    html += '<div class="world-section"><h4>Governance</h4>';
+    html += `<div class="world-kv"><span class="k">mayor</span><span>${esc(gov.mayor?.name||'none')}</span></div>`;
+    if (gov.activeProposal) {
+      const p = gov.activeProposal;
+      html += `<div class="world-kv"><span class="k">proposal</span><span>${esc(p.type||'')} by ${esc(p.proposer||'')}</span></div>`;
+      html += `<div class="world-kv"><span class="k">votes</span><span>${p.votes?.for?.length||0} for / ${p.votes?.against?.length||0} against</span></div>`;
+    } else {
+      html += `<div class="world-kv"><span class="k">proposal</span><span>none</span></div>`;
+    }
+    if (gov.constitution) {
+      html += `<div style="font-size:10px;color:var(--text-dim);margin-top:4px;line-height:1.3;max-height:80px;overflow-y:auto">${esc(gov.constitution)}</div>`;
+    }
+    html += '</div>';
+  }
+
+  // Exiles — only if present (social-village)
+  const exiles = Object.entries(e.exiles||{}).filter(([,v])=>v);
+  if (exiles.length) {
+    html += '<div class="world-section"><h4>Exiles</h4>';
+    for (const [n,info] of exiles) html += `<div class="world-kv"><span class="k">${esc(n)}</span><span>until tick ${info.until||'?'}</span></div>`;
+    html += '</div>';
+  }
+
+  // Notable events (governance, news, join/leave — captured live via SSE)
+  if (notableEvents.length) {
+    html += '<div class="world-section"><h4>Events</h4>';
+    for (const n of notableEvents.slice(0, 20)) {
+      html += `<div class="world-log-entry"><span style="color:var(--text-dim);font-size:10px">#${n.tick||'?'}</span> ${n.text}</div>`;
+    }
+    html += '</div>';
+  }
+  // Server meta
+  if (serverMeta) {
+    html += '<div class="world-section"><h4>Server</h4>';
+    html += `<div class="world-kv"><span class="k">uptime</span><span>${fmtUp(serverMeta.uptime*1000)}</span></div>`;
+    html += `<div class="world-kv"><span class="k">tick interval</span><span>${Math.round(serverMeta.tickIntervalMs/1000)}s</span></div>`;
+    html += `<div class="world-kv"><span class="k">relay timeout</span><span>${Math.round(serverMeta.relayTimeoutMs/1000)}s</span></div>`;
+    html += `<div class="world-kv"><span class="k">game</span><span>${esc(serverMeta.game?.name||serverMeta.game?.id||'?')} v${serverMeta.game?.version||'?'}</span></div>`;
+    html += `<div class="world-kv"><span class="k">observers</span><span>${serverMeta.observers||0}</span></div>`;
+    html += `<div class="world-kv"><span class="k">participants</span><span>${serverMeta.participants||0}</span></div>`;
+    // Show bots with failures
+    const failEntries = Object.entries(serverMeta.failureCounts || {}).filter(([,v]) => v > 0);
+    if (failEntries.length) {
+      html += '<div style="margin-top:4px;font-size:10px;color:var(--yellow)">Failure counts:</div>';
+      for (const [bot, count] of failEntries) {
+        html += `<div class="world-kv"><span class="k" style="color:var(--yellow)">${esc(bot)}</span><span style="color:var(--red)">${count}/${serverMeta.maxConsecutiveFailures||5}</span></div>`;
+      }
+    }
+    html += '</div>';
+  }
+  return html;
+}
+
+function hbCountdown(hub, health) {
+  if (!hub || hub.lastHeartbeat == null) return null;
+  const intervalS = Math.round((hub.heartbeatIntervalMs || health?.heartbeatIntervalMs || 300_000) / 1000);
+  const elapsed = hub.lastHeartbeat + (Date.now() - hubStatusFetchedAt);
+  const next = Math.max(0, intervalS - Math.round(elapsed / 1000));
+  return next;
+}
+
+// ---- Architecture View ----
+function renderArchView() {
+  const e = latestTickEvent || {};
+  const tick = e.tick || 0;
+  const phase = e.phase || '--';
+
+  // Server box
+  let serverUp = '--';
+  if (serverMeta?.uptime) serverUp = fmtUp(serverMeta.uptime * 1000);
+
+  // Determine flow state: which phase of tick are we in?
+  let anyDone = false, allDone = true;
+  if (tickInProgress) {
+    for (const b of tickStartBots) {
+      const bs = currentTickBotState[b];
+      if (bs?.status === 'done') anyDone = true;
+      else allDone = false;
+    }
+  }
+  const connCls = tickInProgress ? (anyDone ? 'active respond' : 'active') : '';
+
+  // Count real bots (exclude NPCs)
+  const realBots = getRealBots(e);
+
+  let html = '<div class="arch-view">';
+
+  // Game Server box
+  html += `<div class="arch-box">
+    <div class="arch-label">World Server</div>
+    <div class="arch-sub">tick #${tick} \u00B7 ${esc(phase)}<br>uptime: ${serverUp}</div>
+  </div>`;
+
+  // Connector: server <-> hub
+  html += `<div class="arch-connector ${connCls}"></div>`;
+  if (tickInProgress) {
+    html += `<div class="arch-connector-label">${anyDone ? '\u2191 respond' : '\u2193 relay'}</div>`;
+  }
+
+  // Hub box
+  const hubUp = hubSummary.uptimeMs ? fmtUp(hubSummary.uptimeMs) : '--';
+  const hs = hubSummary;
+  html += `<div class="arch-box">
+    <div class="arch-label">Hub</div>
+    <div class="arch-sub">${realBots.size} bots \u00B7 relay: ${hs.pendingScenes} pending \u00B7 poll: ${hs.pollWaiters}<br>uptime: ${hubUp}</div>
+  </div>`;
+
+  // Connector: hub <-> bots
+  html += `<div class="arch-connector ${connCls}"></div>`;
+
+  // Bot list
+  const sorted = [...realBots.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+  if (sorted.length) {
+    html += '<div class="arch-bot-list">';
+    for (const [name, display] of sorted) {
+      let dotCls = 'ad-gray', label = '';
+      if (tickInProgress) {
+        const bs = currentTickBotState[name];
+        if (bs) {
+          if (bs.status === 'sending') { dotCls = 'ad-accent ad-pulse'; label = 'relaying'; }
+          else if (bs.status === 'delivered') { dotCls = 'ad-accent'; label = 'delivered'; }
+          else if (bs.status === 'processing') { dotCls = 'ad-accent ad-pulse'; label = 'processing'; }
+          else if (bs.status === 'queued') { dotCls = 'ad-yellow'; label = 'queued'; }
+          else if (bs.status === 'done') { dotCls = 'ad-green ad-flash'; label = 'done'; }
+        } else { label = 'waiting'; }
+      } else {
+        const hub = hubStatus[name];
+        if (hub?.polling) { dotCls = 'ad-green-dim'; label = 'polling'; }
+        else { label = 'idle'; }
+      }
+      const hbNext = hbCountdown(hubStatus[name], healthData[name]);
+      const hbInfo = hbNext != null ? `hb ${hbNext}s` : '';
+      html += `<div class="arch-bot-row"><span class="arch-bot-name">${esc(display)}</span><span class="arch-status">${label}${hbInfo ? ' \u00B7 ' + hbInfo : ''}</span><span class="arch-dot ${dotCls}"></span></div>`;
+    }
+    html += '</div>';
+  }
+
+  // Connected but not joined — bots heartbeating the hub but not in-game
+  const inGameNames = new Set(sorted.map(([n]) => n));
+  const connected = Object.keys(hubStatus).filter(n => !inGameNames.has(n) && !n.startsWith('npc-'));
+  if (connected.length) {
+    html += '<div style="margin-top:6px;padding:0 8px;font-size:9px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:6px">Connected (not joined)</div>';
+    html += '<div class="arch-bot-list">';
+    for (const name of connected.sort()) {
+      const hub = hubStatus[name];
+      const hbNext = hbCountdown(hub, healthData[name]);
+      const nextHb = hbNext != null ? hbNext + 's' : '?';
+      const ver = hub?.version ? `v${hub.version}` : '';
+      const up = hub?.uptimeMs ? fmtUp(hub.uptimeMs) : '';
+      const scenes = hub?.scenesProcessed || 0;
+      const errs = hub?.pollErrors || 0;
+      const display = hub?.displayName || name;
+      html += `<div class="arch-bot-row" style="flex-wrap:wrap"><span class="arch-bot-name" style="color:var(--text-dim)">${esc(display)}</span><span class="arch-status">send /village join</span><span class="arch-dot ad-yellow"></span></div>`;
+      html += `<div style="padding:0 8px 4px;font-size:9px;color:var(--text-dim);line-height:1.4">${ver} \u00B7 up ${up} \u00B7 next hb ${nextHb} \u00B7 ${scenes} scenes \u00B7 ${errs} poll err</div>`;
+    }
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// ---- Tick Log ----
+let expandedPayloads = new Set();
+let expandedActions = new Set();
+let expandedPrompts = new Set();
+
+function togglePayload(key) {
+  if (expandedPayloads.has(key)) expandedPayloads.delete(key);
+  else expandedPayloads.add(key);
+  renderTickLog();
+}
+
+function toggleActions(key) {
+  if (expandedActions.has(key)) expandedActions.delete(key);
+  else expandedActions.add(key);
+  renderTickLog();
+}
+
+function togglePrompt(key) {
+  if (expandedPrompts.has(key)) expandedPrompts.delete(key);
+  else expandedPrompts.add(key);
+  renderTickLog();
+}
+
+function renderRawActions(actions) {
+  if (!actions?.length) return '<span style="color:var(--text-dim)">no actions</span>';
+  let html = '';
+  for (const a of actions) {
+    const tool = (a.tool || '').replace('village_', '');
+    html += `<div style="margin-bottom:4px"><span style="color:var(--accent);font-weight:600">${esc(tool)}</span>`;
+    if (a.params && Object.keys(a.params).length) {
+      for (const [k, v] of Object.entries(a.params)) {
+        const val = typeof v === 'string' ? v : JSON.stringify(v);
+        html += `\n  <span style="color:var(--text-dim)">${esc(k)}:</span> ${esc(val)}`;
+      }
+    }
+    html += '</div>';
+  }
+  return html;
+}
+
+function renderTickLog() {
+  const container = document.getElementById('tickLog');
+  let html = '';
+
+  // Tick status — always visible at top
+  if (tickInProgress) {
+    const elapsed = tickStartTime ? Math.round((Date.now() - tickStartTime) / 1000) : 0;
+    const timeoutSec = Math.round(relayTimeoutMs / 1000);
+    const remaining = Math.max(0, timeoutSec - elapsed);
+    html += `<div class="tick-progress"><span class="spinner">\u27F3</span> Tick #${(latestTickEvent?.tick||0)+1} in progress<span class="elapsed">${elapsed}s elapsed \u00B7 timeout ${remaining}s</span></div>`;
+
+    for (const botName of tickStartBots) {
+      const bs = currentTickBotState[botName] || { status: 'sending', detail: '' };
+      const hub = hubStatus[botName];
+      let statusText = '', statusCls = '';
+      if (bs.status === 'done') {
+        statusCls = 'pb-done'; statusText = `\u2713 responded${bs.detail ? ' [' + bs.detail + ']' : ''}`;
+      } else if (bs.status === 'processing') {
+        statusCls = 'pb-processing'; statusText = '\u27F3 processing scene...';
+      } else if (bs.status === 'queued') {
+        statusCls = 'pb-queued'; statusText = `\u23F3 relay queued \u2014 ${bs.detail}`;
+        if (hub && !hub.polling) statusText += ' (not polling)';
+      } else if (bs.status === 'delivered') {
+        if (hub?.polling) {
+          statusCls = 'pb-processing'; statusText = '\u27F3 processing scene...';
+        } else {
+          statusCls = 'pb-delivered'; statusText = `\u2192 delivered${bs.detail ? ' (' + bs.detail + ')' : ''}, awaiting response...`;
+        }
+      } else {
+        statusCls = 'pb-sending'; statusText = '\u2192 sending relay...';
+        if (hub && hub.polling) statusText = '\u2192 sending relay... (bot is polling)';
+      }
+      html += `<div class="progress-bot"><span class="pb-name">${esc(botName)}</span><span class="pb-status ${statusCls}">${statusText}</span></div>`;
+    }
+
+    // Live actions streamed during tick
+    if (currentTickActions.length) {
+      html += '<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px">';
+      html += '<div style="padding:2px 16px;font-size:10px;color:var(--text-dim)">Live actions:</div>';
+      for (const a of currentTickActions) html += renderActionLine(a);
+      html += '</div>';
+    }
+
+    // Raw transport event log below
+    if (currentTickTransport.length) {
+      html += '<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px">';
+      html += '<div style="padding:2px 16px;font-size:10px;color:var(--text-dim)">Transport:</div>';
+      for (const t of currentTickTransport) html += renderTransportLine(t);
+      html += '</div>';
+    }
+  } else if (latestTickEvent?.nextTickAt) {
+    const s = Math.max(0, Math.round((latestTickEvent.nextTickAt - Date.now()) / 1000));
+    html += `<div class="tick-idle">Next tick in ${s}s</div>`;
+  }
+
+  for (const tick of tickHistory) {
+    const time = tick.timestamp ? new Date(tick.timestamp).toLocaleTimeString() : '--';
+    const bc = tick.bots?.length || 0;
+    const ok = tick.bots?.filter(b => b.deliveryStatus === 'ok').length || 0;
+    const cls = ok === bc ? 'badge-ok' : ok > 0 ? 'badge-warn' : 'badge-err';
+    html += `<div class="tick-group"><div class="tick-header">
+      <span class="tick-num">#${tick.tick}</span><span>${tick.phase || ''}</span><span>${time}</span>
+      <span class="badge ${cls}">${ok}/${bc}</span>
+    </div><div class="tick-body">`;
+
+    // Transport events for this tick
+    for (const t of (tick.transport || [])) {
+      html += renderTransportLine(t);
+    }
+
+    for (const bot of (tick.bots || [])) {
+      const isErr = bot.deliveryStatus !== 'ok';
+      const stCls = !isErr ? 'status-ok' : bot.deliveryStatus === 'timeout' ? 'status-timeout' : 'status-error';
+      let stTxt = !isErr ? `\u2713 ${(bot.deliveryMs/1000).toFixed(1)}s` : `\u2717 ${bot.deliveryStatus}`;
+      if (isErr && bot.error?.message) stTxt += ` \u2014 ${esc(bot.error.message)}`;
+      if (isErr && bot.error?.httpStatus) stTxt += ` (${bot.error.httpStatus})`;
+      if (isErr) stTxt += ` ${(bot.deliveryMs/1000).toFixed(1)}s`;
+      let actHtml = '';
+      if (bot.actions?.length > 0) {
+        for (const a of bot.actions) {
+          actHtml += `<span class="action-tag">${(a.tool||'').replace('village_','')}</span>`;
+          if (a.message) actHtml += `<span class="action-msg">${esc((a.message||'').slice(0,80))}${a.message.length>80?'\u2026':''}</span> `;
+          if (a.target) actHtml += `<span class="action-msg">\u2192${esc(a.target)}</span> `;
+        }
+      } else if (!isErr) {
+        actHtml = '<span style="color:var(--text-dim)">no actions</span>';
+      }
+      const flags = (bot.hasAgenda?'\uD83C\uDFAF':'')+(bot.hasMemoryEntry?'\uD83D\uDCDD':'');
+      const u = bot.usage;
+      const tokenStr = u ? `${u.input||0}\u2192${u.output||0}` : '';
+      const cacheStr = u && (u.cacheRead || u.cacheWrite)
+        ? ` cr=${u.cacheRead||0} cw=${u.cacheWrite||0}` : '';
+      const costStr = u?.cost?.total ? ` $${u.cost.total.toFixed(3)}` : '';
+      const meta = `${(bot.payloadSize/1024).toFixed(1)}KB`;
+      const pk = `${tick.tick}:${bot.name}`;
+      const isPayloadOpen = expandedPayloads.has(pk);
+      const isActionsOpen = expandedActions.has(pk);
+      const isPromptOpen = expandedPrompts.has(pk);
+
+      html += `<div class="bot-row">
+        <div class="bot-row-summary" onclick="selectBot('${bot.name}')">
+          <div class="br-name">${esc(bot.displayName||bot.name)} <span style="color:var(--text-dim);font-weight:400;font-size:10px">${flags}</span></div>
+          <div class="br-status ${stCls}">${stTxt} <span style="color:var(--text-dim);font-size:10px">${meta}${tokenStr ? ' \u00B7 '+tokenStr+' tok'+cacheStr : ''}${costStr}</span></div>
+          <div class="br-actions">${actHtml}</div>
+        </div>`;
+      if (bot.rawActions?.length || bot.actions?.length) {
+        html += `<div class="payload-toggle${isActionsOpen?' open':''}" onclick="event.stopPropagation();toggleActions('${pk}')">actions</div>`;
+        html += `<div class="payload-box${isActionsOpen?' show':''}">${renderRawActions(bot.rawActions || bot.actions)}</div>`;
+      }
+      if (bot.payload?.systemPrompt || bot.payload?.scene) {
+        const promptParts = [];
+        if (bot.payload.systemPrompt) promptParts.push('[SYSTEM]\n' + bot.payload.systemPrompt);
+        if (bot.payload.scene) promptParts.push('[SCENE]\n' + bot.payload.scene);
+        html += `<div class="payload-toggle${isPromptOpen?' open':''}" onclick="event.stopPropagation();togglePrompt('${pk}')">prompt</div>`;
+        html += `<div class="payload-box${isPromptOpen?' show':''}" data-pk="prompt:${pk}">${esc(promptParts.join('\n\n---\n\n'))}</div>`;
+      }
+      if (bot.payload) {
+        html += `<div class="payload-toggle${isPayloadOpen?' open':''}" onclick="event.stopPropagation();togglePayload('${pk}')">payload</div>`;
+        html += `<div class="payload-box${isPayloadOpen?' show':''}" data-pk="${pk}">${esc(JSON.stringify(bot.payload,null,2))}</div>`;
+      }
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+  // Save scroll positions before DOM replacement
+  const scrollTop = container.scrollTop;
+  const boxScrolls = {};
+  for (const key of expandedPayloads) {
+    const el = container.querySelector(`[data-pk="${key}"]`);
+    if (el) boxScrolls[key] = el.scrollTop;
+  }
+  for (const key of expandedPrompts) {
+    const pk = `prompt:${key}`;
+    const el = container.querySelector(`[data-pk="${pk}"]`);
+    if (el) boxScrolls[pk] = el.scrollTop;
+  }
+  container.innerHTML = html;
+  container.scrollTop = scrollTop;
+  // Restore expanded payload box scroll positions
+  for (const [key, st] of Object.entries(boxScrolls)) {
+    const el = container.querySelector(`[data-pk="${key}"]`);
+    if (el) el.scrollTop = st;
+  }
+}
+
+function renderTransportLine(t) {
+  const time = t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : '';
+  const evMap = {
+    relay_delivered: '\u2192 relay delivered',
+    relay_queued: '\u2192 relay QUEUED (no poll)',
+    poll_waiting: '\u23F3 poll waiting',
+    poll_pickup: '\u2190 poll pickup',
+    respond: '\u2190 respond',
+  };
+  let detail = '';
+  if (t.event === 'respond' && t.actions) detail = ` [${t.actions.map(a=>(a||'').replace('village_','')).join(', ')}]`;
+  if (t.event === 'relay_delivered' && t.immediate) detail = ' (immediate)';
+  const label = evMap[t.event] || t.event;
+  const warnCls = t.event === 'relay_queued' ? ' style="color:var(--yellow)"' : '';
+  return `<div class="transport-line"><span class="t-time">${time}</span> <span class="t-bot">${esc(t.botName||'')}</span> <span class="t-event"${warnCls}>${label}</span>${detail}</div>`;
+}
+
+function renderActionLine(a) {
+  const tool = (a.action || '').replace('village_', '');
+  let msg = '';
+  if (a.message) msg = esc((a.message || '').slice(0, 100));
+  else if (a.target) msg = '\u2192 ' + esc(a.targetDisplayName || a.target);
+  else if (a.destination) msg = '\u2192 ' + esc(a.destination);
+  const loc = a.locationName || a.location || '';
+  return `<div class="action-line"><span class="al-bot">${esc(a.displayName||a.bot)}</span><span class="al-action">${tool}</span><span class="al-msg">${msg}</span><span class="al-loc">${esc(loc)}</span></div>`;
+}
+
+// ---- Detail Panel ----
+function updateDetail() {
+  const panel = document.getElementById('detailPanel');
+  if (!selectedBot || !latestTickEvent) {
+    panel.innerHTML = '<div class="detail-section"><h3>Select a bot</h3><div class="detail-empty">Click a bot in the sidebar or tick log</div></div>';
+    return;
+  }
+  const name = selectedBot;
+  const health = healthData[name];
+  const memories = latestTickEvent.memories?.[name];
+  const agenda = latestTickEvent.agendas?.[name];
+
+  // Find location — from locations map or flat bots array
+  const allBots = getAllBots(latestTickEvent);
+  const botInfo = allBots.get(name);
+  const loc = botInfo?.location || '--';
+  const displayName = botInfo?.displayName || name;
+
+  const lastTick = tickHistory[0];
+  const lastDetail = lastTick?.bots?.find(b => b.name === name);
+  let html = '';
+
+  html += `<div class="detail-section"><h3>Identity</h3>
+    <div class="detail-kv"><span class="k">display name</span><span class="v">${esc(displayName)}</span></div>
+    <div class="detail-kv"><span class="k">bot name</span><span class="v">${name}</span></div>
+    <div class="detail-kv"><span class="k">location</span><span class="v">${esc(loc)}</span></div>
+  </div>`;
+
+  if (health) {
+    const lastScene = health.lastSceneAt ? new Date(health.lastSceneAt).toLocaleTimeString() : '--';
+    html += `<div class="detail-section"><h3>Heartbeat</h3>
+      <div class="detail-kv"><span class="k">status</span><span class="v"><span class="conn-badge conn-${health.status}">${health.status}</span></span></div>
+      <div class="detail-kv"><span class="k">plugin version</span><span class="v">${health.version||'?'}</span></div>
+      <div class="detail-kv"><span class="k">joined</span><span class="v">${health.joined ? '<span style="color:var(--green)">yes</span>' : '<span style="color:var(--red)">no</span>'}</span></div>
+      <div class="detail-kv"><span class="k">last heartbeat</span><span class="v">${Math.round((health.ageMs||0)/1000)}s ago</span></div>
+      <div class="detail-kv"><span class="k">uptime</span><span class="v">${fmtUp(health.uptimeMs)}</span></div>
+      <div class="detail-kv"><span class="k">scenes processed</span><span class="v">${health.scenesProcessed||0}</span></div>
+      <div class="detail-kv"><span class="k">scenes failed</span><span class="v">${health.scenesFailed||0}</span></div>
+      <div class="detail-kv"><span class="k">avg scene time</span><span class="v">${health.avgSceneMs?Math.round(health.avgSceneMs)+'ms':'--'}</span></div>
+      <div class="detail-kv"><span class="k">last scene</span><span class="v">${lastScene}</span></div>
+      <div class="detail-kv"><span class="k">poll errors</span><span class="v">${health.pollErrors||0}</span></div>
+    </div>`;
+  } else {
+    html += '<div class="detail-section"><h3>Heartbeat</h3><div class="detail-empty">No heartbeat data</div></div>';
+  }
+
+  // Hub relay/poll status
+  const hub = hubStatus[name];
+  if (hub) {
+    html += `<div class="detail-section"><h3>Hub Transport</h3>
+      <div class="detail-kv"><span class="k">polling</span><span class="v">${hub.polling?'<span style="color:var(--green)">yes</span>':'no'}</span></div>
+      <div class="detail-kv"><span class="k">scene queued</span><span class="v">${hub.sceneQueued?'<span style="color:var(--yellow)">yes</span>':'no'}</span></div>
+      <div class="detail-kv"><span class="k">relay pending</span><span class="v">${hub.pendingRelay?'<span style="color:var(--accent)">yes</span>':'no'}</span></div>
+    </div>`;
+  }
+
+  // Failure tracking
+  const failures = serverMeta?.failureCounts?.[name];
+  html += '<div class="detail-section"><h3>Reliability</h3>';
+  if (failures) {
+    const maxF = serverMeta?.maxConsecutiveFailures || 5;
+    const fColor = failures >= maxF - 1 ? 'var(--red)' : failures > 0 ? 'var(--yellow)' : 'var(--text)';
+    html += `<div class="detail-kv"><span class="k">consecutive failures</span><span class="v" style="color:${fColor}">${failures} / ${maxF}</span></div>`;
+  } else {
+    html += `<div class="detail-kv"><span class="k">consecutive failures</span><span class="v">0</span></div>`;
+  }
+  html += '</div>';
+
+  // Agenda — only show if the world provides agendas
+  if (agenda?.goal) {
+    html += `<div class="detail-section"><h3>Agenda</h3>
+      <div style="font-size:12px;line-height:1.4">${esc(agenda.goal)}</div><div style="font-size:10px;color:var(--text-dim);margin-top:4px">since ${agenda.since||'?'}</div>
+    </div>`;
+  }
+
+  if (lastDetail) {
+    html += `<div class="detail-section"><h3>Last Tick #${lastTick.tick}</h3>
+      <div class="detail-kv"><span class="k">delivery</span><span class="v">${lastDetail.deliveryStatus==='ok'?'\u2713 '+(lastDetail.deliveryMs/1000).toFixed(1)+'s':'\u2717 '+lastDetail.deliveryStatus}</span></div>
+      ${lastDetail.error ? `<div class="detail-kv"><span class="k">error</span><span class="v" style="color:var(--red)">${esc(lastDetail.error.message||lastDetail.error.type||'')}${lastDetail.error.httpStatus?' ('+lastDetail.error.httpStatus+')':''}</span></div>` : ''}
+      <div class="detail-kv"><span class="k">payload</span><span class="v">${(lastDetail.payloadSize/1024).toFixed(1)}KB \u00B7 ${lastDetail.toolCount} tools</span></div>
+      <div class="detail-kv"><span class="k">actions</span><span class="v">${lastDetail.actions?.length||0}</span></div>
+      ${lastDetail.hasMemoryEntry != null ? `<div class="detail-kv"><span class="k">memory entry</span><span class="v">${lastDetail.hasMemoryEntry?'yes':'--'}</span></div>` : ''}
+    </div>`;
+    if (lastDetail.rawActions?.length || lastDetail.actions?.length) {
+      html += `<div class="detail-section"><h3>Actions #${lastTick.tick}</h3>
+        <div class="payload-box show" style="display:block;max-height:300px">${renderRawActions(lastDetail.rawActions || lastDetail.actions)}</div>
+      </div>`;
+    }
+    if (lastDetail.payload) {
+      html += `<div class="detail-section"><h3>Payload #${lastTick.tick}</h3>
+        <div class="payload-box show" style="display:block;max-height:500px">${esc(JSON.stringify(lastDetail.payload,null,2))}</div>
+      </div>`;
+    }
+  }
+
+  const hist = tickHistory.slice(0,15).map(t => {
+    const d = t.bots?.find(b => b.name === name);
+    return d ? { tick: t.tick, s: d.deliveryStatus, ms: d.deliveryMs, n: d.actions?.length||0, err: d.error } : null;
+  }).filter(Boolean);
+  if (hist.length) {
+    html += '<div class="detail-section"><h3>Delivery History</h3>';
+    for (const h of hist) {
+      const c = h.s==='ok'?'status-ok':h.s==='timeout'?'status-timeout':'status-error';
+      const errTxt = h.err?.message ? ` \u2014 ${esc(h.err.message)}` : '';
+      html += `<div class="detail-kv"><span class="k">#${h.tick}</span><span class="v ${c}">${h.s==='ok'?(h.ms/1000).toFixed(1)+'s':h.s}${errTxt} \u00B7 ${h.n} act</span></div>`;
+    }
+    html += '</div>';
+  }
+
+  // Memory — only show if the world provides memories
+  if (memories) {
+    html += '<div class="detail-section"><h3>Memory</h3>';
+    if (memories.summary) html += `<div class="memory-summary">${esc(memories.summary)}</div>`;
+    const r = memories.recent || [];
+    html += `<div style="font-size:10px;color:var(--text-dim);margin:4px 0">${r.length} entries</div>`;
+    for (let i = r.length-1; i >= Math.max(0, r.length-10); i--) html += `<div class="memory-entry">${esc(r[i])}</div>`;
+    if (r.length > 10) html += `<div style="font-size:10px;color:var(--text-dim)">+${r.length-10} older</div>`;
+    html += '</div>';
+  }
+
+  panel.innerHTML = html;
+}
+
+function selectBot(name) {
+  selectedBot = name;
+  if (sidebarTab !== 'bots') switchTab('bots');
+  else renderSidebar();
+  updateDetail();
+  if (window.innerWidth <= 768) switchMobilePanel('detail');
+}
+
+// ---- sessionStorage persistence ----
+const SS_KEY = 'village-dev-console';
+
+function saveSession() {
+  try {
+    sessionStorage.setItem(SS_KEY, JSON.stringify({
+      selectedBot,
+      sidebarTab,
+      expandedPayloads: [...expandedPayloads],
+      expandedActions: [...expandedActions],
+      notableEvents: notableEvents.slice(0, 30),
+      latestTickEvent,
+      tickInProgress,
+      tickStartTime,
+      tickStartBots,
+      currentTickBotState,
+      currentTickActions,
+      mobilePanel,
+    }));
+  } catch {}
+}
+
+function restoreSession() {
+  try {
+    const raw = sessionStorage.getItem(SS_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.selectedBot) selectedBot = d.selectedBot;
+    if (d.sidebarTab) sidebarTab = d.sidebarTab;
+    if (d.expandedPayloads?.length) expandedPayloads = new Set(d.expandedPayloads);
+    if (d.expandedActions?.length) expandedActions = new Set(d.expandedActions);
+    if (d.notableEvents?.length) notableEvents = d.notableEvents;
+    if (d.latestTickEvent) latestTickEvent = d.latestTickEvent;
+    if (d.tickInProgress) {
+      tickInProgress = true;
+      tickStartTime = d.tickStartTime || Date.now();
+      tickStartBots = d.tickStartBots || [];
+      currentTickBotState = d.currentTickBotState || {};
+      currentTickActions = d.currentTickActions || [];
+    }
+    if (d.mobilePanel) mobilePanel = d.mobilePanel;
+  } catch {}
+}
+
+// Auto-save session state on changes
+const _origSelectBot = selectBot;
+selectBot = function(name) { _origSelectBot(name); saveSession(); };
+const _origSwitchTab = switchTab;
+switchTab = function(tab) { _origSwitchTab(tab); saveSession(); };
+const _origSwitchMobilePanel = switchMobilePanel;
+switchMobilePanel = function(panel) { _origSwitchMobilePanel(panel); saveSession(); };
+
+// ---- Server-side tick history bootstrap ----
+async function fetchRecentTicks() {
+  try {
+    const r = await fetch(basePath + '/api/dev/recent-ticks');
+    const d = await r.json();
+    if (d.ticks?.length) {
+      // Merge: server ticks go after any already-received live ticks
+      const existingTickNums = new Set(tickHistory.map(t => t.tick));
+      for (const tick of d.ticks) {
+        if (!existingTickNums.has(tick.tick)) {
+          tickHistory.push(tick); // server ticks are already newest-first
+          existingTickNums.add(tick.tick);
+        }
+      }
+      // Re-sort newest first and cap
+      tickHistory.sort((a, b) => b.tick - a.tick);
+      if (tickHistory.length > MAX_TICKS) tickHistory.length = MAX_TICKS;
+      renderTickLog();
+      renderSidebar();
+      updateDetail();
+    }
+  } catch {}
+}
+
+// ---- Helpers ----
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtUp(ms) {
+  if (!ms) return '--';
+  const s = Math.floor(ms/1000);
+  return s<60?s+'s':s<3600?Math.floor(s/60)+'m':Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m';
+}
+
+// ---- Init ----
+restoreSession();
+// Sync sidebar tab UI with restored state
+document.getElementById('tabBots').className = 'sidebar-tab' + (sidebarTab === 'bots' ? ' active' : '');
+document.getElementById('tabWorld').className = 'sidebar-tab' + (sidebarTab === 'world' ? ' active' : '');
+document.getElementById('tabArch').className = 'sidebar-tab' + (sidebarTab === 'arch' ? ' active' : '');
+// Sync mobile panel with restored state
+switchMobilePanel(mobilePanel);
+document.getElementById('mTabSidebar').textContent = sidebarTab.charAt(0).toUpperCase() + sidebarTab.slice(1);
+updateHeader();
+renderTickLog();
+window._tickElapsed = setInterval(() => { renderTickLog(); renderSidebar(); }, 1000);
+connectSSE();
+fetchHealth();
+fetchHubStatus();
+fetchServerMeta();
+fetchRecentTicks();
+setInterval(fetchHealth, 30000);
+setInterval(fetchHubStatus, 5000);
+setInterval(fetchServerMeta, 15000);
+renderSidebar();
+</script>
+</body>
+</html>
