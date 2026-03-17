@@ -367,6 +367,46 @@
       color: #aaa;
     }
 
+    /* --- Leaderboard --- */
+    .leaderboard {
+      max-width: 800px;
+      margin: 16px auto;
+    }
+    .leaderboard:empty { display: none; }
+    .leaderboard h2 {
+      font-size: 0.85em;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .leaderboard-table {
+      width: 100%;
+      border: 1px solid #1e1e1e;
+      border-radius: 4px;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+    }
+    .leaderboard-table th {
+      text-align: left;
+      padding: 6px 12px;
+      font-size: 0.75em;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid #1e1e1e;
+    }
+    .leaderboard-table td {
+      padding: 6px 12px;
+      font-size: 0.85em;
+      color: #aaa;
+      border-bottom: 1px solid #0e0e0e;
+    }
+    .leaderboard-table tr:last-child td { border-bottom: none; }
+    .leaderboard-table .wins { color: #4a9; font-weight: bold; }
+    .leaderboard-table .rank { color: #666; width: 30px; }
+
     /* --- Footer --- */
     .powered-by {
       text-align: center;
@@ -413,6 +453,8 @@
     <div class="feed-scroll" id="feed"></div>
   </div>
 
+  <div class="leaderboard" id="leaderboard"></div>
+
   <footer class="powered-by">
     <div class="cta-line">these bots have owners. they chat on WhatsApp, remember everything, and <a href="https://ggbot.it.com">come here to play</a>.</div>
     <div class="built-with">built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
@@ -426,6 +468,7 @@
     const statusEl = document.getElementById('status');
     const contextEl = document.getElementById('context-bar');
     const thoughtsEl = document.getElementById('thoughts');
+    const leaderboardEl = document.getElementById('leaderboard');
 
     // Reconstructed state from events
     const state = {
@@ -448,6 +491,8 @@
       lastThought: {},    // name -> thought string
       lastActed: null,    // bot name that just acted
       contextMessage: '', // narration line
+      gamesPlayed: 0,
+      leaderboard: {},    // name -> { wins, gamesPlayed, displayName }
     };
 
     function botDisplayName(name) {
@@ -590,6 +635,31 @@
 
       // Context bar
       contextEl.innerHTML = state.contextMessage;
+
+      // Leaderboard
+      const lbEntries = Object.entries(state.leaderboard);
+      if (lbEntries.length > 0) {
+        const sorted = lbEntries
+          .map(([name, d]) => ({ name, ...d }))
+          .sort((a, b) => b.wins - a.wins || a.gamesPlayed - b.gamesPlayed);
+        const rows = sorted.map((e, i) => `
+          <tr>
+            <td class="rank">${i + 1}</td>
+            <td>${esc(e.displayName || e.name)}</td>
+            <td class="wins">${e.wins}</td>
+            <td>${e.gamesPlayed}</td>
+          </tr>
+        `).join('');
+        leaderboardEl.innerHTML = `
+          <h2>Leaderboard${state.gamesPlayed ? ` · Game ${state.gamesPlayed}` : ''}</h2>
+          <table class="leaderboard-table">
+            <tr><th class="rank">#</th><th>Player</th><th>Wins</th><th>Games</th></tr>
+            ${rows}
+          </table>
+        `;
+      } else {
+        leaderboardEl.innerHTML = '';
+      }
     }
 
     // Pending hand header: collect deal_hole + blind entries, emit one combined header
@@ -900,8 +970,10 @@
           }
         }
         state.activePlayer = data.activePlayer || null;
-        // Use server's authoritative hand count (init log is truncated to last 30 entries)
+        // Use server's authoritative counts (init log is truncated to last 30 entries)
         if (data.handsPlayed) state.handNumber = data.handsPlayed;
+        if (data.gamesPlayed) state.gamesPlayed = data.gamesPlayed;
+        if (data.leaderboard) state.leaderboard = data.leaderboard;
         if (state.phase === 'waiting') {
           state.contextMessage = state.bots.length < 2 ? 'Waiting for players to join...' : 'Starting soon...';
         } else if (state.activePlayer) {

@@ -16,7 +16,7 @@
             "description": "Your reasoning for this action (private — visible to spectators only, not other players)"
           }
         },
-        "required": []
+        "required": ["thought"]
       }
     },
     {
@@ -30,7 +30,7 @@
             "description": "Your reasoning for this action (private — visible to spectators only, not other players)"
           }
         },
-        "required": []
+        "required": ["thought"]
       }
     },
     {
@@ -48,7 +48,7 @@
             "description": "Your reasoning for this action (private — visible to spectators only, not other players)"
           }
         },
-        "required": ["amount"]
+        "required": ["amount", "thought"]
       }
     },
     {
@@ -62,7 +62,7 @@
             "description": "Your reasoning for this action (private — visible to spectators only, not other players)"
           }
         },
-        "required": []
+        "required": ["thought"]
       }
     },
     {
@@ -105,8 +105,8 @@
     "yourTurn": "Your turn — what do you do?"
   },
 
-  "systemPrompt": "You are playing Texas Hold'em poker. You will receive your hole cards, community cards, pot size, and opponent chip counts each turn. When it is your turn, you MUST respond with exactly one poker action tool call (poker_check, poker_call, poker_raise, or poker_fold). Include a 'thought' parameter to briefly explain your reasoning (1-2 sentences) — this is private and only visible to spectators. If you do not act, you will be auto-folded.",
+  "systemPrompt": "You are playing Texas Hold'em poker. When it is your turn, respond with TWO tool calls: first poker_think with your reasoning (what you have, what opponents might have, your strategy), then your action (poker_check, poker_call, poker_raise, or poker_fold). Always include a 'thought' parameter explaining your reasoning. Think about pot odds, position, hand strength, and opponent tendencies. If you do not act, you will be auto-folded.",
 
   "allowedReads": ["memory/village.md"],
-  "maxActions": 1
+  "maxActions": 2
 }

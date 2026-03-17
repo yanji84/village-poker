@@ -18,6 +18,8 @@ export function initState(worldConfig) {
     log: [],
     buyIns: {},       // botName → chip count (persists across hands)
     handsPlayed: 0,
+    gamesPlayed: 0,
+    leaderboard: {},  // botName → { wins, gamesPlayed, displayName }
   };
 }
 
@@ -139,19 +141,43 @@ export const phases = {
     scene: finishedScene,
     transitions: [
       {
-        // New game when a player leaves (resetting the table) or new players join
+        // Auto-restart: wait 1 tick for observers to see the result, then reset
         to: 'waiting',
         when: (state) => {
-          const playersWithChips = state.bots.filter(b => (state.buyIns[b] || 0) > 0);
-          return playersWithChips.length !== 1 || state.bots.length < 2;
+          if (!state.restartAfterTick) {
+            // Recovery from old state or missed onEnter — set it now
+            state.restartAfterTick = state.clock.tick;
+            return false;
+          }
+          if (state.clock.tick <= state.restartAfterTick) return false;
+          // Reset all buy-ins for a fresh game
+          for (const bot of state.bots) {
+            state.buyIns[bot] = BUY_IN;
+          }
+          state.handsPlayed = 0;
+          return true;
         },
       },
     ],
     onEnter(state) {
+      state.gamesPlayed = (state.gamesPlayed || 0) + 1;
+      if (!state.leaderboard) state.leaderboard = {};
+
       const winner = state.bots.find(b => (state.buyIns[b] || 0) > 0);
       if (winner) {
         const displayName = state.remoteParticipants?.[winner]?.displayName || winner;
         state.winner = { botName: winner, displayName, chips: state.buyIns[winner], handsPlayed: state.handsPlayed };
+
+        // Update leaderboard for all participants
+        for (const bot of state.bots) {
+          if (!state.leaderboard[bot]) {
+            state.leaderboard[bot] = { wins: 0, gamesPlayed: 0, displayName: state.remoteParticipants?.[bot]?.displayName || bot };
+          }
+          state.leaderboard[bot].gamesPlayed++;
+          state.leaderboard[bot].displayName = state.remoteParticipants?.[bot]?.displayName || bot;
+        }
+        state.leaderboard[winner].wins++;
+
         logAction(state, {
           bot: 'dealer',
           displayName: 'Dealer',
@@ -160,6 +186,9 @@ export const phases = {
           visibility: 'public',
         });
       }
+
+      // Auto-restart after 1 tick
+      state.restartAfterTick = state.clock.tick;
     },
   },
 };
@@ -171,8 +200,25 @@ export const tools = {
     const active = getActivePlayer(state, bot);
     if (!active) return null;
     const { hand, player } = active;
-
-    if (player.bet < hand.currentBet) return null; // can't check when facing a bet
+    // If facing a bet, treat check as a call (LLMs often pick check when they mean call)
+    if (player.bet < hand.currentBet) {
+      const toCall = Math.min(hand.currentBet - player.bet, player.chips);
+      if (toCall <= 0) return null;
+      player.chips -= toCall;
+      player.bet += toCall;
+      player.totalBet += toCall;
+      hand.pot += toCall;
+      state.buyIns[bot.name] = player.chips;
+      player.acted = true;
+      advanceAction(state);
+      return {
+        action: 'call',
+        amount: toCall,
+        message: `calls ${toCall}`,
+        visibility: 'public',
+        ...(params?.thought ? { thought: params.thought } : {}),
+      };
+    }
 
     player.acted = true;
     advanceAction(state);
