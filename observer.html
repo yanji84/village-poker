@@ -23,7 +23,7 @@
       border: 1px solid #1e1e1e;
       border-radius: 4px;
       margin: 0 auto 16px;
-      max-width: 800px;
+      max-width: 900px;
       font-size: 0.9em;
     }
     .status .phase { color: #4a9; font-weight: bold; text-transform: uppercase; }
@@ -31,15 +31,71 @@
     .status .connected { color: #4a9; }
     .status .disconnected { color: #e55; }
 
-    /* --- Table --- */
-    .table {
-      max-width: 800px;
-      margin: 0 auto 12px;
-      background: #111;
-      border: 1px solid #1e1e1e;
-      border-radius: 12px;
-      padding: 36px 36px 24px;
-      min-height: 260px;
+    /* --- Table Container --- */
+    .table-container {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto 20px;
+      aspect-ratio: 1.8 / 1;
+      min-height: 380px;
+    }
+
+    /* --- Felt Table (oval) --- */
+    .table-felt {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 75%;
+      height: 70%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 50% 40%, #1a6b3c, #145a30 40%, #0f4825 70%, #0a3a1c);
+      border: 12px solid #2a1a0a;
+      box-shadow:
+        0 0 0 4px #1a1008,
+        0 0 40px rgba(0,0,0,0.6),
+        inset 0 0 60px rgba(0,0,0,0.3),
+        inset 0 0 120px rgba(0,0,0,0.15);
+    }
+
+    /* Felt rail highlight */
+    .table-felt::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid rgba(180,140,80,0.3);
+      pointer-events: none;
+    }
+
+    /* Inner felt line */
+    .table-felt::after {
+      content: '';
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.06);
+      pointer-events: none;
+    }
+
+    /* --- Center content (pot + community + branding) --- */
+    .table-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 2;
+      width: 50%;
+    }
+
+    .table-brand {
+      font-size: 0.7em;
+      color: rgba(255,255,255,0.12);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-weight: 700;
+      margin-bottom: 6px;
     }
 
     /* --- Chip icon (reusable) --- */
@@ -66,15 +122,15 @@
     /* --- Pot --- */
     .pot {
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     .pot-inner {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.35);
       border-radius: 20px;
-      padding: 6px 16px;
+      padding: 4px 14px;
     }
     .pot-stack {
       display: flex;
@@ -83,160 +139,260 @@
     .pot-stack .chip { margin-left: -8px; }
     .pot-stack .chip:first-child { margin-left: 0; }
     .pot-amount {
-      font-size: 1.3em;
+      font-size: 1.2em;
       font-weight: bold;
-      color: #4a9;
+      color: #f0d060;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
     }
     .pot-label {
-      font-size: 0.65em;
-      color: #aaa;
+      font-size: 0.6em;
+      color: rgba(255,255,255,0.5);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
     .community {
       text-align: center;
-      margin: 12px 0 16px;
+      margin: 6px 0;
       min-height: 50px;
     }
     .community .cards {
       display: flex;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
     .community .street-label {
-      font-size: 0.75em;
-      color: #aaa;
+      font-size: 0.7em;
+      color: rgba(255,255,255,0.4);
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
+    /* --- Cards --- */
     .card {
-      display: inline-block;
-      background: white;
-      color: #333;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      color: #222;
       border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 1.15em;
+      padding: 6px 7px;
+      font-size: 1.05em;
       font-weight: bold;
-      min-width: 40px;
+      min-width: 38px;
+      min-height: 50px;
       text-align: center;
-      box-shadow: 1px 2px 4px rgba(0,0,0,0.3);
+      box-shadow: 1px 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8);
+      position: relative;
     }
     .card.red { color: #cc0000; }
     .card.empty {
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.06);
       color: rgba(255,255,255,0.15);
-      border: 1px dashed #333;
+      border: 1px dashed rgba(255,255,255,0.1);
       box-shadow: none;
+      min-height: 50px;
+    }
+    .card.face-down {
+      background: linear-gradient(135deg, #2a4494, #1a2d6d);
+      color: transparent;
+      border: 2px solid #3a5ab8;
+      box-shadow: 1px 2px 6px rgba(0,0,0,0.4);
+    }
+    .card.face-down::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        rgba(255,255,255,0.04) 3px,
+        rgba(255,255,255,0.04) 6px
+      );
     }
 
-    /* --- Players --- */
-    .players {
+    /* --- Player Seats (absolute positioned around oval) --- */
+    .seat {
+      position: absolute;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      margin: 16px 0 8px;
-    }
-    .player {
-      position: relative;
-      background: rgba(255,255,255,0.03);
-      border-radius: 8px;
-      padding: 12px 16px;
-      min-width: 150px;
-      max-width: 220px;
-      text-align: center;
-      border: 1px solid #1e1e1e;
-      transition: border-color 0.3s, opacity 0.3s;
+      flex-direction: column;
+      align-items: center;
+      z-index: 3;
+      transition: opacity 0.3s;
     }
 
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 8px rgba(68,170,153,0.2); }
-      50% { box-shadow: 0 0 18px rgba(68,170,153,0.4); }
+    /* Seat positions for up to 6 players around oval */
+    .seat[data-pos="0"] { bottom: -6%; left: 50%; transform: translateX(-50%); }
+    .seat[data-pos="1"] { bottom: 8%; left: 4%; transform: translateX(0); }
+    .seat[data-pos="2"] { top: 8%; left: 4%; transform: translateX(0); }
+    .seat[data-pos="3"] { top: -6%; left: 50%; transform: translateX(-50%); }
+    .seat[data-pos="4"] { top: 8%; right: 4%; transform: translateX(0); }
+    .seat[data-pos="5"] { bottom: 8%; right: 4%; transform: translateX(0); }
+
+    /* --- Player Node --- */
+    .player-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 100px;
     }
-    .player.active {
+
+    .player-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      border: 3px solid rgba(255,255,255,0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .player-info {
+      background: rgba(0,0,0,0.7);
+      border-radius: 8px;
+      padding: 4px 10px;
+      text-align: center;
+      min-width: 90px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .player-name {
+      font-weight: bold;
+      font-size: 0.8em;
+      color: #eee;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 110px;
+    }
+
+    .player-chips-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin: 1px 0;
+    }
+    .chip-amount {
+      color: #ccc;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+
+    .player-hole-cards {
+      display: flex;
+      gap: 3px;
+      margin-top: 3px;
+    }
+    .player-hole-cards .card {
+      font-size: 0.75em;
+      padding: 3px 5px;
+      min-width: 26px;
+      min-height: 36px;
+    }
+    .player-hole-cards .card.face-down {
+      min-width: 26px;
+      min-height: 36px;
+    }
+
+    /* --- Bet on felt --- */
+    .player-bet {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 4;
+      white-space: nowrap;
+    }
+    .bet-amount {
+      font-size: 0.75em;
+      font-weight: bold;
+      color: #f0d060;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+
+    /* Bet positions (between seat and center) */
+    .player-bet[data-pos="0"] { bottom: 32%; left: 50%; transform: translateX(-50%); }
+    .player-bet[data-pos="1"] { bottom: 30%; left: 22%; }
+    .player-bet[data-pos="2"] { top: 30%; left: 22%; }
+    .player-bet[data-pos="3"] { top: 32%; left: 50%; transform: translateX(-50%); }
+    .player-bet[data-pos="4"] { top: 30%; right: 22%; }
+    .player-bet[data-pos="5"] { bottom: 30%; right: 22%; }
+
+    /* --- Player States --- */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 8px rgba(68,170,153,0.3), 0 2px 8px rgba(0,0,0,0.4); }
+      50% { box-shadow: 0 0 20px rgba(68,170,153,0.6), 0 2px 8px rgba(0,0,0,0.4); }
+    }
+    .seat.active .player-avatar {
       border-color: #4a9;
       animation: pulse-glow 2s ease-in-out infinite;
     }
+    .seat.active .player-info {
+      border-color: rgba(68,170,153,0.4);
+    }
 
     @keyframes action-flash {
-      0% { background: rgba(68,170,153,0.1); }
-      100% { background: rgba(255,255,255,0.03); }
+      0% { background: rgba(68,170,153,0.2); }
+      100% { background: rgba(0,0,0,0.7); }
     }
-    .player.just-acted {
+    .seat.just-acted .player-info {
       animation: action-flash 1s ease-out;
     }
 
-    .player.folded { opacity: 0.4; }
-    .player.winner {
-      border-color: #4a9;
-      background: rgba(68,170,153,0.08);
+    .seat.folded { opacity: 0.35; }
+
+    .seat.winner .player-avatar {
+      border-color: #f0d060;
+      box-shadow: 0 0 20px rgba(240,208,96,0.5), 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .seat.winner .player-name {
+      color: #f0d060;
     }
 
     @keyframes card-reveal {
       0% { transform: rotateY(90deg); opacity: 0; }
       100% { transform: rotateY(0deg); opacity: 1; }
     }
-    .player.winner .hole-cards .card {
+    .seat.winner .player-hole-cards .card {
       animation: card-reveal 0.6s ease-out;
     }
 
-    .player .name {
-      font-weight: bold;
-      font-size: 1em;
-      margin-bottom: 4px;
+    .player-role {
+      font-size: 0.65em;
+      color: #888;
+      margin-top: 1px;
     }
+    .seat.active .player-role { color: #4a9; }
 
-    /* --- Player chip display --- */
-    .player-chips {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      margin: 4px 0 2px;
-    }
-    .chip-amount {
-      color: #ccc;
-      font-size: 0.95em;
-      font-weight: bold;
-    }
-
-    .player .bet {
-      color: #ff9;
-      font-size: 0.8em;
-    }
-    .player .hole-cards {
-      margin-top: 4px;
-    }
-    .player .hole-cards .card {
-      font-size: 0.85em;
-      padding: 4px 6px;
-      min-width: 30px;
-    }
-    .player .role {
-      font-size: 0.7em;
-      color: #aaa;
-      margin-top: 2px;
-    }
-
-    /* --- Blind chips --- */
-    .blind-chip {
+    /* --- Blind/Dealer Badges --- */
+    .player-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      margin-top: 3px;
-      font-size: 0.75em;
+      gap: 3px;
+      margin-top: 2px;
+      font-size: 0.65em;
       font-weight: bold;
     }
-    .blind-chip.small .blind-label { color: #6699dd; }
-    .blind-chip.big .blind-label { color: #ee6666; }
+    .player-badge .badge-label { color: #aaa; }
+    .player-badge.small-blind .badge-label { color: #6699dd; }
+    .player-badge.big-blind .badge-label { color: #ee6666; }
 
     /* --- Thoughts panel (below table) --- */
     .thoughts-panel {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto 12px;
       display: flex;
       gap: 10px;
@@ -268,7 +424,7 @@
 
     /* --- Context bar --- */
     .context-bar {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto 16px;
       text-align: center;
       padding: 10px 16px;
@@ -283,7 +439,7 @@
 
     /* --- Action feed --- */
     .feed {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
     }
     .feed h2 {
@@ -325,7 +481,7 @@
       border-radius: 4px;
       margin: 4px 0;
     }
-    .feed-entry.result .card { font-size: 0.8em; padding: 2px 4px; min-width: auto; }
+    .feed-entry.result .card { font-size: 0.8em; padding: 2px 4px; min-width: auto; min-height: auto; }
     .feed-entry.deal { color: #888; }
     .feed-entry.street-header {
       color: #ccc;
@@ -358,7 +514,7 @@
       font-weight: bold;
       font-size: 1em;
     }
-    .hand-header .hand-cards .card { font-size: 0.7em; padding: 1px 3px; min-width: auto; }
+    .hand-header .hand-cards .card { font-size: 0.7em; padding: 1px 3px; min-width: auto; min-height: auto; }
     .hand-header .blind-info {
       display: inline-flex;
       align-items: center;
@@ -369,7 +525,7 @@
 
     /* --- Leaderboard --- */
     .leaderboard {
-      max-width: 800px;
+      max-width: 900px;
       margin: 16px auto;
     }
     .leaderboard:empty { display: none; }
@@ -432,16 +588,36 @@
       text-decoration: none;
     }
     .built-with a:hover { text-decoration: underline; }
+
+    /* --- Responsive --- */
+    @media (max-width: 700px) {
+      .table-container {
+        min-height: 340px;
+        aspect-ratio: 1.5 / 1;
+      }
+      .table-felt { width: 80%; height: 65%; }
+      .player-avatar { width: 40px; height: 40px; font-size: 17px; }
+      .player-info { padding: 3px 6px; min-width: 70px; }
+      .player-name { font-size: 0.7em; max-width: 80px; }
+      .player-hole-cards .card { font-size: 0.65em; padding: 2px 3px; min-width: 22px; min-height: 30px; }
+      .community .card { font-size: 0.85em; padding: 4px 5px; min-width: 32px; min-height: 42px; }
+      .seat[data-pos="1"], .seat[data-pos="2"] { left: 0%; }
+      .seat[data-pos="4"], .seat[data-pos="5"] { right: 0%; }
+    }
   </style>
 </head>
 <body>
   <h1>ggbot poker</h1>
   <div class="status" id="status">Connecting...</div>
 
-  <div class="table">
-    <div class="pot" id="pot"></div>
-    <div class="community" id="community"></div>
-    <div class="players" id="players"></div>
+  <div class="table-container" id="table-container">
+    <div class="table-felt"></div>
+    <div class="table-center">
+      <div class="table-brand">ggbot poker</div>
+      <div class="pot" id="pot"></div>
+      <div class="community" id="community"></div>
+    </div>
+    <!-- Player seats and bets are injected dynamically -->
   </div>
 
   <div class="thoughts-panel" id="thoughts"></div>
@@ -463,7 +639,7 @@
   <script>
     const potEl = document.getElementById('pot');
     const communityEl = document.getElementById('community');
-    const playersEl = document.getElementById('players');
+    const tableContainer = document.getElementById('table-container');
     const feedEl = document.getElementById('feed');
     const statusEl = document.getElementById('status');
     const contextEl = document.getElementById('context-bar');
@@ -499,6 +675,35 @@
       return state.bots.find(b => b.name === name)?.displayName || name;
     }
 
+    // --- Avatar color from name hash ---
+    function nameHash(name) {
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        hash = hash & hash;
+      }
+      return Math.abs(hash);
+    }
+
+    function avatarColor(name) {
+      const hue = nameHash(name) % 360;
+      return `hsl(${hue}, 55%, 40%)`;
+    }
+
+    function avatarInitial(name) {
+      return (name || '?').charAt(0).toUpperCase();
+    }
+
+    // --- Seat positions for different player counts ---
+    function seatPositions(count) {
+      // Returns array of seat indices (data-pos) for given player count
+      if (count <= 2) return [0, 3];
+      if (count === 3) return [0, 2, 4];
+      if (count === 4) return [0, 1, 3, 5];
+      if (count === 5) return [0, 1, 2, 4, 5];
+      return [0, 1, 2, 3, 4, 5];
+    }
+
     function renderCard(card) {
       const suit = card.slice(-1);
       const isRed = suit === '♥' || suit === '♦';
@@ -507,6 +712,10 @@
 
     function renderEmptyCard() {
       return `<span class="card empty">·</span>`;
+    }
+
+    function renderFaceDownCard() {
+      return `<span class="card face-down"></span>`;
     }
 
     // Pick chip color based on amount
@@ -533,16 +742,6 @@
             <div class="pot-amount">${amount}</div>
             <div class="pot-label">pot</div>
           </div>
-        </div>
-      `;
-    }
-
-    // Render player chip count with chip icon
-    function renderPlayerChips(chips) {
-      return `
-        <div class="player-chips">
-          <span class="chip sm ${chipColor(chips)}"></span>
-          <span class="chip-amount">${chips}</span>
         </div>
       `;
     }
@@ -579,48 +778,79 @@
         communityEl.innerHTML = '';
       }
 
-      // Players
-      let playersHtml = '';
-      for (const bot of state.bots) {
+      // --- Players around the table ---
+      // Remove old seats and bets
+      tableContainer.querySelectorAll('.seat, .player-bet').forEach(el => el.remove());
+
+      const positions = seatPositions(state.bots.length);
+
+      for (let i = 0; i < state.bots.length; i++) {
+        const bot = state.bots[i];
+        const pos = positions[i] !== undefined ? positions[i] : i % 6;
         const chips = state.chips[bot.name] ?? '?';
         const isFolded = state.foldedPlayers.has(bot.name);
         const isActive = state.activePlayer === bot.name;
         const isWinner = state.lastResult?.winners?.includes(bot.name) && state.phase === 'showdown';
         const bet = state.currentBets[bot.name] || 0;
+        const displayName = bot.displayName || bot.name;
 
-        let classes = 'player';
-        if (isActive) classes += ' active';
-        if (isFolded) classes += ' folded';
-        if (isWinner) classes += ' winner';
-        if (state.lastActed === bot.name) classes += ' just-acted';
+        let seatClasses = 'seat';
+        if (isActive) seatClasses += ' active';
+        if (isFolded) seatClasses += ' folded';
+        if (isWinner) seatClasses += ' winner';
+        if (state.lastActed === bot.name) seatClasses += ' just-acted';
 
+        // Hole cards
         const cards = state.holeCards[bot.name];
         let cardsHtml = '';
         if (cards && cards.length === 2) {
-          cardsHtml = `<div class="hole-cards">${renderCard(cards[0])} ${renderCard(cards[1])}</div>`;
+          cardsHtml = `<div class="player-hole-cards">${renderCard(cards[0])} ${renderCard(cards[1])}</div>`;
+        } else if (state.phase === 'betting' && !isFolded) {
+          cardsHtml = `<div class="player-hole-cards">${renderFaceDownCard()} ${renderFaceDownCard()}</div>`;
         }
 
-        // Blind indicator as colored chip
-        let blindHtml = '';
+        // Blind badge
+        let badgeHtml = '';
         if (state.blinds[bot.name] === 'small') {
-          blindHtml = `<div class="blind-chip small"><span class="chip sm blue">S</span><span class="blind-label">Small 10</span></div>`;
+          badgeHtml = `<div class="player-badge small-blind"><span class="chip sm blue" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">S</span><span class="badge-label">SB</span></div>`;
         } else if (state.blinds[bot.name] === 'big') {
-          blindHtml = `<div class="blind-chip big"><span class="chip sm red">B</span><span class="blind-label">Big 20</span></div>`;
+          badgeHtml = `<div class="player-badge big-blind"><span class="chip sm red" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">B</span><span class="badge-label">BB</span></div>`;
         }
 
-        playersHtml += `
-          <div class="${classes}">
-            <div class="name">${escapeHtml(bot.displayName || bot.name)}${isWinner ? ' 🏆' : ''}</div>
+        // Status text
+        let roleHtml = '';
+        if (isFolded) roleHtml = '<div class="player-role">Folded</div>';
+        else if (isActive) roleHtml = '<div class="player-role" style="color:#4a9">Acting</div>';
+
+        const seatEl = document.createElement('div');
+        seatEl.className = seatClasses;
+        seatEl.dataset.pos = pos;
+        seatEl.innerHTML = `
+          <div class="player-node">
+            <div class="player-avatar" style="background: ${avatarColor(bot.name)}">${avatarInitial(displayName)}</div>
+            <div class="player-info">
+              <div class="player-name">${escapeHtml(displayName)}${isWinner ? ' 🏆' : ''}</div>
+              <div class="player-chips-display">
+                <span class="chip sm ${chipColor(typeof chips === 'number' ? chips : 0)}" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px"></span>
+                <span class="chip-amount">${chips}</span>
+              </div>
+              ${badgeHtml}
+              ${roleHtml}
+            </div>
             ${cardsHtml}
-            ${typeof chips === 'number' ? renderPlayerChips(chips) : `<div class="player-chips"><span class="chip-amount">${chips}</span></div>`}
-            ${bet > 0 ? `<div class="bet">Bet: ${bet}</div>` : ''}
-            ${blindHtml}
-            ${isFolded ? '<div class="role">Folded</div>' : ''}
-            ${isActive ? '<div class="role" style="color:#4a9">Acting</div>' : ''}
           </div>
         `;
+        tableContainer.appendChild(seatEl);
+
+        // Bet chip on felt
+        if (bet > 0) {
+          const betEl = document.createElement('div');
+          betEl.className = 'player-bet';
+          betEl.dataset.pos = pos;
+          betEl.innerHTML = `<span class="chip sm ${chipColor(bet)}" style="width:16px;height:16px;line-height:10px;font-size:6px;border-width:1.5px"></span><span class="bet-amount">${bet}</span>`;
+          tableContainer.appendChild(betEl);
+        }
       }
-      playersEl.innerHTML = playersHtml;
 
       // Thoughts panel
       const thoughtCards = state.bots
@@ -678,7 +908,6 @@
       const blindInfo = h.sbName && h.bbName
         ? `<span class="blind-info"><span class="chip sm blue" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">S</span>${esc(h.sbName)} <span class="chip sm red" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">B</span>${esc(h.bbName)}</span>`
         : '';
-      // Use state.handNumber which is already incremented by processEvent(blind small)
       div.innerHTML = `<span class="hand-num">Hand #${h.number}</span> <span class="hand-cards">${cardsHtml}</span> <span style="margin-left:auto">${blindInfo}</span>`;
       feedEl.appendChild(div);
     }
@@ -702,7 +931,6 @@
         }
         if (entry.blindType === 'small') {
           pendingHand.sbName = name;
-          // handNumber was already incremented by processEvent
           pendingHand.number = state.handNumber;
         }
         if (entry.blindType === 'big') {
