@@ -48,6 +48,22 @@
       color: #eee;
     }
     .top-bar-title .accent { color: var(--accent); }
+    .spectator-count {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .spectator-count .eye-icon {
+      font-size: 13px;
+      opacity: 0.7;
+    }
+    .spectator-count .count-num {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
 
     /* --- Status Bar --- */
     .status {
@@ -96,6 +112,10 @@
       font-weight: 600;
     }
     .info-strip .pot-value { color: #f0d060; }
+    .info-strip .blind-escalated {
+      color: #ff9944;
+      text-shadow: 0 0 6px rgba(255, 153, 68, 0.5);
+    }
     .info-strip .board-cards {
       display: inline-flex;
       gap: 4px;
@@ -103,6 +123,74 @@
     }
     .info-strip .sep {
       color: var(--text-muted);
+    }
+
+    /* --- Live Action Ticker --- */
+    .action-ticker {
+      position: relative;
+      overflow: hidden;
+      padding: 5px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-primary);
+      font-family: var(--mono);
+      font-size: 11px;
+      height: 26px;
+      line-height: 16px;
+    }
+    .action-ticker-track {
+      display: flex;
+      gap: 0;
+      white-space: nowrap;
+      animation: ticker-scroll 30s linear infinite;
+      will-change: transform;
+    }
+    .action-ticker-track:hover {
+      animation-play-state: paused;
+    }
+    .action-ticker-item {
+      flex-shrink: 0;
+      color: var(--text-secondary);
+    }
+    .action-ticker-item .ticker-name {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .action-ticker-item .ticker-action-fold {
+      color: var(--red);
+    }
+    .action-ticker-item .ticker-action-raise {
+      color: #f0d060;
+      font-weight: 600;
+    }
+    .action-ticker-item .ticker-action-call {
+      color: var(--green);
+    }
+    .action-ticker-item .ticker-action-check {
+      color: var(--text-secondary);
+    }
+    .action-ticker-item .ticker-action-allin {
+      color: #e44;
+      font-weight: 700;
+    }
+    .action-ticker-item .ticker-action-deal {
+      color: var(--accent);
+    }
+    .action-ticker-item .ticker-action-result {
+      color: #f0d060;
+      font-weight: 700;
+    }
+    .action-ticker-sep {
+      flex-shrink: 0;
+      color: var(--text-muted);
+      margin: 0 12px;
+    }
+    .action-ticker-empty {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
 
     /* --- Cards (minimal monospace labels) --- */
@@ -199,6 +287,12 @@
     .player-card.winner {
       border-left-color: #f0d060;
       background: #111108;
+      animation: winner-glow 1.5s ease-in-out 3;
+    }
+
+    @keyframes winner-glow {
+      0%, 100% { background: #111108; box-shadow: inset 0 0 0 rgba(240,208,96,0); }
+      50% { background: #1a1808; box-shadow: inset 0 0 20px rgba(240,208,96,0.1); }
     }
 
     @keyframes pulse-border {
@@ -242,6 +336,29 @@
     .player-card.active .player-card-role { color: var(--accent); }
     .player-card-role.blind-sb { color: #69d; }
     .player-card-role.blind-bb { color: #e66; }
+
+    .player-card-personality {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .player-card-personality .archetype-name {
+      color: var(--accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .player-card-personality .archetype-tagline {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .player-card.folded .player-card-personality { opacity: 0.5; }
+    .player-card.eliminated .player-card-personality { opacity: 0.3; }
 
     .player-card-cards {
       display: flex;
@@ -536,6 +653,108 @@
 
     @media (max-width: 700px) {
       .leaderboard-table .hide-mobile { display: none; }
+    }
+
+    /* --- Game Stats --- */
+    .game-stats {
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      background: var(--bg-card);
+    }
+    .game-stats:empty { display: none; }
+    .game-stats h2 {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+    .game-stats-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .game-stats-tabs button {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .game-stats-tabs button:hover { border-color: #444; }
+    .game-stats-tabs button.active {
+      background: rgba(68,170,255,0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .game-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+    }
+    .game-stat-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+    }
+    .game-stat-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .game-stat-value {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .game-stat-sub {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .street-bar {
+      display: flex;
+      gap: 2px;
+      margin-top: 4px;
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .street-bar-segment {
+      height: 100%;
+      min-width: 2px;
+      border-radius: 1px;
+    }
+    .street-legend {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .street-legend-item {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .street-legend-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
     }
 
     /* --- Pixel Poker Canvas --- */
@@ -1024,6 +1243,58 @@
       animation: strategy-flash 1.5s ease-out;
     }
 
+    /* --- Dramatic Moment: All-In --- */
+    .player-card.all-in {
+      border-left-color: #e44 !important;
+    }
+    .player-card-role.role-allin {
+      color: #e44 !important;
+      font-weight: 700;
+      text-shadow: 0 0 6px rgba(228,68,68,0.5);
+    }
+
+    @keyframes allin-flash {
+      0% { background: var(--bg-elevated); }
+      15% { background: #2a1010; box-shadow: inset 0 0 30px rgba(228,68,68,0.3); }
+      30% { background: var(--bg-elevated); }
+      45% { background: #2a1010; box-shadow: inset 0 0 20px rgba(228,68,68,0.2); }
+      100% { background: var(--bg-elevated); box-shadow: none; }
+    }
+    .info-strip.allin-alert {
+      animation: allin-flash 1.2s ease-out;
+    }
+
+    @keyframes canvas-shake {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-3px, 2px); }
+      20% { transform: translate(4px, -2px); }
+      30% { transform: translate(-2px, 3px); }
+      40% { transform: translate(3px, -1px); }
+      50% { transform: translate(-1px, 2px); }
+      60% { transform: translate(2px, -3px); }
+      70% { transform: translate(-3px, 1px); }
+      80% { transform: translate(1px, -2px); }
+      90% { transform: translate(-2px, 1px); }
+    }
+    #poker-canvas.canvas-shake {
+      animation: canvas-shake 0.5s ease-out;
+    }
+
+    /* --- Dramatic Moment: Big Pot --- */
+    @keyframes bigpot-pulse {
+      0%, 100% { text-shadow: 0 0 4px rgba(240,208,96,0.3); }
+      50% { text-shadow: 0 0 12px rgba(240,208,96,0.8), 0 0 20px rgba(240,208,96,0.4); }
+    }
+    .pot-value.big-pot {
+      animation: bigpot-pulse 1.5s ease-in-out infinite;
+      font-size: 14px !important;
+    }
+    .pot-value.huge-pot {
+      animation: bigpot-pulse 0.8s ease-in-out infinite;
+      font-size: 16px !important;
+      color: #ffcc00 !important;
+    }
+
     /* --- Responsive single column --- */
     @media (max-width: 800px) {
       .dashboard {
@@ -1146,6 +1417,41 @@
     }
     .bluff-tag.won { background: #1a3a1a; color: #4a6; }
     .bluff-tag.caught { background: #3a1a1a; color: #a44; }
+
+    /* --- Streak Indicators --- */
+    .streak-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--mono);
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-left: 4px;
+      animation: streak-pulse 2s ease-in-out infinite;
+    }
+    .streak-indicator.hot {
+      background: linear-gradient(135deg, #4a2000, #6b3000);
+      color: #ff8c42;
+      text-shadow: 0 0 6px rgba(255, 140, 66, 0.5);
+    }
+    .streak-indicator.cold {
+      background: linear-gradient(135deg, #0a2040, #1a3050);
+      color: #6cb4ee;
+      text-shadow: 0 0 6px rgba(108, 180, 238, 0.5);
+    }
+    @keyframes streak-pulse {
+      0%, 100% { opacity: 0.85; }
+      50% { opacity: 1; }
+    }
+    .player-card-streak {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      text-align: center;
+    }
 
     /* --- Score Badge --- */
     .score-badge {
@@ -1294,13 +1600,527 @@
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* --- Hand Result Toast --- */
+    .hand-result-toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      z-index: 9999;
+      background: linear-gradient(135deg, #1a1a0a 0%, #111108 100%);
+      border: 1px solid #f0d06066;
+      border-radius: 8px;
+      padding: 14px 28px;
+      font-family: var(--mono);
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 40px rgba(240,208,96,0.08);
+      max-width: 500px;
+    }
+    .hand-result-toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .hand-result-toast.fade-out {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-10px);
+    }
+    .hand-result-toast .toast-trophy {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+    .hand-result-toast .toast-winner {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f0d060;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+    .hand-result-toast .toast-detail {
+      font-size: 12px;
+      color: #bbb;
+    }
+    .hand-result-toast .toast-detail .toast-chips {
+      color: #f0d060;
+      font-weight: 600;
+    }
+    .hand-result-toast .toast-detail .toast-hand-name {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* --- Hand Strength Label (showdown) --- */
+    .hand-strength-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: #f0d060;
+      background: rgba(240, 208, 96, 0.08);
+      border: 1px solid rgba(240, 208, 96, 0.25);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-top: 4px;
+      display: inline-block;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      animation: hand-strength-appear 0.5s ease-out;
+    }
+    @keyframes hand-strength-appear {
+      0% { opacity: 0; transform: scale(0.8); }
+      60% { opacity: 1; transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* --- Player Elimination Announcement --- */
+    .player-card.eliminated {
+      border-left-color: #a00 !important;
+      background: #1a0808 !important;
+      opacity: 1 !important;
+      animation: elimination-pulse 0.6s ease-in-out 3 !important;
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes elimination-pulse {
+      0%, 100% { background: #1a0808; box-shadow: inset 0 0 0 rgba(170,0,0,0); }
+      50% { background: #2a0a0a; box-shadow: inset 0 0 30px rgba(170,0,0,0.2); }
+    }
+    .player-card.eliminated .player-card-name { color: #666; text-decoration: line-through; }
+    .player-card.eliminated .player-card-chips { color: #a00; }
+
+    .elimination-stamp {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 900;
+      color: #cc0000;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      border: 3px solid #cc0000;
+      padding: 2px 12px;
+      pointer-events: none;
+      opacity: 0;
+      animation: stamp-in 0.4s ease-out 0.2s forwards;
+      text-shadow: 0 0 10px rgba(204,0,0,0.6);
+      box-shadow: 0 0 15px rgba(204,0,0,0.3);
+      z-index: 10;
+    }
+    @keyframes stamp-in {
+      0% { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(2.5); }
+      60% { opacity: 1; transform: translate(-50%, -50%) rotate(-12deg) scale(0.9); }
+      100% { opacity: 0.85; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
+    }
+
+    .elimination-toast {
+      position: fixed;
+      top: 140px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      z-index: 9998;
+      background: linear-gradient(135deg, #1a0808 0%, #110404 100%);
+      border: 1px solid #cc000066;
+      border-radius: 8px;
+      padding: 14px 28px;
+      font-family: var(--mono);
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 40px rgba(204,0,0,0.12);
+      max-width: 500px;
+    }
+    .elimination-toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .elimination-toast.fade-out {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-10px);
+    }
+    .elimination-toast .elim-icon {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+    .elimination-toast .elim-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #cc0000;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+    .elimination-toast .elim-detail {
+      font-size: 12px;
+      color: #888;
+    }
+
+    /* --- Intro Banner --- */
+    .intro-banner {
+      background: #0d1117;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+    }
+    .intro-content {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .intro-content h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .intro-content p {
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .intro-stats-explainer {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .intro-stats-explainer strong {
+      color: var(--text-primary);
+    }
+    .intro-content button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 5px 16px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .intro-content button:hover {
+      opacity: 0.85;
+    }
+
+    /* === Mobile Responsive Layout (375px phones) === */
+    @media (max-width: 520px) {
+      body {
+        font-size: 12px;
+      }
+
+      /* Top bar: compact */
+      .top-bar {
+        padding: 8px 12px;
+      }
+      .top-bar-title {
+        font-size: 11px;
+        letter-spacing: 1px;
+      }
+      .spectator-count {
+        font-size: 10px;
+      }
+
+      /* Status bar: tighter */
+      .status {
+        padding: 6px 12px;
+        gap: 8px;
+        font-size: 10px;
+      }
+
+      /* Info strip: wrap and compact */
+      .info-strip {
+        padding: 6px 12px;
+        gap: 6px 12px;
+        font-size: 11px;
+      }
+      .info-strip .label {
+        font-size: 9px;
+        letter-spacing: 1px;
+        margin-right: 3px;
+      }
+      .info-strip .sep {
+        display: none;
+      }
+
+      /* Ticker: smaller */
+      .action-ticker {
+        padding: 4px 12px;
+        height: 22px;
+        font-size: 10px;
+        line-height: 14px;
+      }
+
+      /* Canvas: shorter on mobile */
+      #poker-canvas {
+        height: 180px;
+      }
+
+      /* Dashboard: single column, no min-height */
+      .dashboard {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+      .left-col {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      /* Player grid: single column on very small screens */
+      .player-grid {
+        grid-template-columns: 1fr;
+      }
+
+      /* Player cards: tighter */
+      .player-card {
+        padding: 10px 12px;
+        min-height: 90px;
+      }
+      .player-card-name {
+        font-size: 11px;
+      }
+      .player-card-personality {
+        font-size: 8px;
+      }
+      .player-card-strategy {
+        font-size: 10px;
+        -webkit-line-clamp: 1;
+      }
+      .player-card-chips {
+        font-size: 11px;
+      }
+      .player-card-stats {
+        font-size: 9px;
+      }
+      .player-card-stats .stat-bar {
+        width: 35px;
+      }
+
+      /* Section headers */
+      .section-header {
+        padding: 8px 12px 5px;
+        font-size: 9px;
+      }
+
+      /* Stats dashboard */
+      .stats-dashboard {
+        padding: 10px 12px;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 12px;
+        font-size: 10px;
+      }
+
+      /* Reasoning panel: limit height on mobile so it doesn't push content */
+      .reasoning-panel {
+        max-height: 60vh;
+      }
+      .reasoning-body {
+        max-height: 50vh;
+        padding: 12px;
+      }
+      .reasoning-header {
+        padding: 8px 12px;
+      }
+      .reasoning-header .who {
+        font-size: 11px;
+      }
+      .reasoning-scene {
+        font-size: 10px;
+        padding: 8px 10px;
+      }
+      .reasoning-text {
+        font-size: 11px;
+        padding: 10px 12px;
+      }
+      .reasoning-action {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+
+      /* Leaderboard: compact */
+      .leaderboard {
+        padding: 10px 12px;
+      }
+      .leaderboard-table {
+        font-size: 10px;
+      }
+      .leaderboard-table th {
+        padding: 5px 6px;
+        font-size: 9px;
+      }
+      .leaderboard-table td {
+        padding: 4px 6px;
+      }
+
+      /* Game stats */
+      .game-stats {
+        padding: 10px 12px;
+      }
+      .game-stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .game-stat-card {
+        padding: 6px 8px;
+      }
+      .game-stat-value {
+        font-size: 14px;
+      }
+      .game-stats-tabs {
+        flex-wrap: wrap;
+      }
+      .game-stats-tabs button {
+        font-size: 9px;
+        padding: 3px 7px;
+      }
+
+      /* Join panel: full width, adjust tab position */
+      .join-panel {
+        width: 100%;
+      }
+      .join-tab {
+        padding: 10px 6px;
+        font-size: 10px;
+      }
+      .join-panel-section {
+        padding: 12px 14px;
+      }
+
+      /* Hand result toast: fit on mobile */
+      .hand-result-toast {
+        max-width: calc(100vw - 32px);
+        padding: 10px 16px;
+        top: 60px;
+      }
+      .hand-result-toast .toast-winner {
+        font-size: 13px;
+      }
+      .hand-result-toast .toast-detail {
+        font-size: 11px;
+      }
+
+      /* Elimination toast: fit on mobile */
+      .elimination-toast {
+        max-width: calc(100vw - 32px);
+        padding: 10px 16px;
+        top: 120px;
+      }
+
+      /* Toast container: position for mobile */
+      .toast-container {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+      }
+      .toast {
+        max-width: 100%;
+        font-size: 11px;
+      }
+
+      /* Full editor modal: near-fullscreen on mobile */
+      .full-editor-modal {
+        width: 95vw;
+        height: 90vh;
+        max-width: none;
+      }
+      .full-editor-header {
+        padding: 10px 14px;
+      }
+      .full-editor-body {
+        padding: 12px 14px;
+      }
+      .full-editor-body textarea {
+        font-size: 11px;
+      }
+      .full-editor-footer {
+        padding: 10px 14px;
+      }
+
+      /* Intro banner: compact */
+      .intro-banner {
+        padding: 12px 14px;
+      }
+      .intro-content h2 {
+        font-size: 13px;
+      }
+      .intro-content p {
+        font-size: 12px;
+      }
+      .intro-stats-explainer {
+        font-size: 11px;
+      }
+
+      /* Elimination stamp: scale down */
+      .elimination-stamp {
+        font-size: 14px;
+        letter-spacing: 2px;
+        padding: 2px 8px;
+        border-width: 2px;
+      }
+
+      /* Pot emphasis: tone down font bump */
+      .pot-value.big-pot {
+        font-size: 12px !important;
+      }
+      .pot-value.huge-pot {
+        font-size: 14px !important;
+      }
+
+      /* Footer */
+      .powered-by {
+        padding: 12px 0 8px;
+      }
+
+      /* Streak badge: smaller */
+      .streak-indicator {
+        font-size: 10px;
+        padding: 1px 4px;
+      }
+
+      /* Score badge */
+      .score-badge {
+        font-size: 12px;
+      }
+    }
+
+    /* Player grid: 2 cols between 375 and 520 */
+    @media (min-width: 375px) and (max-width: 520px) {
+      .player-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
   </style>
 </head>
 <body>
 
+  <!-- Hand Result Toast -->
+  <div class="hand-result-toast" id="hand-result-toast"></div>
+
+  <!-- Elimination Toast -->
+  <div class="elimination-toast" id="elimination-toast"></div>
+
   <!-- Top Header -->
   <div class="top-bar">
     <div class="top-bar-title"><span class="accent">POKER ARENA</span> &mdash; Live AI Strategy Competition</div>
+    <div class="spectator-count" id="spectator-count"></div>
+  </div>
+
+  <!-- Intro Banner (first-time visitors) -->
+  <div class="intro-banner" id="intro-banner">
+    <div class="intro-content">
+      <h2>Welcome to Poker Arena</h2>
+      <p>Watch AI bots compete in Texas Hold'em poker — or join the game yourself! Submit your strategy as a prompt, and an AI bot plays poker using your instructions.</p>
+      <div class="intro-stats-explainer">
+        <div><strong>VPIP</strong> — % of hands a player voluntarily puts money in (calls or raises preflop)</div>
+        <div><strong>Win Rate</strong> — % of hands won</div>
+        <div><strong>Bluffs Won/Caught</strong> — Won = everyone folded (no showdown). Caught = lost at showdown after raising</div>
+        <div><strong>Score</strong> — Composite: wins × 10 + win rate × 100 + bluff success × 50 − bluffs caught × 5</div>
+        <div><strong>Blinds</strong> — Forced bets that escalate every 20 hands to force action</div>
+      </div>
+      <button onclick="dismissIntro()">Got it!</button>
+    </div>
   </div>
 
   <!-- Status Bar -->
@@ -1315,6 +2135,15 @@
     <span><span class="label">Street</span> <span class="value" id="street-value">&mdash;</span></span>
     <span class="sep">|</span>
     <span><span class="label">Hand</span> <span class="value" id="hand-value">#0</span></span>
+    <span class="sep">|</span>
+    <span><span class="label">Blinds</span> <span class="value" id="blinds-value">10/20</span></span>
+  </div>
+
+  <!-- Live Action Ticker -->
+  <div class="action-ticker" id="action-ticker">
+    <div class="action-ticker-track" id="action-ticker-track">
+      <span class="action-ticker-empty">Waiting for actions...</span>
+    </div>
   </div>
 
   <!-- Main Dashboard Grid -->
@@ -1354,6 +2183,9 @@
 
   <!-- Leaderboard -->
   <div class="leaderboard" id="leaderboard"></div>
+
+  <!-- Game Stats -->
+  <div class="game-stats" id="game-stats"></div>
 
   <footer class="powered-by">
     <div class="built-with">built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
@@ -1577,6 +2409,15 @@ Min raise: <span style="font-weight:bold">80</span>
   </div>
 
   <script>
+    // --- Intro banner for first-time visitors ---
+    function dismissIntro() {
+      document.getElementById('intro-banner').style.display = 'none';
+      localStorage.setItem('intro_dismissed', 'true');
+    }
+    if (localStorage.getItem('intro_dismissed')) {
+      document.getElementById('intro-banner').style.display = 'none';
+    }
+
     // --- Base path for API calls (works behind /poker/ reverse proxy) ---
     const basePath = window.location.pathname.replace(/\/+$/, '');
     const apiBase = basePath + '/api/arena';
@@ -2394,12 +3235,70 @@ Min raise: <span style="font-weight:bold">80</span>
       lastSay: {},
       maxPlayers: 6,
       playerCount: 0,
+      dramaticEvent: null,
+      gameStats: {},
+      gameStatsByTime: {},
+      gameStatsPeriod: 'all',
+      observerCount: 0,
     };
+
+    // Blinds escalation: mirrors game.js getBlinds()
+    const BLIND_ESCALATION_INTERVAL = 20;
+    function getBlindLevel(handNumber) {
+      const level = Math.min(Math.floor(handNumber / BLIND_ESCALATION_INTERVAL), 5);
+      const multiplier = Math.pow(2, level);
+      return { small: 10 * multiplier, big: 20 * multiplier, level };
+    }
 
     // Reasoning panel history for current hand
     let handReasoningHistory = [];
     // Current active thought data for reasoning panel
     let activeThoughtData = null;
+
+    // Live action ticker state
+    const MAX_TICKER_ITEMS = 30;
+    let tickerItems = []; // array of { text: string, cssClass: string }
+
+    function addTickerItem(name, actionText, cssClass) {
+      tickerItems.push({ name, actionText, cssClass });
+      if (tickerItems.length > MAX_TICKER_ITEMS) {
+        tickerItems = tickerItems.slice(-MAX_TICKER_ITEMS);
+      }
+    }
+
+    function renderTicker() {
+      const track = document.getElementById('action-ticker-track');
+      if (!track) return;
+      if (tickerItems.length === 0) {
+        track.innerHTML = '<span class="action-ticker-empty">Waiting for actions...</span>';
+        track.style.animation = 'none';
+        return;
+      }
+      // Build items HTML — duplicate for seamless loop
+      const buildItems = (items) => items.map((item, i) => {
+        const sep = '<span class="action-ticker-sep">&bull;</span>';
+        return (i > 0 ? sep : '') +
+          '<span class="action-ticker-item">' +
+          '<span class="ticker-name">' + escapeHtml(item.name) + '</span> ' +
+          '<span class="ticker-action-' + item.cssClass + '">' + escapeHtml(item.actionText) + '</span>' +
+          '</span>';
+      }).join('');
+
+      const itemsHtml = buildItems(tickerItems);
+      // Duplicate content for seamless scrolling loop
+      track.innerHTML = '<span class="ticker-half">' + itemsHtml + '</span>' +
+        '<span class="action-ticker-sep" style="margin:0 20px">&bull;</span>' +
+        '<span class="ticker-half">' + itemsHtml + '</span>';
+
+      // Adjust animation speed based on content width
+      const needsScroll = track.scrollWidth > track.parentElement.clientWidth;
+      if (needsScroll) {
+        const duration = Math.max(15, tickerItems.length * 3);
+        track.style.animation = 'ticker-scroll ' + duration + 's linear infinite';
+      } else {
+        track.style.animation = 'none';
+      }
+    }
 
     function botDisplayName(name) {
       return state.bots.find(b => b.name === name)?.displayName || name;
@@ -2423,6 +3322,73 @@ Min raise: <span style="font-weight:bold">80</span>
       return (name || '?').charAt(0).toUpperCase();
     }
 
+    // --- Bot personality archetypes ---
+    const BOT_PERSONALITIES = {
+      'Nova':  { archetype: 'The Shark',      tagline: 'Cold reads, sharp teeth' },
+      'Jinx':  { archetype: 'The Maniac',     tagline: 'Chaos is the plan' },
+      'Pixel': { archetype: 'The Trapper',     tagline: 'Friendly face, hidden fangs' },
+      'Volt':  { archetype: 'The Calculator',  tagline: 'Every bet is an equation' },
+    };
+
+    /**
+     * Derive a personality archetype for human players based on their play stats.
+     * Returns { archetype, tagline } or null if not enough data.
+     */
+    function derivePersonality(stats) {
+      const hands = stats.handsPlayed || 0;
+      if (hands < 5) return null; // not enough data yet
+
+      const vpip = (((stats.calls || 0) + (stats.raises || 0)) / hands) * 100;
+      const raiseRate = ((stats.raises || 0) / Math.max(1, (stats.calls || 0) + (stats.raises || 0))) * 100;
+      const winRate = ((stats.handsWon || 0) / hands) * 100;
+      const bluffsWon = stats.bluffsWon || 0;
+      const bluffsCaught = stats.bluffsCaught || 0;
+      const totalBluffs = bluffsWon + bluffsCaught;
+
+      // High bluff rate
+      if (totalBluffs >= 3 && bluffsWon > bluffsCaught) {
+        return { archetype: 'The Hustler', tagline: 'Sells fiction for chips' };
+      }
+      // Very tight
+      if (vpip < 30) {
+        return { archetype: 'The Rock', tagline: 'Patience is a weapon' };
+      }
+      // Very loose and aggressive
+      if (vpip > 55 && raiseRate > 50) {
+        return { archetype: 'The Wildcard', tagline: 'Any two cards will do' };
+      }
+      // Aggressive raiser
+      if (raiseRate > 60) {
+        return { archetype: 'The Bully', tagline: 'Raises speak louder than words' };
+      }
+      // Passive caller
+      if (vpip > 45 && raiseRate < 30) {
+        return { archetype: 'The Sheriff', tagline: 'Always pays to see' };
+      }
+      // High win rate
+      if (winRate > 40) {
+        return { archetype: 'The Grinder', tagline: 'Steady hands, steady wins' };
+      }
+      // Default
+      return { archetype: 'The Contender', tagline: 'Still finding their edge' };
+    }
+
+    /**
+     * Get personality for a player (bot or human).
+     * Returns { archetype, tagline } or null.
+     */
+    function getPlayerPersonality(botName, displayName, isHuman, stats) {
+      // Check built-in bot personalities by display name
+      if (!isHuman && BOT_PERSONALITIES[displayName]) {
+        return BOT_PERSONALITIES[displayName];
+      }
+      // For humans (or unknown bots), derive from stats
+      if (isHuman && stats) {
+        return derivePersonality(stats);
+      }
+      return null;
+    }
+
     // --- Card rendering ---
     function renderCard(card) {
       const suit = card.slice(-1);
@@ -2436,6 +3402,303 @@ Min raise: <span style="font-weight:bold">80</span>
 
     function renderFaceDownCard() {
       return `<span class="card face-down"></span>`;
+    }
+
+    // --- Winner Celebration Particle System ---
+    let celebrationParticles = [];
+    let celebrationActive = false;
+    let celebrationStartFrame = 0;
+    const CELEBRATION_DURATION = 180; // frames (~3 seconds at 60fps)
+    const CELEBRATION_COLORS = ['#f0d060', '#ff6b6b', '#4af', '#4a6', '#ff9f43', '#ee5a24', '#a29bfe', '#fd79a8'];
+
+    function spawnCelebration(cx, cy, canvasW, canvasH) {
+      celebrationParticles = [];
+      celebrationActive = true;
+      celebrationStartFrame = pokerAnimFrame;
+
+      // Burst of confetti from the winner's position
+      for (let i = 0; i < 60; i++) {
+        const angle = (Math.PI * 2 * i) / 60 + (Math.random() - 0.5) * 0.5;
+        const speed = 1.5 + Math.random() * 3;
+        celebrationParticles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 2, // upward bias
+          size: 2 + Math.random() * 3,
+          color: CELEBRATION_COLORS[Math.floor(Math.random() * CELEBRATION_COLORS.length)],
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.2,
+          gravity: 0.04 + Math.random() * 0.03,
+          life: 1.0,
+          decay: 0.004 + Math.random() * 0.004,
+          type: Math.random() > 0.5 ? 'rect' : 'diamond',
+        });
+      }
+
+      // Shower from top of canvas
+      for (let i = 0; i < 40; i++) {
+        celebrationParticles.push({
+          x: Math.random() * canvasW,
+          y: -10 - Math.random() * 40,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: 1 + Math.random() * 2,
+          size: 2 + Math.random() * 2,
+          color: CELEBRATION_COLORS[Math.floor(Math.random() * CELEBRATION_COLORS.length)],
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.15,
+          gravity: 0.02,
+          life: 1.0,
+          decay: 0.003 + Math.random() * 0.003,
+          type: Math.random() > 0.5 ? 'rect' : 'diamond',
+        });
+      }
+    }
+
+    function updateAndDrawCelebration(ctx, w, h) {
+      if (!celebrationActive || celebrationParticles.length === 0) return;
+
+      const elapsed = pokerAnimFrame - celebrationStartFrame;
+      if (elapsed > CELEBRATION_DURATION) {
+        celebrationActive = false;
+        celebrationParticles = [];
+        return;
+      }
+
+      for (let i = celebrationParticles.length - 1; i >= 0; i--) {
+        const p = celebrationParticles[i];
+        p.x += p.vx;
+        p.vy += p.gravity;
+        p.y += p.vy;
+        p.rotation += p.rotSpeed;
+        p.life -= p.decay;
+
+        if (p.life <= 0 || p.y > h + 20) {
+          celebrationParticles.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.fillStyle = p.color;
+
+        if (p.type === 'rect') {
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        } else {
+          // Diamond shape
+          ctx.beginPath();
+          ctx.moveTo(0, -p.size / 2);
+          ctx.lineTo(p.size / 2, 0);
+          ctx.lineTo(0, p.size / 2);
+          ctx.lineTo(-p.size / 2, 0);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Gold glow flash at start
+      if (elapsed < 30) {
+        ctx.globalAlpha = 0.15 * (1 - elapsed / 30);
+        ctx.fillStyle = '#f0d060';
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalAlpha = 1.0;
+      }
+    }
+
+    let lastCelebrationResult = null;
+    let lastToastResult = null;
+    let toastTimeout = null;
+
+    // Elimination tracking
+    let eliminatedPlayers = new Set();       // players currently at 0 chips (busted)
+    let eliminationAnimations = {};          // { botName: { startTime, ... } } for canvas effects
+    let eliminationToastTimeout = null;
+
+    // Community card reveal animation state
+    let prevCommunityLength = 0;        // track how many cards were shown last frame
+    let cardRevealAnim = null;          // { startTime, newCardStartIdx, totalCards }
+    const CARD_REVEAL_DURATION = 600;   // ms for the full flip animation
+    const CARD_REVEAL_STAGGER = 120;    // ms stagger between cards on flop
+
+    // Card dealing animation state (hole cards from deck to players)
+    let dealAnim = null;                // { startTime, playerCount, seatPositions: [{x,y}] }
+    const DEAL_ANIM_DURATION = 400;     // ms per card flight
+    const DEAL_ANIM_STAGGER = 100;      // ms stagger between each card dealt
+    const DEAL_CARDS_PER_PLAYER = 2;    // two hole cards each
+
+    function showHandResultToast(winnerDisplayNames, amount, handName) {
+      const toastEl = document.getElementById('hand-result-toast');
+      if (!toastEl) return;
+
+      // Clear any existing toast timer
+      if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toastTimeout = null;
+      }
+
+      const namesStr = winnerDisplayNames.join(' & ');
+      const plural = winnerDisplayNames.length > 1;
+      const share = plural ? Math.floor(amount / winnerDisplayNames.length) : amount;
+
+      toastEl.innerHTML = `
+        <div class="toast-trophy">&#127942;</div>
+        <div class="toast-winner">${escapeHtml(namesStr)} win${plural ? '' : 's'}!</div>
+        <div class="toast-detail">
+          <span class="toast-chips">${share} chips</span> with <span class="toast-hand-name">${escapeHtml(handName)}</span>
+        </div>
+      `;
+
+      // Show with animation
+      toastEl.classList.remove('fade-out');
+      // Force reflow to restart transition
+      void toastEl.offsetWidth;
+      toastEl.classList.add('visible');
+
+      // Start fade out after 3 seconds
+      toastTimeout = setTimeout(() => {
+        toastEl.classList.add('fade-out');
+        toastEl.classList.remove('visible');
+      }, 3000);
+    }
+
+    // --- Player Elimination ---
+
+    function checkForEliminations() {
+      const bots = state.bots || [];
+      const newlyEliminated = [];
+
+      for (const bot of bots) {
+        const chips = state.chips[bot.name];
+        // Player has 0 chips and wasn't already tracked as eliminated
+        if (typeof chips === 'number' && chips === 0 && !eliminatedPlayers.has(bot.name)) {
+          // Only trigger during showdown (after a result), not during betting (all-in is different)
+          if (state.phase === 'showdown') {
+            eliminatedPlayers.add(bot.name);
+            eliminationAnimations[bot.name] = { startTime: Date.now() };
+            newlyEliminated.push(bot);
+          }
+        }
+      }
+
+      // Clear eliminated status if a player gets chips again (shouldn't happen, but safety)
+      for (const name of eliminatedPlayers) {
+        const chips = state.chips[name];
+        if (typeof chips === 'number' && chips > 0) {
+          eliminatedPlayers.delete(name);
+          delete eliminationAnimations[name];
+        }
+      }
+
+      // Show elimination toast for newly eliminated players
+      for (const bot of newlyEliminated) {
+        const displayName = bot.displayName || bot.name;
+        const stats = seatData[bot.name]?.stats || state.leaderboard[bot.name]?.stats || {};
+        const handsPlayed = stats.handsPlayed || 0;
+        const handsWon = stats.handsWon || 0;
+        showEliminationToast(displayName, handsPlayed, handsWon);
+      }
+    }
+
+    function showEliminationToast(playerName, handsPlayed, handsWon) {
+      const toastEl = document.getElementById('elimination-toast');
+      if (!toastEl) return;
+
+      if (eliminationToastTimeout) {
+        clearTimeout(eliminationToastTimeout);
+        eliminationToastTimeout = null;
+      }
+
+      const remainingCount = state.bots.filter(b => {
+        const c = state.chips[b.name];
+        return typeof c === 'number' && c > 0;
+      }).length;
+
+      toastEl.innerHTML = `
+        <div class="elim-icon">&#128128;</div>
+        <div class="elim-name">${escapeHtml(playerName)} ELIMINATED</div>
+        <div class="elim-detail">
+          ${handsPlayed > 0 ? `${handsWon}/${handsPlayed} hands won` : 'No hands played'}
+          &middot; ${remainingCount} player${remainingCount !== 1 ? 's' : ''} remain
+        </div>
+      `;
+
+      toastEl.classList.remove('fade-out');
+      void toastEl.offsetWidth;
+      toastEl.classList.add('visible');
+
+      eliminationToastTimeout = setTimeout(() => {
+        toastEl.classList.add('fade-out');
+        toastEl.classList.remove('visible');
+      }, 4000);
+    }
+
+    function drawEliminationEffect(ctx, px, py, charScale, startTime) {
+      const elapsed = (Date.now() - startTime) / 1000;
+
+      // Phase 1 (0-0.5s): Red flash ring expanding outward
+      if (elapsed < 0.5) {
+        const progress = elapsed / 0.5;
+        const ringRadius = 8 * charScale * progress;
+        ctx.globalAlpha = 1.0 - progress;
+        ctx.strokeStyle = '#cc0000';
+        ctx.lineWidth = 2 * charScale;
+        ctx.beginPath();
+        ctx.arc(px, py, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+      }
+
+      // Phase 2 (0.2s+): Red X drawn over the character, fades in
+      if (elapsed > 0.2) {
+        const xProgress = Math.min(1, (elapsed - 0.2) / 0.3);
+        const xSize = 7 * charScale;
+        ctx.globalAlpha = 0.7 * xProgress;
+        ctx.strokeStyle = '#cc0000';
+        ctx.lineWidth = 2.5 * charScale;
+        ctx.lineCap = 'round';
+
+        // First stroke of the X
+        if (xProgress > 0) {
+          const p1 = Math.min(1, xProgress * 2);
+          ctx.beginPath();
+          ctx.moveTo(px - xSize, py - xSize);
+          ctx.lineTo(px - xSize + 2 * xSize * p1, py - xSize + 2 * xSize * p1);
+          ctx.stroke();
+        }
+        // Second stroke
+        if (xProgress > 0.5) {
+          const p2 = Math.min(1, (xProgress - 0.5) * 2);
+          ctx.beginPath();
+          ctx.moveTo(px + xSize, py - xSize);
+          ctx.lineTo(px + xSize - 2 * xSize * p2, py - xSize + 2 * xSize * p2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1.0;
+        ctx.lineCap = 'butt';
+      }
+
+      // Phase 3 (1s+): Persistent subtle red tint and "OUT" text
+      if (elapsed > 1.0) {
+        const fadeIn = Math.min(1, (elapsed - 1.0) / 0.5);
+        // Semi-transparent red overlay
+        ctx.globalAlpha = 0.15 * fadeIn;
+        ctx.fillStyle = '#cc0000';
+        ctx.beginPath();
+        ctx.arc(px, py, 10 * charScale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+
+        // "OUT" label
+        ctx.globalAlpha = 0.8 * fadeIn;
+        ctx.font = `bold ${Math.floor(7 * charScale)}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#cc0000';
+        ctx.fillText('OUT', px, py - 14 * charScale);
+        ctx.globalAlpha = 1.0;
+      }
     }
 
     // --- Pixel Poker Canvas (pixel-agents style) ---
@@ -2467,9 +3730,12 @@ Min raise: <span style="font-weight:bold">80</span>
 
     function resizePokerCanvas() {
       const rect = pokerCanvas.parentElement.getBoundingClientRect();
-      pokerCanvas.width = Math.floor(rect.width * (window.devicePixelRatio || 1));
-      pokerCanvas.height = Math.floor(250 * (window.devicePixelRatio || 1));
-      pokerCtx.setTransform((window.devicePixelRatio || 1), 0, 0, (window.devicePixelRatio || 1), 0, 0);
+      const dpr = window.devicePixelRatio || 1;
+      const cssHeight = window.innerWidth <= 520 ? 180 : 250;
+      pokerCanvas.style.height = cssHeight + 'px';
+      pokerCanvas.width = Math.floor(rect.width * dpr);
+      pokerCanvas.height = Math.floor(cssHeight * dpr);
+      pokerCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       pokerCtx.imageSmoothingEnabled = false;
     }
     window.addEventListener('resize', resizePokerCanvas);
@@ -2542,6 +3808,17 @@ Min raise: <span style="font-weight:bold">80</span>
       pxRect(ctx, tx + felt + 2, ty + th - felt - 3, tw - felt * 2 - 4, 1, '#3a8a52');
       pxRect(ctx, tx + felt + 2, ty + felt + 2, 1, th - felt * 2 - 4, '#3a8a52');
       pxRect(ctx, tx + tw - felt - 3, ty + felt + 2, 1, th - felt * 2 - 4, '#3a8a52');
+
+      // Deck of cards on the table (small stacked card backs, left of center)
+      const deckX = Math.floor(w / 2 - tw * 0.18);
+      const deckY = Math.floor(h / 2 - 10);
+      // Stack shadow (3 offset cards to suggest depth)
+      for (let d = 2; d >= 0; d--) {
+        const dx = deckX - d, dy = deckY - d;
+        pxRect(ctx, dx, dy, 10, 14, '#0f2a50');
+        pxRect(ctx, dx + 1, dy + 1, 8, 1, '#2a5a9a');
+        pxRect(ctx, dx, dy, 10, 1, '#3a6aaa');
+      }
     }
 
     // --- Pixel character (top-down RPG style, ~12x18 design) ---
@@ -2616,6 +3893,101 @@ Min raise: <span style="font-weight:bold">80</span>
       ctx.globalAlpha = 1.0;
     }
 
+    // --- Thinking dots above active player ---
+    function drawThinkingDots(ctx, cx, cy, scale) {
+      const s = scale || 3;
+      // Three dots that appear sequentially in a loop
+      // Each dot is visible for 1/3 of a ~1.5s cycle
+      const cycleFrames = 90; // ~1.5s at 60fps
+      const phase = pokerAnimFrame % cycleFrames;
+      const dotSize = Math.max(2, Math.round(1.5 * s));
+      const gap = Math.round(3.5 * s);
+      const baseY = cy - 14 * s; // above the character's head
+      const baseX = cx - gap; // center the three dots
+
+      for (let i = 0; i < 3; i++) {
+        // Each dot fades in sequentially: dot i is fully visible when phase is in its third
+        const dotPhase = (phase - i * (cycleFrames / 3) + cycleFrames) % cycleFrames;
+        const t = dotPhase / cycleFrames; // 0..1
+        // Dot is visible (alpha > 0) for the first 0.5 of its cycle, peaking at 0.15
+        let alpha;
+        if (t < 0.1) {
+          alpha = t / 0.1; // fade in
+        } else if (t < 0.35) {
+          alpha = 1.0; // fully visible
+        } else if (t < 0.5) {
+          alpha = 1.0 - (t - 0.35) / 0.15; // fade out
+        } else {
+          alpha = 0;
+        }
+
+        if (alpha > 0) {
+          // Subtle bounce: dot rises slightly when appearing
+          const bounce = alpha > 0.5 ? Math.round(-1.5 * s * (1 - alpha)) : 0;
+          ctx.globalAlpha = alpha * 0.85;
+          ctx.fillStyle = '#8AAFD4';
+          ctx.beginPath();
+          ctx.arc(baseX + i * gap, baseY + bounce, dotSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1.0;
+    }
+
+    // --- Streak indicator above player on pixel canvas ---
+    function drawStreakFlame(ctx, cx, cy, scale, streakLen) {
+      const s = scale || 3;
+      // Animated pixelated flame above head
+      const baseY = cy - 15 * s;
+      const baseX = cx;
+      const flicker = pokerAnimFrame % 12;
+      const intensity = Math.min(1, (streakLen - 2) / 5); // grows with streak
+
+      // Outer flame (orange-red)
+      ctx.globalAlpha = 0.7 + 0.2 * Math.sin(pokerAnimFrame * 0.15);
+      pxRect(ctx, baseX - 1 * s, baseY - 1 * s, 3 * s, 2 * s, '#e85c0d');
+      pxRect(ctx, baseX - 0 * s, baseY - 3 * s + (flicker < 6 ? 0 : s), 2 * s, 2 * s, '#ff6b1a');
+      // Inner flame (yellow)
+      ctx.globalAlpha = 0.8 + 0.15 * Math.sin(pokerAnimFrame * 0.2 + 1);
+      pxRect(ctx, baseX, baseY - 1 * s, 1 * s, 1 * s, '#ffd54f');
+      // Spark particles for big streaks
+      if (streakLen >= 5) {
+        const sparkY = baseY - 4 * s - (pokerAnimFrame % 8) * s * 0.3;
+        const sparkX = baseX + Math.sin(pokerAnimFrame * 0.3) * 2 * s;
+        ctx.globalAlpha = 0.5 + 0.3 * Math.sin(pokerAnimFrame * 0.25);
+        pxRect(ctx, sparkX, sparkY, 1 * s, 1 * s, '#ffeb3b');
+      }
+      ctx.globalAlpha = 1.0;
+    }
+
+    function drawStreakIce(ctx, cx, cy, scale, streakLen) {
+      const s = scale || 3;
+      // Animated pixelated ice crystal above head
+      const baseY = cy - 15 * s;
+      const baseX = cx;
+      const shimmer = Math.sin(pokerAnimFrame * 0.08);
+
+      // Ice crystal shape (small cross/diamond)
+      ctx.globalAlpha = 0.6 + 0.25 * shimmer;
+      // Vertical bar
+      pxRect(ctx, baseX, baseY - 3 * s, 1 * s, 3 * s, '#90caf9');
+      // Horizontal bar
+      pxRect(ctx, baseX - 1 * s, baseY - 2 * s, 3 * s, 1 * s, '#bbdefb');
+      // Corner accents
+      ctx.globalAlpha = 0.4 + 0.2 * Math.sin(pokerAnimFrame * 0.12 + 1);
+      pxRect(ctx, baseX - 1 * s, baseY - 3 * s, 1 * s, 1 * s, '#e3f2fd');
+      pxRect(ctx, baseX + 1 * s, baseY - 3 * s, 1 * s, 1 * s, '#e3f2fd');
+      pxRect(ctx, baseX - 1 * s, baseY - 1 * s, 1 * s, 1 * s, '#e3f2fd');
+      pxRect(ctx, baseX + 1 * s, baseY - 1 * s, 1 * s, 1 * s, '#e3f2fd');
+      // Extra crystals for deep cold streaks
+      if (streakLen >= 5) {
+        ctx.globalAlpha = 0.3 + 0.2 * Math.sin(pokerAnimFrame * 0.1 + 2);
+        pxRect(ctx, baseX - 2 * s, baseY - 2 * s, 1 * s, 1 * s, '#64b5f6');
+        pxRect(ctx, baseX + 2 * s, baseY - 2 * s, 1 * s, 1 * s, '#64b5f6');
+      }
+      ctx.globalAlpha = 1.0;
+    }
+
     // --- Pixel chair at seat position ---
     function drawPixelChair(ctx, cx, cy, facing, scale) {
       const s = scale || 3;
@@ -2655,7 +4027,7 @@ Min raise: <span style="font-weight:bold">80</span>
       return seatIdx < 3 ? 'down' : 'up';
     }
 
-    // --- Community cards: pixelated rectangles ---
+    // --- Community cards: pixelated rectangles with reveal animation ---
     function drawCommunityCards(ctx, cards, w, h) {
       if (!cards || cards.length === 0) return;
       const cardW = 14, cardH = 20, gap = 3;
@@ -2663,23 +4035,101 @@ Min raise: <span style="font-weight:bold">80</span>
       const startX = Math.floor(w / 2 - totalW / 2);
       const startY = Math.floor(h / 2 - cardH / 2 - 4);
 
+      const now = Date.now();
+      const anim = cardRevealAnim;
+
       cards.forEach((card, i) => {
         const cx = startX + i * (cardW + gap);
-        // Card border
-        pxRect(ctx, cx - 1, startY - 1, cardW + 2, cardH + 2, '#333');
-        // Card background
-        pxRect(ctx, cx, startY, cardW, cardH, '#F5F0E0');
 
-        // Card rank and suit
-        const suit = card.slice(-1);
-        const rank = card.slice(0, -1);
-        const isRed = suit === '\u2665' || suit === '\u2666';
-        ctx.font = 'bold 7px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = isRed ? '#922B21' : '#1a1a1a';
-        ctx.fillText(rank, cx + cardW / 2, startY + 9);
-        ctx.font = '8px serif';
-        ctx.fillText(suit, cx + cardW / 2, startY + 17);
+        // Check if this card is part of a reveal animation
+        let progress = 1; // 1 = fully revealed
+        let slideOffsetY = 0;
+        if (anim && i >= anim.newCardStartIdx) {
+          const cardDelay = (i - anim.newCardStartIdx) * CARD_REVEAL_STAGGER;
+          const elapsed = now - anim.startTime - cardDelay;
+          if (elapsed < 0) {
+            progress = 0; // not started yet (staggered)
+          } else if (elapsed < CARD_REVEAL_DURATION) {
+            progress = elapsed / CARD_REVEAL_DURATION;
+          }
+          // Slide up from below table during first half
+          if (progress < 0.5) {
+            slideOffsetY = Math.floor((1 - progress * 2) * 12);
+          }
+          // Clear finished animation
+          if (i === anim.totalCards - 1 && progress >= 1) {
+            cardRevealAnim = null;
+          }
+        }
+
+        if (progress <= 0) return; // card not yet visible (stagger delay)
+
+        const drawY = startY + slideOffsetY;
+
+        // Flip effect: scale X from 0 to 1 with a card-back phase
+        const isFlipping = progress < 1;
+        const flipPhase = Math.min(progress * 2, 1); // 0..1 over first half of animation for flip
+        const scaleX = isFlipping ? Math.abs(Math.cos((1 - flipPhase) * Math.PI / 2)) : 1;
+        const showBack = isFlipping && flipPhase < 0.5;
+
+        if (scaleX < 0.05) return; // too thin to draw during mid-flip
+
+        // Calculate scaled card dimensions
+        const scaledW = Math.max(1, Math.floor(cardW * scaleX));
+        const offsetX = Math.floor((cardW - scaledW) / 2);
+
+        // Card border
+        pxRect(ctx, cx + offsetX - 1, drawY - 1, scaledW + 2, cardH + 2, '#333');
+
+        if (showBack) {
+          // Card back: blue pattern
+          pxRect(ctx, cx + offsetX, drawY, scaledW, cardH, '#1a3a6a');
+          // Diamond pattern on back
+          if (scaledW > 4) {
+            pxRect(ctx, cx + offsetX + 2, drawY + 4, Math.max(1, scaledW - 4), 1, '#2a5a9a');
+            pxRect(ctx, cx + offsetX + 2, drawY + 8, Math.max(1, scaledW - 4), 1, '#2a5a9a');
+            pxRect(ctx, cx + offsetX + 2, drawY + 12, Math.max(1, scaledW - 4), 1, '#2a5a9a');
+            pxRect(ctx, cx + offsetX + 2, drawY + 16, Math.max(1, scaledW - 4), 1, '#2a5a9a');
+          }
+          // Border accent
+          if (scaledW > 2) {
+            pxRect(ctx, cx + offsetX + 1, drawY + 1, scaledW - 2, 1, '#3a6aaa');
+            pxRect(ctx, cx + offsetX + 1, drawY + cardH - 2, scaledW - 2, 1, '#3a6aaa');
+          }
+        } else {
+          // Card face
+          pxRect(ctx, cx + offsetX, drawY, scaledW, cardH, '#F5F0E0');
+
+          // Only draw rank/suit when card is wide enough to be legible
+          if (scaleX > 0.5) {
+            const suit = card.slice(-1);
+            const rank = card.slice(0, -1);
+            const isRed = suit === '\u2665' || suit === '\u2666';
+
+            ctx.save();
+            // Scale text horizontally to match card compression
+            ctx.translate(cx + cardW / 2, 0);
+            ctx.scale(scaleX, 1);
+            ctx.translate(-(cx + cardW / 2), 0);
+
+            ctx.font = 'bold 7px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = isRed ? '#922B21' : '#1a1a1a';
+            ctx.fillText(rank, cx + cardW / 2, drawY + 9);
+            ctx.font = '8px serif';
+            ctx.fillText(suit, cx + cardW / 2, drawY + 17);
+
+            ctx.restore();
+          }
+        }
+
+        // Subtle glow on newly revealed card
+        if (isFlipping && progress > 0.5) {
+          const glowAlpha = (1 - progress) * 0.4;
+          ctx.globalAlpha = glowAlpha;
+          pxRect(ctx, cx + offsetX - 2, drawY - 2, scaledW + 4, cardH + 4, '#FFD700');
+          ctx.globalAlpha = 1.0;
+        }
       });
     }
 
@@ -2731,6 +4181,92 @@ Min raise: <span style="font-weight:bold">80</span>
       ctx.fillText('Pot: ' + pot, Math.floor(w / 2), Math.floor(h / 2 + 26));
     }
 
+    // --- Card dealing animation: face-down cards fly from center deck to players ---
+    function drawDealAnimation(ctx, w, h) {
+      if (!dealAnim) return;
+      const now = Date.now();
+      const elapsed = now - dealAnim.startTime;
+      const totalCards = dealAnim.playerCount * DEAL_CARDS_PER_PLAYER;
+      const totalDuration = DEAL_ANIM_STAGGER * (totalCards - 1) + DEAL_ANIM_DURATION;
+
+      if (elapsed > totalDuration + 200) {
+        dealAnim = null;  // animation complete
+        return;
+      }
+
+      // Source: deck position on the table (left of center, matching drawPokerTable deck)
+      const tw = Math.floor(w * 0.46);
+      const srcX = Math.floor(w / 2 - tw * 0.18 + 5);  // center of the deck stack
+      const srcY = Math.floor(h / 2 - 10 + 7);          // vertical center of the deck
+
+      // Card dimensions (small, pixel style)
+      const cardW = 10, cardH = 14;
+
+      // Deal order: round 1 card to each player, then round 2
+      for (let cardIdx = 0; cardIdx < totalCards; cardIdx++) {
+        const playerIdx = cardIdx % dealAnim.playerCount;
+        const cardDelay = cardIdx * DEAL_ANIM_STAGGER;
+        const cardElapsed = elapsed - cardDelay;
+
+        if (cardElapsed < 0) continue;  // not started yet
+        if (cardElapsed > DEAL_ANIM_DURATION + 200) continue;  // finished, hide
+
+        const t = Math.min(cardElapsed / DEAL_ANIM_DURATION, 1);
+        // Ease-out cubic for smooth deceleration
+        const ease = 1 - Math.pow(1 - t, 3);
+
+        const dest = dealAnim.seatPositions[playerIdx];
+        if (!dest) continue;
+
+        // Interpolate position
+        const cx = srcX + (dest.x - srcX) * ease;
+        const cy = srcY + (dest.y - srcY) * ease;
+
+        // Slight rotation during flight
+        const rotation = (1 - t) * 0.3 * (playerIdx % 2 === 0 ? 1 : -1);
+
+        // Fade out in the last 100ms (card arrives and "becomes" the player's hand)
+        const fadeOut = cardElapsed > DEAL_ANIM_DURATION ? Math.max(0, 1 - (cardElapsed - DEAL_ANIM_DURATION) / 200) : 1;
+
+        // Scale slightly smaller at start, grow to full size
+        const scale = 0.7 + 0.3 * ease;
+        const sw = Math.floor(cardW * scale);
+        const sh = Math.floor(cardH * scale);
+
+        ctx.save();
+        ctx.globalAlpha = fadeOut * 0.95;
+        ctx.translate(cx, cy);
+        ctx.rotate(rotation);
+
+        // Card shadow
+        pxRect(ctx, -sw / 2 + 1, -sh / 2 + 1, sw, sh, 'rgba(0,0,0,0.3)');
+
+        // Card back: blue
+        pxRect(ctx, -sw / 2, -sh / 2, sw, sh, '#1a3a6a');
+
+        // Card border
+        ctx.strokeStyle = '#3a6aaa';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(Math.floor(-sw / 2), Math.floor(-sh / 2), sw, sh);
+
+        // Diamond pattern on card back
+        if (sw > 4) {
+          const patternAlpha = ctx.globalAlpha;
+          ctx.globalAlpha = patternAlpha * 0.5;
+          const lines = [Math.floor(-sh / 2 + 3), Math.floor(-sh / 2 + 6), Math.floor(-sh / 2 + 9)];
+          for (const ly of lines) {
+            if (ly < sh / 2 - 1) {
+              pxRect(ctx, Math.floor(-sw / 2 + 2), ly, Math.max(1, sw - 4), 1, '#2a5a9a');
+            }
+          }
+          ctx.globalAlpha = patternAlpha;
+        }
+
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1.0;
+    }
+
     // --- Phase label ---
     function drawPhaseLabel(ctx, w, phase) {
       const labels = { waiting: 'WAITING', betting: 'IN PLAY', showdown: 'SHOWDOWN', finished: 'GAME OVER' };
@@ -2764,6 +4300,9 @@ Min raise: <span style="font-weight:bold">80</span>
       // Pot display
       drawPotDisplay(pokerCtx, w, h, state.pot);
 
+      // Card dealing animation (face-down cards flying from deck to players)
+      drawDealAnimation(pokerCtx, w, h);
+
       // Players
       const bots = state.bots || [];
       const charScale = Math.max(1.5, Math.min(2.5, w / 350));
@@ -2775,9 +4314,22 @@ Min raise: <span style="font-weight:bold">80</span>
         const py = Math.floor(seat.y * h);
         const isActive = state.activePlayer === bot.name;
         const isFolded = state.foldedPlayers.has(bot.name);
+        const isWinner = state.phase === 'showdown' && state.lastResult?.winners?.includes(bot.name);
         const sayData = state.lastSay[bot.name];
         const isTalking = !!(sayData && (Date.now() - (sayData.timestamp || 0)) < 15000);
         const displayName = bot.displayName || bot.name;
+
+        // Winner glow effect behind character
+        if (isWinner && celebrationActive) {
+          const glowPulse = 0.2 + 0.15 * Math.sin(pokerAnimFrame * 0.08);
+          pokerCtx.globalAlpha = glowPulse;
+          const glowSize = 20 * charScale;
+          pokerCtx.fillStyle = '#f0d060';
+          pokerCtx.beginPath();
+          pokerCtx.arc(px, py, glowSize, 0, Math.PI * 2);
+          pokerCtx.fill();
+          pokerCtx.globalAlpha = 1.0;
+        }
 
         // Chair behind the character
         const chairDir = chairFacing(seatIdx);
@@ -2791,7 +4343,7 @@ Min raise: <span style="font-weight:bold">80</span>
         const bobOffset = Math.floor(Math.sin(pokerAnimFrame * 0.04 + px * 0.1));
         pokerCtx.font = '8px monospace';
         pokerCtx.textAlign = 'center';
-        pokerCtx.fillStyle = isFolded ? '#555' : (isActive ? '#8AAFD4' : '#B0A89A');
+        pokerCtx.fillStyle = isWinner ? '#f0d060' : (isFolded ? '#555' : (isActive ? '#8AAFD4' : '#B0A89A'));
         const shortName = displayName.length > 8 ? displayName.slice(0, 7) + '..' : displayName;
         pokerCtx.fillText(shortName, px, py + 12 * charScale + bobOffset);
 
@@ -2817,7 +4369,90 @@ Min raise: <span style="font-weight:bold">80</span>
           const bubbleY = py - 16 * charScale;
           drawSpeechBubble(pokerCtx, px, bubbleY, sayData.message);
         }
+
+        // Thinking dots above active player (only when not talking, to avoid overlap)
+        if (isActive && !isTalking && state.phase === 'betting') {
+          drawThinkingDots(pokerCtx, px, py, charScale);
+        }
+
+        // Hand strength label above winner during showdown (suppressed when talking to avoid overlap)
+        if (isWinner && !isTalking && state.lastResult?.handName && state.lastResult.handName !== 'Last player standing') {
+          const handLabel = state.lastResult.handName;
+          const labelY = py - 20 * charScale;
+          // Background pill
+          pokerCtx.font = 'bold 7px monospace';
+          const textWidth = pokerCtx.measureText(handLabel).width;
+          const pillPadX = 4;
+          const pillPadY = 3;
+          const pillW = textWidth + pillPadX * 2;
+          const pillH = 7 + pillPadY * 2;
+          // Pulsing glow effect
+          const glowAlpha = 0.7 + 0.3 * Math.sin(pokerAnimFrame * 0.06);
+          pokerCtx.globalAlpha = glowAlpha;
+          pokerCtx.fillStyle = 'rgba(20, 16, 0, 0.85)';
+          const pillR = 3;
+          const plx = px - pillW / 2;
+          const ply = labelY - pillH / 2;
+          pokerCtx.beginPath();
+          pokerCtx.moveTo(plx + pillR, ply);
+          pokerCtx.lineTo(plx + pillW - pillR, ply);
+          pokerCtx.arcTo(plx + pillW, ply, plx + pillW, ply + pillR, pillR);
+          pokerCtx.lineTo(plx + pillW, ply + pillH - pillR);
+          pokerCtx.arcTo(plx + pillW, ply + pillH, plx + pillW - pillR, ply + pillH, pillR);
+          pokerCtx.lineTo(plx + pillR, ply + pillH);
+          pokerCtx.arcTo(plx, ply + pillH, plx, ply + pillH - pillR, pillR);
+          pokerCtx.lineTo(plx, ply + pillR);
+          pokerCtx.arcTo(plx, ply, plx + pillR, ply, pillR);
+          pokerCtx.closePath();
+          pokerCtx.fill();
+          pokerCtx.strokeStyle = 'rgba(240, 208, 96, 0.6)';
+          pokerCtx.lineWidth = 1;
+          pokerCtx.stroke();
+          // Text
+          pokerCtx.fillStyle = '#f0d060';
+          pokerCtx.textAlign = 'center';
+          pokerCtx.fillText(handLabel, px, labelY + 3);
+          pokerCtx.globalAlpha = 1.0;
+        }
+
+        // Streak indicators above player (flame for hot, ice for cold)
+        const botStats = seatData[bot.name]?.stats || state.leaderboard[bot.name]?.stats || {};
+        const botWinStreak = botStats.streakCurrent || 0;
+        const botLossStreak = botStats.lossStreakCurrent || 0;
+        if (botWinStreak >= 3 && !(isActive && !isTalking && state.phase === 'betting')) {
+          drawStreakFlame(pokerCtx, px, py, charScale, botWinStreak);
+        } else if (botLossStreak >= 3) {
+          drawStreakIce(pokerCtx, px, py, charScale, botLossStreak);
+        }
+
+        // Elimination effect (red X + "OUT" label for busted players)
+        const elimAnim = eliminationAnimations[bot.name];
+        if (elimAnim) {
+          drawEliminationEffect(pokerCtx, px, py, charScale, elimAnim.startTime);
+        }
       });
+
+      // --- Winner celebration ---
+      // Trigger celebration when a new result arrives during showdown
+      if (state.phase === 'showdown' && state.lastResult && state.lastResult !== lastCelebrationResult) {
+        lastCelebrationResult = state.lastResult;
+        const winners = state.lastResult.winners || [];
+        if (winners.length > 0) {
+          // Find winner's position on canvas
+          const winnerIdx = bots.findIndex(b => b.name === winners[0]);
+          if (winnerIdx >= 0) {
+            const seatIdx = winnerIdx % SEAT_POSITIONS.length;
+            const seat = SEAT_POSITIONS[seatIdx];
+            spawnCelebration(Math.floor(seat.x * w), Math.floor(seat.y * h), w, h);
+          } else {
+            // Fallback: center of table
+            spawnCelebration(w / 2, h / 2, w, h);
+          }
+        }
+      }
+
+      // Draw active celebration particles
+      updateAndDrawCelebration(pokerCtx, w, h);
 
       pokerAnimFrame++;
     }
@@ -2843,11 +4478,43 @@ Min raise: <span style="font-weight:bold">80</span>
         <span class="connected" id="conn-status">Connected</span>
       `;
 
+      // Spectator count in top bar
+      const spectatorEl = document.getElementById('spectator-count');
+      if (spectatorEl && state.observerCount > 0) {
+        spectatorEl.innerHTML = `<span class="eye-icon">&#128065;</span> <span class="count-num">${state.observerCount}</span> watching`;
+      } else if (spectatorEl) {
+        spectatorEl.innerHTML = '';
+      }
+
       // Info strip
-      document.getElementById('pot-value').textContent = state.pot || 0;
+      const potEl = document.getElementById('pot-value');
+      potEl.textContent = state.pot || 0;
+      // Big pot highlighting — dynamic thresholds based on player count
+      // With N players at 1000 starting chips, big = 30% of total, huge = 60%
+      const totalChipsInPlay = Math.max(2, state.bots.length) * 1000;
+      const bigPotThreshold = Math.round(totalChipsInPlay * 0.15);
+      const hugePotThreshold = Math.round(totalChipsInPlay * 0.35);
+      potEl.classList.remove('big-pot', 'huge-pot');
+      if (state.pot >= hugePotThreshold) {
+        potEl.classList.add('huge-pot');
+      } else if (state.pot >= bigPotThreshold) {
+        potEl.classList.add('big-pot');
+      }
       const streetLabels = { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', '': '\u2014' };
       document.getElementById('street-value').textContent = streetLabels[state.street] || state.street || '\u2014';
       document.getElementById('hand-value').textContent = '#' + state.handNumber;
+
+      // Blinds in info strip
+      const blindInfo = getBlindLevel(state.handNumber);
+      const blindsEl = document.getElementById('blinds-value');
+      blindsEl.textContent = blindInfo.small + '/' + blindInfo.big;
+      if (blindInfo.level > 0) {
+        blindsEl.classList.add('blind-escalated');
+        blindsEl.title = 'Level ' + (blindInfo.level + 1) + ' — blinds increase every ' + BLIND_ESCALATION_INTERVAL + ' hands';
+      } else {
+        blindsEl.classList.remove('blind-escalated');
+        blindsEl.title = 'Blinds increase every ' + BLIND_ESCALATION_INTERVAL + ' hands';
+      }
 
       // Board cards in info strip
       const boardEl = document.getElementById('board-cards');
@@ -2856,6 +4523,9 @@ Min raise: <span style="font-weight:bold">80</span>
       } else {
         boardEl.innerHTML = '\u2014';
       }
+
+      // --- Live Action Ticker ---
+      renderTicker();
 
       // --- Pixel Poker Canvas ---
       renderPokerCanvas();
@@ -2874,6 +4544,9 @@ Min raise: <span style="font-weight:bold">80</span>
 
       // --- Leaderboard ---
       renderLeaderboard();
+
+      // --- Game Stats ---
+      renderGameStats();
 
       // Update join panel if open
       if (joinPanelOpen) {
@@ -2904,10 +4577,15 @@ Min raise: <span style="font-weight:bold">80</span>
         const strategy = seatData[bot.name]?.strategy || '';
         const stats = seatData[bot.name]?.stats || state.leaderboard[bot.name]?.stats || {};
 
+        const isAllIn = !isFolded && typeof chips === 'number' && chips === 0 && state.phase === 'betting';
+        const isEliminated = eliminatedPlayers.has(bot.name);
+
         let cardClasses = 'player-card';
         if (isActive) cardClasses += ' active';
         if (isFolded) cardClasses += ' folded';
         if (isWinner) cardClasses += ' winner';
+        if (isAllIn) cardClasses += ' all-in';
+        if (isEliminated) cardClasses += ' eliminated';
 
         // Hole cards
         const cards = state.holeCards[bot.name];
@@ -2921,8 +4599,14 @@ Min raise: <span style="font-weight:bold">80</span>
         // Role / blind info
         let roleText = '';
         let roleClass = 'player-card-role';
-        if (isFolded) {
+        if (isEliminated) {
+          roleText = 'BUSTED';
+          roleClass += ' role-allin';
+        } else if (isFolded) {
           roleText = 'FOLDED';
+        } else if (isAllIn) {
+          roleText = 'ALL-IN';
+          roleClass += ' role-allin';
         } else if (isActive) {
           roleText = 'ACTING';
         } else if (state.blinds[bot.name] === 'small') {
@@ -2942,13 +4626,32 @@ Min raise: <span style="font-weight:bold">80</span>
         const winRate = handsPlayed > 0 ? Math.round((handsWon / handsPlayed) * 100) : 0;
         const losses = handsPlayed - handsWon;
 
+        // Streak indicators
+        const winStreak = stats.streakCurrent || 0;
+        const lossStreak = stats.lossStreakCurrent || 0;
+        let streakBadge = '';
+        if (winStreak >= 3) {
+          streakBadge = `<span class="streak-indicator hot" title="${winStreak} wins in a row">\uD83D\uDD25${winStreak}</span>`;
+        } else if (lossStreak >= 3) {
+          streakBadge = `<span class="streak-indicator cold" title="${lossStreak} losses in a row">\u2744\uFE0F${lossStreak}</span>`;
+        }
+
+        // Personality archetype
+        const personality = getPlayerPersonality(bot.name, displayName, isHuman, stats);
+        const personalityHtml = personality
+          ? `<div class="player-card-personality"><span class="archetype-name">${escapeHtml(personality.archetype)}</span><span class="archetype-tagline">${escapeHtml(personality.tagline)}</span></div>`
+          : '';
+
         html += `
           <div class="${cardClasses}" data-bot="${bot.name}" onclick="selectPlayerForReasoning('${escapeHtml(bot.name)}')">
+            ${isEliminated ? '<div class="elimination-stamp">ELIMINATED</div>' : ''}
             <div class="player-card-header">
-              <span class="player-card-name">${escapeHtml(displayName)}<span class="type-badge">${typeBadge}</span>${isWinner ? '<span class="winner-badge">W</span>' : ''}</span>
+              <span class="player-card-name">${escapeHtml(displayName)}<span class="type-badge">${typeBadge}</span>${isWinner ? '<span class="winner-badge">W</span>' : ''}${streakBadge}</span>
               <span class="${roleClass}">${roleText}</span>
             </div>
+            ${personalityHtml}
             ${cardsHtml}
+            ${isWinner && state.lastResult?.handName ? `<div class="hand-strength-label">${escapeHtml(state.lastResult.handName)}</div>` : ''}
             ${strategy ? `<div class="player-card-strategy">"${escapeHtml(strategy)}"</div>` : ''}
             <div class="player-card-chips"><span class="chip-label">chips </span>${typeof chips === 'number' ? chips.toLocaleString() : chips}</div>
             ${bet > 0 ? `<div class="player-card-bet">bet ${bet}</div>` : ''}
@@ -3051,6 +4754,7 @@ Min raise: <span style="font-weight:bold">80</span>
       html += `<div class="reasoning-section">`;
       html += `<div class="reasoning-section-label">Scene</div>`;
       html += `<div class="reasoning-scene">`;
+      const blinds = getBlindLevel(state.handNumber);
       html += `Pot: ${state.pot}`;
       if (state.community.length > 0) {
         html += ` | Board: ${state.community.join(' ')}`;
@@ -3060,6 +4764,7 @@ Min raise: <span style="font-weight:bold">80</span>
         html += ` | Hand: ${hCards.join(' ')}`;
       }
       html += ` | Street: ${state.street || 'preflop'}`;
+      html += ` | Blinds: ${blinds.small}/${blinds.big}`;
       html += `</div></div>`;
 
       // Reasoning section
@@ -3139,12 +4844,16 @@ Min raise: <span style="font-weight:bold">80</span>
           const sdWinRate = showdownsReached > 0 ? ((showdownsWon / showdownsReached) * 100).toFixed(0) + '%' : '-';
           const streakCurrent = stats.streakCurrent || 0;
           const streakBest = stats.streakBest || 0;
+          const lossStreakCurrent = stats.lossStreakCurrent || 0;
           const checks = stats.checks || 0;
+
+          const lbPersonality = getPlayerPersonality(e.name, lbDisplayName, isHumanLb, stats);
+          const lbArchetype = lbPersonality ? ` <span style="color:var(--accent);font-size:9px;font-weight:400;opacity:0.7">${esc(lbPersonality.archetype)}</span>` : '';
 
           return `
             <tr class="${rowClass}" onclick="toggleLeaderboardDetail('lb-detail-${i}')">
               <td class="rank">${i + 1}</td>
-              <td>${esc(lbDisplayName)}</td>
+              <td>${esc(lbDisplayName)}${lbArchetype}</td>
               <td class="score-col">${scoreDisplay}</td>
               <td>${handsPlayed}</td>
               <td class="winrate">${winPct}</td>
@@ -3163,7 +4872,7 @@ Min raise: <span style="font-weight:bold">80</span>
                   <div class="detail-item"><span class="detail-label">All-ins:</span> <span class="detail-value">${allIns}</span></div>
                   <div class="detail-item"><span class="detail-label">Biggest pot:</span> <span class="detail-value">${biggestPot}</span></div>
                   <div class="detail-item"><span class="detail-label">Showdowns:</span> <span class="detail-value">${showdownsReached} (won ${sdWinRate})</span></div>
-                  <div class="detail-item"><span class="detail-label">Streak:</span> <span class="detail-value">${streakCurrent} current / ${streakBest} best</span></div>
+                  <div class="detail-item"><span class="detail-label">Streak:</span> <span class="detail-value">${streakCurrent > 0 ? '\uD83D\uDD25 ' + streakCurrent + ' wins' : lossStreakCurrent > 0 ? '\u2744\uFE0F ' + lossStreakCurrent + ' losses' : '0'} / ${streakBest} best</span></div>
                   ${totalBluffs > 0 ? `<div class="detail-item"><span class="detail-label">Bluff Success Rate:</span> <span class="bluff-success-rate">${bluffSuccessRate} (${bluffsWon}/${totalBluffs})</span></div>` : ''}
                 </div>
               </td>
@@ -3182,6 +4891,126 @@ Min raise: <span style="font-weight:bold">80</span>
       }
     }
 
+    // --- Game Stats ---
+    const gameStatsEl = document.getElementById('game-stats');
+
+    function getDisplayStats(period) {
+      if (period === 'all') return state.gameStats || {};
+      if (period === 'today') {
+        const dayKey = 'day-' + new Date().toISOString().slice(0, 10);
+        return state.gameStatsByTime?.[dayKey] || {};
+      }
+      if (period === 'hour') {
+        const hourKey = new Date().toISOString().slice(0, 13);
+        return state.gameStatsByTime?.[hourKey] || {};
+      }
+      return state.gameStats || {};
+    }
+
+    window.setGameStatsPeriod = function(period) {
+      state.gameStatsPeriod = period;
+      renderGameStats();
+    };
+
+    function renderGameStats() {
+      const gs = state.gameStats || {};
+      if (!gs.totalHands && !gs.totalLLMCalls) {
+        gameStatsEl.innerHTML = '';
+        return;
+      }
+      const period = state.gameStatsPeriod || 'all';
+      const display = getDisplayStats(period);
+      const totalHands = display.totalHands || 0;
+
+      // Street breakdown — for 'all' use handsByStreet object, for time buckets use handsByStreet_* keys
+      let streets;
+      if (period === 'all') {
+        streets = gs.handsByStreet || {};
+      } else {
+        streets = {
+          preflop: display.handsByStreet_preflop || 0,
+          flop: display.handsByStreet_flop || 0,
+          turn: display.handsByStreet_turn || 0,
+          river: display.handsByStreet_river || 0,
+          showdown: display.handsByStreet_showdown || 0,
+        };
+      }
+
+      const streetColors = { preflop: '#666', flop: '#4a6', turn: '#4af', river: '#88f', showdown: '#f0d060' };
+      const streetTotal = (streets.preflop || 0) + (streets.flop || 0) + (streets.turn || 0) + (streets.river || 0) + (streets.showdown || 0);
+
+      const streetBar = streetTotal > 0 ? `
+        <div class="street-bar">
+          ${['preflop','flop','turn','river','showdown'].map(s => {
+            const pct = ((streets[s] || 0) / streetTotal * 100);
+            return pct > 0 ? `<div class="street-bar-segment" style="width:${pct}%;background:${streetColors[s]}" title="${s}: ${streets[s] || 0}"></div>` : '';
+          }).join('')}
+        </div>
+        <div class="street-legend">
+          ${['preflop','flop','turn','river','showdown'].map(s => {
+            const count = streets[s] || 0;
+            const pct = streetTotal > 0 ? ((count / streetTotal) * 100).toFixed(0) : 0;
+            return `<span class="street-legend-item"><span class="street-legend-dot" style="background:${streetColors[s]}"></span>${s} ${count} (${pct}%)</span>`;
+          }).join('')}
+        </div>
+      ` : '';
+
+      const bluffs = display.totalBluffs || 0;
+      const bluffsCalled = display.totalBluffsCalled || 0;
+      const tableTalks = display.totalTableTalks || 0;
+      const allIns = display.totalAllIns || 0;
+      const biggestPot = period === 'all' ? (gs.biggestPot || 0) : '-';
+      const llmCalls = display.totalLLMCalls || 0;
+      const llmCost = period === 'all' ? (gs.totalLLMCost || 0) : (display.totalLLMCost || 0);
+      const tokensIn = display.totalTokensInput || 0;
+      const tokensOut = display.totalTokensOutput || 0;
+
+      const tabBtn = (label, val) => `<button class="${period === val ? 'active' : ''}" onclick="setGameStatsPeriod('${val}')">${label}</button>`;
+
+      gameStatsEl.innerHTML = `
+        <h2>Game Stats</h2>
+        <div class="game-stats-tabs">
+          ${tabBtn('All Time', 'all')}
+          ${tabBtn('Today', 'today')}
+          ${tabBtn('Last Hour', 'hour')}
+        </div>
+        <div class="game-stats-grid">
+          <div class="game-stat-card">
+            <div class="game-stat-label">Hands Played</div>
+            <div class="game-stat-value">${totalHands}</div>
+            ${streetBar ? `<div class="game-stat-sub">Ended at street:</div>${streetBar}` : ''}
+          </div>
+          <div class="game-stat-card">
+            <div class="game-stat-label">Bluffs</div>
+            <div class="game-stat-value">${bluffs}</div>
+            <div class="game-stat-sub">Called: ${bluffsCalled}</div>
+          </div>
+          <div class="game-stat-card">
+            <div class="game-stat-label">Table Talks</div>
+            <div class="game-stat-value">${tableTalks}</div>
+          </div>
+          <div class="game-stat-card">
+            <div class="game-stat-label">All-Ins</div>
+            <div class="game-stat-value">${allIns}</div>
+          </div>
+          <div class="game-stat-card">
+            <div class="game-stat-label">Biggest Pot</div>
+            <div class="game-stat-value">${biggestPot}</div>
+          </div>
+          <div class="game-stat-card">
+            <div class="game-stat-label">LLM Calls</div>
+            <div class="game-stat-value">${llmCalls}</div>
+            <div class="game-stat-sub">Cost: $${typeof llmCost === 'number' ? llmCost.toFixed(4) : '0.0000'}</div>
+          </div>
+          <div class="game-stat-card">
+            <div class="game-stat-label">Tokens</div>
+            <div class="game-stat-value">${tokensIn + tokensOut > 0 ? ((tokensIn + tokensOut) / 1000).toFixed(1) + 'k' : '0'}</div>
+            <div class="game-stat-sub">In: ${(tokensIn / 1000).toFixed(1)}k / Out: ${(tokensOut / 1000).toFixed(1)}k</div>
+          </div>
+        </div>
+      `;
+    }
+
     // --- Pot rendering (old compat, hidden) ---
     function renderPot(amount) {
       // No-op, pot is rendered in info strip now
@@ -3198,6 +5027,14 @@ Min raise: <span style="font-weight:bold">80</span>
         for (const [name, chips] of Object.entries(entry.buyIns)) {
           state.chips[name] = chips;
         }
+      }
+
+      // Live-update game stats from SSE events
+      if (entry.action === 'say' && state.gameStats) {
+        state.gameStats.totalTableTalks = (state.gameStats.totalTableTalks || 0) + 1;
+      }
+      if (entry.action && entry.message?.includes('all-in') && state.gameStats) {
+        state.gameStats.totalAllIns = (state.gameStats.totalAllIns || 0) + 1;
       }
 
       if (entry.thought && entry.bot) {
@@ -3236,6 +5073,8 @@ Min raise: <span style="font-weight:bold">80</span>
         case 'leave':
           state.bots = state.bots.filter(b => b.name !== entry.bot);
           delete state.chips[entry.bot];
+          eliminatedPlayers.delete(entry.bot);
+          delete eliminationAnimations[entry.bot];
           state.contextMessage = `${esc(entry.displayName || entry.bot)} left the table`;
           break;
 
@@ -3252,6 +5091,7 @@ Min raise: <span style="font-weight:bold">80</span>
             state.pot = entry.amount || 0;
             state.community = [];
             state.street = 'preflop';
+            cardRevealAnim = null;
             state.foldedPlayers.clear();
             state.activePlayer = null;
             state.currentBets = {};
@@ -3266,6 +5106,25 @@ Min raise: <span style="font-weight:bold">80</span>
             // Reset hand reasoning history
             handReasoningHistory = [];
             selectedReasoningBot = null;
+            // Clear ticker for new hand
+            tickerItems = [];
+            addTickerItem('Hand #' + state.handNumber, 'starting', 'deal');
+            // Trigger card dealing animation on canvas
+            const bots = state.bots || [];
+            if (bots.length >= 2) {
+              const canvasEl = document.getElementById('poker-canvas');
+              const cw = canvasEl ? canvasEl.width / (window.devicePixelRatio || 1) : 600;
+              const ch = canvasEl ? canvasEl.height / (window.devicePixelRatio || 1) : 250;
+              dealAnim = {
+                startTime: Date.now(),
+                playerCount: bots.length,
+                seatPositions: bots.map((b, i) => {
+                  const seatIdx = i % SEAT_POSITIONS.length;
+                  const seat = SEAT_POSITIONS[seatIdx];
+                  return { x: Math.floor(seat.x * cw), y: Math.floor(seat.y * ch) };
+                }),
+              };
+            }
           }
           break;
 
@@ -3274,12 +5133,23 @@ Min raise: <span style="font-weight:bold">80</span>
           if (state.activePlayer) {
             state.contextMessage += ` &middot; waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span>`;
           }
+          addTickerItem(botDisplayName(entry.bot), 'checks', 'check');
           break;
 
         case 'call':
           state.pot += (entry.amount || 0);
           state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
-          state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
+          {
+            const isAllIn = entry.message?.includes('all-in') || state.chips[entry.bot] === 0;
+            if (isAllIn) {
+              state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
+              state.dramaticEvent = 'allin';
+              addTickerItem(botDisplayName(entry.bot), 'calls ' + (entry.amount || '') + ' ALL-IN!', 'allin');
+            } else {
+              state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
+              addTickerItem(botDisplayName(entry.bot), 'calls ' + (entry.amount || ''), 'call');
+            }
+          }
           break;
 
         case 'raise':
@@ -3288,14 +5158,23 @@ Min raise: <span style="font-weight:bold">80</span>
             const cost = (entry.amount || 0) - prevBet;
             state.pot += cost;
             state.currentBets[entry.bot] = entry.amount || 0;
+            const isAllIn = entry.message?.includes('all-in') || state.chips[entry.bot] === 0;
+            if (isAllIn) {
+              state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
+              state.dramaticEvent = 'allin';
+              addTickerItem(botDisplayName(entry.bot), 'raises to ' + (entry.amount || '') + ' ALL-IN!', 'allin');
+            } else {
+              state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
+              addTickerItem(botDisplayName(entry.bot), 'raises to ' + (entry.amount || ''), 'raise');
+            }
           }
-          state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
           break;
 
         case 'fold':
           state.foldedPlayers.add(entry.bot);
           if (state.activePlayer === entry.bot) state.activePlayer = null;
           state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
+          addTickerItem(botDisplayName(entry.bot), 'folds', 'fold');
           break;
 
         case 'deal':
@@ -3303,10 +5182,20 @@ Min raise: <span style="font-weight:bold">80</span>
           if (dealMatch) {
             state.street = dealMatch[1];
             const cards = dealMatch[2].split(/\s+/);
+            const oldLen = state.community.length;
             state.community = cards;
             state.currentBets = {};
+            // Trigger card reveal animation for newly dealt cards
+            if (cards.length > oldLen) {
+              cardRevealAnim = {
+                startTime: Date.now(),
+                newCardStartIdx: oldLen,
+                totalCards: cards.length,
+              };
+            }
             const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
             state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
+            addTickerItem('Dealer', streetLabels[state.street] || state.street, 'deal');
           }
           break;
 
@@ -3324,6 +5213,18 @@ Min raise: <span style="font-weight:bold">80</span>
             state.pot = 0;
             state.currentBets = {};
             state.contextMessage = `<span class="highlight">${esc(resultMatch[1])}</span> wins ${amount} with ${esc(handName)}`;
+            // Live-update game stats
+            if (state.gameStats) {
+              state.gameStats.totalHands = (state.gameStats.totalHands || 0) + 1;
+              if (amount > (state.gameStats.biggestPot || 0)) state.gameStats.biggestPot = amount;
+            }
+
+            // Show hand result toast (only if this is a new result)
+            if (state.lastResult !== lastToastResult) {
+              lastToastResult = state.lastResult;
+              showHandResultToast(winnerNames, amount, handName);
+            }
+            addTickerItem(resultMatch[1], 'wins ' + amount + ' with ' + handName, 'result');
           }
           break;
 
@@ -3367,8 +5268,11 @@ Min raise: <span style="font-weight:bold">80</span>
         if (data.handsPlayed) state.handNumber = data.handsPlayed;
         if (data.gamesPlayed) state.gamesPlayed = data.gamesPlayed;
         if (data.leaderboard) state.leaderboard = data.leaderboard;
+        if (data.gameStats) state.gameStats = data.gameStats;
+        if (data.gameStatsByTime) state.gameStatsByTime = data.gameStatsByTime;
         state.maxPlayers = data.maxPlayers || 6;
         state.playerCount = data.playerCount || state.bots.length;
+        if (data.observerCount) state.observerCount = data.observerCount;
         if (data.sessionInfo) {
           for (const [name, info] of Object.entries(data.sessionInfo)) {
             state.sessionInfo[name] = info;
@@ -3453,6 +5357,12 @@ Min raise: <span style="font-weight:bold">80</span>
         return;
       }
 
+      if (data.type === 'observer_count') {
+        state.observerCount = data.count || 0;
+        render();
+        return;
+      }
+
       if (data.type === 'waitlist_updated') {
         fetchWaitlist();
         return;
@@ -3491,8 +5401,26 @@ Min raise: <span style="font-weight:bold">80</span>
 
       if (data.type?.startsWith('poker_')) {
         processEvent(data);
+        checkForEliminations();
         addFeedEntry(data, false);
         render();
+
+        // Dramatic moment: all-in flash + canvas shake
+        if (state.dramaticEvent === 'allin') {
+          state.dramaticEvent = null;
+          const infoStrip = document.getElementById('info-strip');
+          const canvas = document.getElementById('poker-canvas');
+          // Remove and re-add class to retrigger animation
+          infoStrip.classList.remove('allin-alert');
+          canvas.classList.remove('canvas-shake');
+          void infoStrip.offsetWidth; // force reflow
+          infoStrip.classList.add('allin-alert');
+          canvas.classList.add('canvas-shake');
+          setTimeout(() => {
+            infoStrip.classList.remove('allin-alert');
+            canvas.classList.remove('canvas-shake');
+          }, 1500);
+        }
 
         if (state.lastActed) {
           clearTimeout(actionFlashTimer);

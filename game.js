@@ -11,8 +11,26 @@ import { logAction } from 'agent-village-hub/helpers';
 // --- Config ---
 
 export const BUY_IN = 1000;
-export const SMALL_BLIND = 10;
-export const BIG_BLIND = 20;
+export const BASE_SMALL_BLIND = 10;
+export const BASE_BIG_BLIND = 20;
+
+// Blinds escalate every BLIND_ESCALATION_INTERVAL hands (doubling each level)
+export const BLIND_ESCALATION_INTERVAL = 20;
+
+/**
+ * Get current blind amounts based on hands played.
+ * Blinds double every 20 hands: 10/20 → 20/40 → 40/80 → ...
+ * Capped at level 5 (320/640) to prevent exceeding buy-in.
+ */
+export function getBlinds(handsPlayed) {
+  const level = Math.min(Math.floor(handsPlayed / BLIND_ESCALATION_INTERVAL), 5);
+  const multiplier = Math.pow(2, level);
+  return {
+    small: BASE_SMALL_BLIND * multiplier,
+    big: BASE_BIG_BLIND * multiplier,
+    level,
+  };
+}
 
 // --- Active player guard ---
 
@@ -25,6 +43,8 @@ export function getActivePlayer(state, bot) {
   if (!hand || hand.activePlayer !== bot.name) return null;
   const player = hand.players[bot.name];
   if (!player || player.folded) return null;
+  // All-in players (0 chips) cannot take any action
+  if (player.chips === 0) return null;
   return { hand, player };
 }
 
@@ -67,7 +87,9 @@ export function dealNewHand(state) {
     community: [],
     pot: 0,
     currentBet: 0,
-    bigBlind: BIG_BLIND,
+    bigBlind: null,    // set below after blind calculation
+    smallBlind: null,  // set below after blind calculation
+    blindLevel: null,  // set below after blind calculation
     street: 'preflop',
     activePlayer: null,
     actedCount: 0,
@@ -91,10 +113,15 @@ export function dealNewHand(state) {
   const sbIndex = seats.length === 2 ? dealerIndex : (dealerIndex + 1) % seats.length;
   const bbIndex = (sbIndex + 1) % seats.length;
 
-  postBlind(state, seats[sbIndex].botName, SMALL_BLIND, 'small');
-  postBlind(state, seats[bbIndex].botName, BIG_BLIND, 'big');
+  const blinds = getBlinds(state.handsPlayed);
+  state.hand.smallBlind = blinds.small;
+  state.hand.bigBlind = blinds.big;
+  state.hand.blindLevel = blinds.level;
 
-  state.hand.currentBet = BIG_BLIND;
+  postBlind(state, seats[sbIndex].botName, blinds.small, 'small');
+  postBlind(state, seats[bbIndex].botName, blinds.big, 'big');
+
+  state.hand.currentBet = blinds.big;
 
   // First to act: after BB in preflop
   const firstToAct = (bbIndex + 1) % seats.length;
@@ -143,13 +170,15 @@ export function advanceAction(state) {
     return 'showdown';
   }
 
-  // Find next non-folded player who hasn't acted (or needs to match a raise)
+  // Find next non-folded, non-all-in player who hasn't acted (or needs to match a raise)
   const currentIndex = seats.findIndex(s => s.botName === hand.activePlayer);
   for (let i = 1; i <= seats.length; i++) {
     const idx = (currentIndex + i) % seats.length;
     const seat = seats[idx];
     const p = hand.players[seat.botName];
     if (p.folded) continue;
+    // Skip all-in players — they can't act
+    if (p.chips === 0) continue;
     if (!p.acted || p.bet < hand.currentBet) {
       hand.activePlayer = seat.botName;
       hand.activePlayerDispatched = false;
@@ -224,11 +253,12 @@ function advanceStreet(state) {
     return 'showdown';
   }
 
-  // First to act post-flop: first non-folded player after dealer
+  // First to act post-flop: first non-folded, non-all-in player after dealer
   const seats = hand.seats;
   for (let i = 1; i <= seats.length; i++) {
     const idx = (hand.dealerIndex + i) % seats.length;
-    if (!hand.players[seats[idx].botName].folded) {
+    const p = hand.players[seats[idx].botName];
+    if (!p.folded && p.chips > 0) {
       hand.activePlayer = seats[idx].botName;
       hand.activePlayerDispatched = false;
       break;

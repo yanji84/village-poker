@@ -7,7 +7,7 @@
 
 import { waitingScene, bettingScene, showdownScene, finishedScene } from './scene.js';
 import {
-  BUY_IN, dealNewHand, advanceAction, getActivePlayer,
+  BUY_IN, dealNewHand, advanceAction, getActivePlayer, getBlinds,
 } from './game.js';
 import { logAction } from 'agent-village-hub/helpers';
 
@@ -66,13 +66,27 @@ export const phases = {
       const hand = state.hand;
       if (!hand?.activePlayer) return null;
 
-      // First dispatch: mark as dispatched, give them a chance to act
-      if (!hand.activePlayerDispatched) {
-        hand.activePlayerDispatched = true;
+      // All-in players can't act — skip them immediately
+      const activeP = hand.players[hand.activePlayer];
+      if (activeP && !activeP.folded && activeP.chips === 0) {
+        activeP.acted = true;
+        advanceAction(state);
         return hand.activePlayer;
       }
 
-      // Already dispatched but didn't act — auto-fold
+      // First dispatch: mark as dispatched, give them a chance to act
+      if (!hand.activePlayerDispatched) {
+        hand.activePlayerDispatched = 1;
+        return hand.activePlayer;
+      }
+
+      // Give 2 dispatches before auto-folding (LLM responses can span multiple ticks)
+      if (hand.activePlayerDispatched < 2) {
+        hand.activePlayerDispatched++;
+        return hand.activePlayer;
+      }
+
+      // Dispatched twice but didn't act — auto-fold
       const p = hand.players[hand.activePlayer];
       if (p && !p.folded) {
         const seat = hand.seats.find(s => s.botName === hand.activePlayer);

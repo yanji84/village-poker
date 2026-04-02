@@ -4,6 +4,7 @@
  */
 
 import { formatCards } from './logic.js';
+import { getBlinds } from './game.js';
 
 // --- Shared helpers ---
 
@@ -92,10 +93,13 @@ export function bettingScene(bot, ctx) {
   const streetNames = { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River' };
   const streetName = streetNames[hand.street] || hand.street;
 
+  const blinds = getBlinds(state.handsPlayed);
+  const blindLabel = blinds.level > 0 ? ` (Level ${blinds.level + 1}: ${blinds.small}/${blinds.big})` : '';
+
   const lines = [
     `## 🃏 Poker Table — ${streetName}`,
     '',
-    `**Pot:** ${hand.pot}`,
+    `**Pot:** ${hand.pot} | **Blinds:** ${hand.smallBlind}/${hand.bigBlind}${blindLabel}`,
   ];
 
   // Community cards
