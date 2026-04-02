@@ -581,6 +581,120 @@
       text-align: center;
     }
 
+    /* --- Hand History Panel --- */
+    .hand-history-panel {
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .hand-history-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .hand-history-toggle:hover {
+      background: var(--bg-elevated);
+    }
+    .hand-history-toggle-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #555;
+    }
+    .hand-history-toggle-arrow {
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    .hand-history-panel.expanded .hand-history-toggle-arrow {
+      transform: rotate(180deg);
+    }
+    .hand-history-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .hand-history-panel.expanded .hand-history-body {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .hand-history-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 11px;
+      padding: 16px;
+      text-align: center;
+    }
+    .hh-entry {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+    }
+    .hh-entry:last-child {
+      border-bottom: none;
+    }
+    .hh-entry-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .hh-hand-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .hh-result {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: #f0d060;
+      font-weight: 600;
+    }
+    .hh-board {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+    .hh-board-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .hh-board-cards {
+      color: var(--text-primary);
+      margin-left: 4px;
+    }
+    .hh-board-cards .card-red { color: #d66; }
+    .hh-board-cards .card-black { color: #ccc; }
+    .hh-actions {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .hh-action-name {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .hh-action-fold { color: var(--red); }
+    .hh-action-raise { color: #f0d060; }
+    .hh-action-call { color: var(--green); }
+    .hh-action-check { color: var(--text-muted); }
+    .hh-action-allin { color: #e44; font-weight: 700; }
+    .hh-action-deal { color: var(--accent); font-style: italic; }
+    .hh-blinds-info {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
     /* --- Context bar (hidden, used as data holder) --- */
     .context-bar { display: none; }
 
@@ -1939,6 +2053,23 @@
         padding: 6px 10px;
       }
 
+      /* Hand history: compact on mobile */
+      .hand-history-toggle {
+        padding: 8px 12px;
+      }
+      .hand-history-toggle-label {
+        font-size: 9px;
+      }
+      .hh-entry {
+        padding: 8px 12px;
+      }
+      .hh-actions {
+        font-size: 9px;
+      }
+      .hand-history-panel.expanded .hand-history-body {
+        max-height: 300px;
+      }
+
       /* Leaderboard: compact */
       .leaderboard {
         padding: 10px 12px;
@@ -2176,6 +2307,17 @@
         </div>
         <div class="reasoning-body" id="reasoning-body">
           <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
+        </div>
+      </div>
+
+      <!-- Hand History Panel -->
+      <div class="hand-history-panel" id="hand-history-panel">
+        <div class="hand-history-toggle" onclick="toggleHandHistory()">
+          <span class="hand-history-toggle-label">Hand History (last 5)</span>
+          <span class="hand-history-toggle-arrow">&#9660;</span>
+        </div>
+        <div class="hand-history-body" id="hand-history-body">
+          <div class="hand-history-empty">No completed hands yet.</div>
         </div>
       </div>
     </div>
@@ -3254,6 +3396,108 @@ Min raise: <span style="font-weight:bold">80</span>
     let handReasoningHistory = [];
     // Current active thought data for reasoning panel
     let activeThoughtData = null;
+
+    // Hand history: last 5 completed hands
+    const MAX_HAND_HISTORY = 5;
+    let handHistoryList = []; // array of { handNum, blinds, board, actions, result, players }
+    let currentHandActions = []; // actions accumulated during the current hand
+    let currentHandPlayers = []; // player names at start of hand
+    let currentHandBlinds = { small: 10, big: 20 };
+    let handHistoryExpanded = false;
+
+    function toggleHandHistory() {
+      const panel = document.getElementById('hand-history-panel');
+      handHistoryExpanded = !handHistoryExpanded;
+      if (handHistoryExpanded) {
+        panel.classList.add('expanded');
+      } else {
+        panel.classList.remove('expanded');
+      }
+    }
+
+    function addHandHistoryAction(name, actionText, cssClass) {
+      currentHandActions.push({ name, actionText, cssClass });
+    }
+
+    function finalizeHandHistory(handNum, board, result) {
+      const entry = {
+        handNum,
+        blinds: { ...currentHandBlinds },
+        board: board.slice(),
+        actions: currentHandActions.slice(),
+        result, // { winners: [], handName, amount }
+        players: currentHandPlayers.slice(),
+      };
+      handHistoryList.push(entry);
+      if (handHistoryList.length > MAX_HAND_HISTORY) {
+        handHistoryList = handHistoryList.slice(-MAX_HAND_HISTORY);
+      }
+      renderHandHistory();
+    }
+
+    function formatCardHtml(card) {
+      if (!card || card.length < 2) return escapeHtml(card || '');
+      const suit = card.slice(-1);
+      const isRed = suit === '\u2665' || suit === '\u2666' || suit === 'h' || suit === 'd'
+        || card.includes('\u2665') || card.includes('\u2666');
+      const cls = isRed ? 'card-red' : 'card-black';
+      return '<span class="' + cls + '">' + escapeHtml(card) + '</span>';
+    }
+
+    function renderHandHistory() {
+      const body = document.getElementById('hand-history-body');
+      if (!body) return;
+
+      if (handHistoryList.length === 0) {
+        body.innerHTML = '<div class="hand-history-empty">No completed hands yet.</div>';
+        return;
+      }
+
+      // Render most recent first
+      let html = '';
+      for (let i = handHistoryList.length - 1; i >= 0; i--) {
+        const h = handHistoryList[i];
+        const winnerNames = (h.result?.winners || []).map(w => botDisplayName(w));
+        const resultText = winnerNames.join(', ') + ' wins ' + (h.result?.amount || 0)
+          + (h.result?.handName ? ' with ' + h.result.handName : '');
+
+        html += '<div class="hh-entry">';
+        html += '<div class="hh-entry-header">';
+        html += '<span class="hh-hand-num">Hand #' + h.handNum + '</span>';
+        html += '<span class="hh-result">' + escapeHtml(resultText) + '</span>';
+        html += '</div>';
+
+        html += '<div class="hh-blinds-info">Blinds ' + h.blinds.small + '/' + h.blinds.big + '</div>';
+
+        if (h.board.length > 0) {
+          html += '<div class="hh-board"><span class="hh-board-label">Board:</span> ';
+          html += '<span class="hh-board-cards">' + h.board.map(c => formatCardHtml(c)).join(' ') + '</span>';
+          html += '</div>';
+        }
+
+        // Compact action summary
+        html += '<div class="hh-actions">';
+        for (const a of h.actions) {
+          const actionClass = 'hh-action-' + a.cssClass;
+          html += '<span class="hh-action-name">' + escapeHtml(a.name) + '</span> ';
+          html += '<span class="' + actionClass + '">' + escapeHtml(a.actionText) + '</span>';
+          html += ' &middot; ';
+        }
+        // Remove trailing middot
+        html = html.replace(/ &middot; $/, '');
+        html += '</div>';
+
+        html += '</div>';
+      }
+
+      body.innerHTML = html;
+
+      // Update toggle label with count
+      const label = document.querySelector('.hand-history-toggle-label');
+      if (label) {
+        label.textContent = 'Hand History (' + handHistoryList.length + '/' + MAX_HAND_HISTORY + ')';
+      }
+    }
 
     // Live action ticker state
     const MAX_TICKER_ITEMS = 30;
@@ -5109,6 +5353,11 @@ Min raise: <span style="font-weight:bold">80</span>
             // Clear ticker for new hand
             tickerItems = [];
             addTickerItem('Hand #' + state.handNumber, 'starting', 'deal');
+            // Reset hand history action tracking for new hand
+            currentHandActions = [];
+            currentHandPlayers = (state.bots || []).map(b => b.name);
+            const blindLevel = getBlindLevel(state.handNumber);
+            currentHandBlinds = { small: blindLevel.small, big: blindLevel.big };
             // Trigger card dealing animation on canvas
             const bots = state.bots || [];
             if (bots.length >= 2) {
@@ -5134,6 +5383,7 @@ Min raise: <span style="font-weight:bold">80</span>
             state.contextMessage += ` &middot; waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span>`;
           }
           addTickerItem(botDisplayName(entry.bot), 'checks', 'check');
+          addHandHistoryAction(botDisplayName(entry.bot), 'checks', 'check');
           break;
 
         case 'call':
@@ -5145,9 +5395,11 @@ Min raise: <span style="font-weight:bold">80</span>
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
               addTickerItem(botDisplayName(entry.bot), 'calls ' + (entry.amount || '') + ' ALL-IN!', 'allin');
+              addHandHistoryAction(botDisplayName(entry.bot), 'calls ' + (entry.amount || '') + ' ALL-IN!', 'allin');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
               addTickerItem(botDisplayName(entry.bot), 'calls ' + (entry.amount || ''), 'call');
+              addHandHistoryAction(botDisplayName(entry.bot), 'calls ' + (entry.amount || ''), 'call');
             }
           }
           break;
@@ -5163,9 +5415,11 @@ Min raise: <span style="font-weight:bold">80</span>
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
               addTickerItem(botDisplayName(entry.bot), 'raises to ' + (entry.amount || '') + ' ALL-IN!', 'allin');
+              addHandHistoryAction(botDisplayName(entry.bot), 'raises to ' + (entry.amount || '') + ' ALL-IN!', 'allin');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
               addTickerItem(botDisplayName(entry.bot), 'raises to ' + (entry.amount || ''), 'raise');
+              addHandHistoryAction(botDisplayName(entry.bot), 'raises to ' + (entry.amount || ''), 'raise');
             }
           }
           break;
@@ -5175,6 +5429,7 @@ Min raise: <span style="font-weight:bold">80</span>
           if (state.activePlayer === entry.bot) state.activePlayer = null;
           state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
           addTickerItem(botDisplayName(entry.bot), 'folds', 'fold');
+          addHandHistoryAction(botDisplayName(entry.bot), 'folds', 'fold');
           break;
 
         case 'deal':
@@ -5196,6 +5451,7 @@ Min raise: <span style="font-weight:bold">80</span>
             const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
             state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
             addTickerItem('Dealer', streetLabels[state.street] || state.street, 'deal');
+            addHandHistoryAction('Dealer', streetLabels[state.street] || state.street, 'deal');
           }
           break;
 
@@ -5225,6 +5481,8 @@ Min raise: <span style="font-weight:bold">80</span>
               showHandResultToast(winnerNames, amount, handName);
             }
             addTickerItem(resultMatch[1], 'wins ' + amount + ' with ' + handName, 'result');
+            // Finalize hand history entry
+            finalizeHandHistory(state.handNumber, state.community, { winners: winnerBots, handName, amount });
           }
           break;
 
