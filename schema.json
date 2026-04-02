@@ -14,6 +14,10 @@
           "thought": {
             "type": "string",
             "description": "Your reasoning for this action (private — visible to spectators only, not other players)"
+          },
+          "say": {
+            "type": "string",
+            "description": "Strategic table talk — ALL players see this. Use to deceive, intimidate, or misdirect. Do NOT narrate your action."
           }
         },
         "required": ["thought"]
@@ -28,6 +32,10 @@
           "thought": {
             "type": "string",
             "description": "Your reasoning for this action (private — visible to spectators only, not other players)"
+          },
+          "say": {
+            "type": "string",
+            "description": "Strategic table talk — ALL players see this. Use to deceive, intimidate, or misdirect. Do NOT narrate your action."
           }
         },
         "required": ["thought"]
@@ -46,6 +54,10 @@
           "thought": {
             "type": "string",
             "description": "Your reasoning for this action (private — visible to spectators only, not other players)"
+          },
+          "say": {
+            "type": "string",
+            "description": "Strategic table talk — ALL players see this. Use to deceive, intimidate, or misdirect. Do NOT narrate your action."
           }
         },
         "required": ["amount", "thought"]
@@ -60,6 +72,10 @@
           "thought": {
             "type": "string",
             "description": "Your reasoning for this action (private — visible to spectators only, not other players)"
+          },
+          "say": {
+            "type": "string",
+            "description": "Strategic table talk — ALL players see this. Use to deceive, intimidate, or misdirect. Do NOT narrate your action."
           }
         },
         "required": ["thought"]
@@ -105,7 +121,7 @@
     "yourTurn": "Your turn — what do you do?"
   },
 
-  "systemPrompt": "You are playing Texas Hold'em poker. When it is your turn, respond with TWO tool calls: first poker_think with your reasoning (what you have, what opponents might have, your strategy), then your action (poker_check, poker_call, poker_raise, or poker_fold). Always include a 'thought' parameter explaining your reasoning. Think about pot odds, position, hand strength, and opponent tendencies. If you do not act, you will be auto-folded.",
+  "systemPrompt": "You are playing Texas Hold'em poker. When it is your turn, respond with ONE tool call: your action (poker_check, poker_call, poker_raise, or poker_fold). Always include a 'thought' parameter with your private reasoning (only spectators see this). Think about pot odds, position, hand strength, and opponent tendencies. If you do not act, you will be auto-folded.\n\nTABLE TALK: You have a 'say' parameter on every action — use it as a strategic weapon. Everything you say is PUBLIC and your opponents WILL read it before their next decision. This means:\n- Bluff verbally: say \"I've got the nuts\" when you have nothing, to induce folds\n- Reverse-tell: act nervous (\"ugh, tough spot\") when you're strong, to get calls\n- Needle and tilt: provoke opponents into emotional plays (\"you always fold to pressure\")\n- Misdirect: talk about one hand when you have another (\"flush draw got there\" when you have trips)\n- Stay silent strategically: sometimes saying nothing is the strongest move\nDo NOT just narrate your action (\"I call\" or \"raising\"). That's boring and wastes the opportunity. Say something that serves your strategy. Be creative, be deceptive, be human. Read what opponents say too — they're trying to manipulate you.\n\nTable talk is a weapon. Use the 'say' parameter on every action to talk at the table. Deceive, intimidate, misdirect, taunt, bluff verbally, project false confidence, or try to tilt your opponents. Be creative and in-character. Poker is psychological warfare — play the players, not just the cards. Never be boring or silent.\n\nEXAMPLE SCENE (this is what you see each turn as the user message):\n\n## 🃏 Poker Table — Flop\n\n**Pot:** 120\n**Board:** K♠ 9♥ 4♦\n\n### Your Hand\n**A♠ K♥**\n\n### Players\n- **alice (you)** — 880 chips (bet: 40) ← acting\n- **bob** — 960 chips (bet: 40)\n- **charlie** — 940 chips *(folded)*\n\n### Your turn\nNo bet to match.\nOptions: **poker_check**, **poker_raise**, **poker_fold**\nMin raise: **80**\n\n### Hand history\n- bob posts small blind (10)\n- alice posts big blind (20)\n- charlie raises to 40\n- bob calls 40\n- alice calls 40\n- charlie folds\n- Dealer deals the Flop: K♠ 9♥ 4♦\n\n### Table talk\n- **bob:** I smell weakness at this table. Who wants to donate?\n- **charlie:** Not me, I'm out. Good luck with that king though.\n\nIn this example, you have top pair (K) with ace kicker — a strong hand. Your strategy determines whether you check to trap, raise for value, or use table talk to mislead.",
 
   "allowedReads": ["memory/village.md"],
   "maxActions": 2

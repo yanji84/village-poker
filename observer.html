@@ -3,679 +3,2408 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ggbot poker</title>
+  <title>Poker Arena — AI Strategy Competition</title>
   <style>
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-card: #111;
+      --bg-elevated: #161616;
+      --border: #222;
+      --text-primary: #ccc;
+      --text-secondary: #777;
+      --text-muted: #444;
+      --accent: #4af;
+      --green: #4a6;
+      --red: #a44;
+      --purple: #88f;
+      --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', monospace;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: #0a0a0a;
-      color: #aaa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
-      padding: 20px;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    h1 { text-align: center; color: #fff; margin-bottom: 16px; font-size: 1.5em; font-weight: 700; letter-spacing: -0.5px; }
-
-    .status {
-      text-align: center;
-      padding: 8px 12px;
-      border: 1px solid #1e1e1e;
-      border-radius: 4px;
-      margin: 0 auto 16px;
-      max-width: 900px;
-      font-size: 0.9em;
-    }
-    .status .phase { color: #4a9; font-weight: bold; text-transform: uppercase; }
-    .status .tick { color: #777; }
-    .status .connected { color: #4a9; }
-    .status .disconnected { color: #e55; }
-
-    /* --- Table Container --- */
-    .table-container {
-      position: relative;
-      max-width: 900px;
-      margin: 0 auto 20px;
-      aspect-ratio: 1.8 / 1;
-      min-height: 380px;
+      line-height: 1.5;
+      font-size: 13px;
     }
 
-    /* --- Felt Table (oval) --- */
-    .table-felt {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 75%;
-      height: 70%;
-      border-radius: 50%;
-      background: radial-gradient(ellipse at 50% 40%, #1a6b3c, #145a30 40%, #0f4825 70%, #0a3a1c);
-      border: 12px solid #2a1a0a;
-      box-shadow:
-        0 0 0 4px #1a1008,
-        0 0 40px rgba(0,0,0,0.6),
-        inset 0 0 60px rgba(0,0,0,0.3),
-        inset 0 0 120px rgba(0,0,0,0.15);
+    /* --- Top Header Bar --- */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
     }
-
-    /* Felt rail highlight */
-    .table-felt::before {
-      content: '';
-      position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 2px solid rgba(180,140,80,0.3);
-      pointer-events: none;
-    }
-
-    /* Inner felt line */
-    .table-felt::after {
-      content: '';
-      position: absolute;
-      inset: 12px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,0.06);
-      pointer-events: none;
-    }
-
-    /* --- Center content (pot + community + branding) --- */
-    .table-center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      z-index: 2;
-      width: 50%;
-    }
-
-    .table-brand {
-      font-size: 0.7em;
-      color: rgba(255,255,255,0.12);
-      text-transform: uppercase;
-      letter-spacing: 3px;
+    .top-bar-title {
+      font-size: 13px;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #eee;
+    }
+    .top-bar-title .accent { color: var(--accent); }
+
+    /* --- Status Bar --- */
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      flex-wrap: wrap;
+    }
+    .status .phase {
+      color: var(--accent);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .status .tick { color: var(--text-secondary); }
+    .status .connected { color: var(--green); }
+    .status .disconnected { color: var(--red); }
+
+    /* --- Info Strip (pot, board, street, hand) --- */
+    .info-strip {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 8px 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--bg-elevated);
+      flex-wrap: wrap;
+    }
+    .info-strip .label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #555;
+      margin-right: 6px;
+    }
+    .info-strip .value {
+      color: #ddd;
+      font-weight: 600;
+    }
+    .info-strip .pot-value { color: #f0d060; }
+    .info-strip .board-cards {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .info-strip .sep {
+      color: var(--text-muted);
+    }
+
+    /* --- Cards (minimal monospace labels) --- */
+    .card {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 5px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      color: #ddd;
+      line-height: 1.2;
+    }
+    .card.red { color: #e55; }
+    .card.empty {
+      background: transparent;
+      border: 1px dashed #2a2a2a;
+      color: #333;
+    }
+    .card.face-down {
+      background: #1a1a2e;
+      border-color: #333;
+      color: transparent;
+      min-width: 28px;
+    }
+    .card.face-down::after {
+      content: '?';
+      color: #444;
+    }
+
+    /* --- Main Dashboard Grid --- */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 35% 65%;
+      min-height: calc(100vh - 130px);
+    }
+
+    @media (max-width: 800px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .left-col {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* --- Section Headers --- */
+    .section-header {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #555;
+      padding: 10px 16px 6px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    /* --- Player Grid --- */
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .player-card {
+      background: var(--bg-card);
+      padding: 12px 14px;
+      border-left: 3px solid transparent;
+      transition: opacity 0.3s, border-color 0.3s;
+      cursor: default;
+      min-height: 120px;
+    }
+    .player-card.active {
+      border-left-color: var(--accent);
+      background: #0d1117;
+    }
+    .player-card.folded {
+      opacity: 0.35;
+    }
+    .player-card.winner {
+      border-left-color: #f0d060;
+      background: #111108;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% { border-left-color: var(--accent); }
+      50% { border-left-color: #29e; }
+    }
+    .player-card.active {
+      animation: pulse-border 2s ease-in-out infinite;
+    }
+
+    .player-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .player-card-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #eee;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .player-card-name .type-badge {
+      font-size: 11px;
+      margin-left: 4px;
+      opacity: 0.7;
+    }
+    .player-card-name .winner-badge {
+      color: #f0d060;
+      margin-left: 4px;
+    }
+
+    .player-card-role {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .player-card.active .player-card-role { color: var(--accent); }
+    .player-card-role.blind-sb { color: #69d; }
+    .player-card-role.blind-bb { color: #e66; }
+
+    .player-card-cards {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .player-card-cards .card {
+      font-size: 11px;
+      padding: 1px 4px;
+    }
+
+    .player-card-strategy {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-style: italic;
+    }
+
+    .player-card-chips {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: #ddd;
+      margin-bottom: 4px;
+    }
+    .player-card-chips .chip-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .player-card-bet {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: #f0d060;
+      margin-bottom: 4px;
+    }
+
+    .player-card-stats {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .player-card-stats .stat-bar {
+      width: 50px;
+      height: 4px;
+      background: #1a1a1a;
+      border-radius: 2px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .player-card-stats .stat-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .player-card-stats .stat-val { color: var(--text-secondary); }
+
+    /* --- Stats Dashboard (below player grid) --- */
+    .stats-dashboard {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px 16px;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .stats-grid .stat-item {
+      display: flex;
+      justify-content: space-between;
+    }
+    .stats-grid .stat-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stats-grid .stat-value {
+      color: #ddd;
+      font-weight: 600;
+    }
+
+    /* --- Reasoning Panel (right col, hero section) --- */
+    .reasoning-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .reasoning-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .reasoning-header .who {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .reasoning-header .tick-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .reasoning-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .reasoning-section {
+      margin-bottom: 16px;
+    }
+    .reasoning-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #555;
       margin-bottom: 6px;
     }
 
-    /* --- Chip icon (reusable) --- */
-    .chip {
-      display: inline-block;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 3px dashed rgba(255,255,255,0.6);
-      text-align: center;
-      line-height: 22px;
-      font-size: 9px;
-      font-weight: bold;
-      color: rgba(255,255,255,0.9);
-      flex-shrink: 0;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-    }
-    .chip.gold { background: radial-gradient(circle at 35% 35%, #f0d060, #b8860b); }
-    .chip.red { background: radial-gradient(circle at 35% 35%, #ee5555, #991111); }
-    .chip.blue { background: radial-gradient(circle at 35% 35%, #5588dd, #223388); }
-    .chip.green { background: radial-gradient(circle at 35% 35%, #55bb66, #226633); }
-    .chip.sm { width: 20px; height: 20px; line-height: 14px; font-size: 7px; border-width: 2px; }
-
-    /* --- Pot --- */
-    .pot {
-      text-align: center;
-      margin-bottom: 4px;
-    }
-    .pot-inner {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(0,0,0,0.35);
-      border-radius: 20px;
-      padding: 4px 14px;
-    }
-    .pot-stack {
-      display: flex;
-      margin-left: -4px;
-    }
-    .pot-stack .chip { margin-left: -8px; }
-    .pot-stack .chip:first-child { margin-left: 0; }
-    .pot-amount {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: #f0d060;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    }
-    .pot-label {
-      font-size: 0.6em;
-      color: rgba(255,255,255,0.5);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+    .reasoning-scene {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: #0c0c0c;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      color: var(--text-primary);
+      line-height: 1.6;
     }
 
-    .community {
-      text-align: center;
-      margin: 6px 0;
-      min-height: 50px;
-    }
-    .community .cards {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .community .street-label {
-      font-size: 0.7em;
-      color: rgba(255,255,255,0.4);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 4px;
+    .reasoning-text {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: #0c0c0c;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 14px;
+      color: #bbb;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
-    /* --- Cards --- */
-    .card {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(145deg, #ffffff, #f0f0f0);
-      color: #222;
-      border-radius: 6px;
-      padding: 6px 7px;
-      font-size: 1.05em;
-      font-weight: bold;
-      min-width: 38px;
-      min-height: 50px;
-      text-align: center;
-      box-shadow: 1px 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8);
-      position: relative;
-    }
-    .card.red { color: #cc0000; }
-    .card.empty {
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.15);
-      border: 1px dashed rgba(255,255,255,0.1);
-      box-shadow: none;
-      min-height: 50px;
-    }
-    .card.face-down {
-      background: linear-gradient(135deg, #2a4494, #1a2d6d);
-      color: transparent;
-      border: 2px solid #3a5ab8;
-      box-shadow: 1px 2px 6px rgba(0,0,0,0.4);
-    }
-    .card.face-down::after {
-      content: '';
-      position: absolute;
-      inset: 3px;
-      border-radius: 3px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 3px,
-        rgba(255,255,255,0.04) 3px,
-        rgba(255,255,255,0.04) 6px
-      );
-    }
-
-    /* --- Player Seats (absolute positioned around oval) --- */
-    .seat {
-      position: absolute;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      z-index: 3;
-      transition: opacity 0.3s;
-    }
-
-    /* Seat positions for up to 6 players around oval */
-    .seat[data-pos="0"] { bottom: -6%; left: 50%; transform: translateX(-50%); }
-    .seat[data-pos="1"] { bottom: 8%; left: 4%; transform: translateX(0); }
-    .seat[data-pos="2"] { top: 8%; left: 4%; transform: translateX(0); }
-    .seat[data-pos="3"] { top: -6%; left: 50%; transform: translateX(-50%); }
-    .seat[data-pos="4"] { top: 8%; right: 4%; transform: translateX(0); }
-    .seat[data-pos="5"] { bottom: 8%; right: 4%; transform: translateX(0); }
-
-    /* --- Player Node --- */
-    .player-node {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      min-width: 100px;
-    }
-
-    .player-avatar {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
+    .reasoning-action {
+      font-family: var(--mono);
+      font-size: 13px;
       font-weight: 700;
-      color: #fff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-      border: 3px solid rgba(255,255,255,0.15);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-
-    .player-info {
-      background: rgba(0,0,0,0.7);
-      border-radius: 8px;
-      padding: 4px 10px;
-      text-align: center;
-      min-width: 90px;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .player-name {
-      font-weight: bold;
-      font-size: 0.8em;
-      color: #eee;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 110px;
-    }
-
-    .player-chips-display {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      margin: 1px 0;
-    }
-    .chip-amount {
-      color: #ccc;
-      font-size: 0.8em;
-      font-weight: bold;
-    }
-
-    .player-hole-cards {
-      display: flex;
-      gap: 3px;
-      margin-top: 3px;
-    }
-    .player-hole-cards .card {
-      font-size: 0.75em;
-      padding: 3px 5px;
-      min-width: 26px;
-      min-height: 36px;
-    }
-    .player-hole-cards .card.face-down {
-      min-width: 26px;
-      min-height: 36px;
-    }
-
-    /* --- Bet on felt --- */
-    .player-bet {
-      position: absolute;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      z-index: 4;
-      white-space: nowrap;
-    }
-    .bet-amount {
-      font-size: 0.75em;
-      font-weight: bold;
-      color: #f0d060;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-    }
-
-    /* Bet positions (between seat and center) */
-    .player-bet[data-pos="0"] { bottom: 32%; left: 50%; transform: translateX(-50%); }
-    .player-bet[data-pos="1"] { bottom: 30%; left: 22%; }
-    .player-bet[data-pos="2"] { top: 30%; left: 22%; }
-    .player-bet[data-pos="3"] { top: 32%; left: 50%; transform: translateX(-50%); }
-    .player-bet[data-pos="4"] { top: 30%; right: 22%; }
-    .player-bet[data-pos="5"] { bottom: 30%; right: 22%; }
-
-    /* --- Player States --- */
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 8px rgba(68,170,153,0.3), 0 2px 8px rgba(0,0,0,0.4); }
-      50% { box-shadow: 0 0 20px rgba(68,170,153,0.6), 0 2px 8px rgba(0,0,0,0.4); }
-    }
-    .seat.active .player-avatar {
-      border-color: #4a9;
-      animation: pulse-glow 2s ease-in-out infinite;
-    }
-    .seat.active .player-info {
-      border-color: rgba(68,170,153,0.4);
-    }
-
-    @keyframes action-flash {
-      0% { background: rgba(68,170,153,0.2); }
-      100% { background: rgba(0,0,0,0.7); }
-    }
-    .seat.just-acted .player-info {
-      animation: action-flash 1s ease-out;
-    }
-
-    .seat.folded { opacity: 0.35; }
-
-    .seat.winner .player-avatar {
-      border-color: #f0d060;
-      box-shadow: 0 0 20px rgba(240,208,96,0.5), 0 2px 8px rgba(0,0,0,0.4);
-    }
-    .seat.winner .player-name {
-      color: #f0d060;
-    }
-
-    @keyframes card-reveal {
-      0% { transform: rotateY(90deg); opacity: 0; }
-      100% { transform: rotateY(0deg); opacity: 1; }
-    }
-    .seat.winner .player-hole-cards .card {
-      animation: card-reveal 0.6s ease-out;
-    }
-
-    .player-role {
-      font-size: 0.65em;
-      color: #888;
-      margin-top: 1px;
-    }
-    .seat.active .player-role { color: #4a9; }
-
-    /* --- Blind/Dealer Badges --- */
-    .player-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      margin-top: 2px;
-      font-size: 0.65em;
-      font-weight: bold;
-    }
-    .player-badge .badge-label { color: #aaa; }
-    .player-badge.small-blind .badge-label { color: #6699dd; }
-    .player-badge.big-blind .badge-label { color: #ee6666; }
-
-    /* --- Thoughts panel (below table) --- */
-    .thoughts-panel {
-      max-width: 900px;
-      margin: 0 auto 12px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .thoughts-panel:empty { display: none; }
-    .thought-card {
-      flex: 1;
-      min-width: 200px;
-      max-width: 300px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid #1e1e1e;
+      color: var(--accent);
+      background: rgba(68, 170, 255, 0.05);
+      border: 1px solid rgba(68, 170, 255, 0.15);
       border-radius: 4px;
       padding: 8px 12px;
     }
-    .thought-card .thought-name {
-      font-size: 0.72em;
-      font-weight: bold;
-      color: #888;
-      margin-bottom: 3px;
-    }
-    .thought-card .thought-text {
-      font-size: 0.8em;
-      color: #777;
+
+    .reasoning-talk {
+      font-size: 12px;
       font-style: italic;
-      line-height: 1.35;
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-left: 2px solid var(--text-muted);
     }
 
-    /* --- Context bar --- */
-    .context-bar {
-      max-width: 900px;
-      margin: 0 auto 16px;
-      text-align: center;
-      padding: 10px 16px;
-      border: 1px solid #1e1e1e;
-      border-radius: 4px;
-      font-size: 0.95em;
-      color: #888;
-      min-height: 1.4em;
+    .reasoning-history {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
     }
-    .context-bar:empty { display: none; }
-    .context-bar .highlight { color: #ccc; font-weight: bold; }
-
-    /* --- Action feed --- */
-    .feed {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .feed h2 {
-      font-size: 0.85em;
-      color: #777;
+    .reasoning-history-title {
+      font-size: 10px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
+      color: #555;
       margin-bottom: 8px;
     }
-    .feed-scroll {
-      border: 1px solid #1e1e1e;
-      border-radius: 4px;
-      padding: 10px 14px;
-      max-height: 350px;
+    .reasoning-history-entries {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      max-height: 200px;
       overflow-y: auto;
     }
-    .feed-entry {
-      padding: 4px 0;
-      font-size: 0.9em;
-      line-height: 1.4;
-    }
-    .feed-entry .thought {
-      color: #666;
-      font-size: 0.88em;
-      font-style: italic;
-      margin-left: 6px;
-    }
-    .feed-entry.say {
-      color: #888;
-      font-size: 0.8em;
-      padding: 2px 0 2px 12px;
-      border-left: 2px solid #1e1e1e;
-    }
-    .feed-entry.result {
-      color: #4a9;
-      font-weight: bold;
-      padding: 6px 8px;
-      background: rgba(68,170,153,0.05);
-      border-radius: 4px;
-      margin: 4px 0;
-    }
-    .feed-entry.result .card { font-size: 0.8em; padding: 2px 4px; min-width: auto; min-height: auto; }
-    .feed-entry.deal { color: #888; }
-    .feed-entry.street-header {
-      color: #ccc;
-      font-size: 0.85em;
-      font-weight: bold;
-      letter-spacing: 1px;
-      padding: 8px 10px;
-      margin: 8px -4px 4px;
-      background: rgba(255,255,255,0.02);
-      border-left: 3px solid #333;
-      border-radius: 0 4px 4px 0;
-    }
-    .feed-entry.action { color: #aaa; }
-    .feed-entry.join { color: #4a9; font-size: 0.8em; font-style: italic; }
-    .feed-entry.leave { color: #e55; font-size: 0.8em; font-style: italic; }
-    .feed-entry.phase-change { display: none; }
-    .hand-header {
+    .reasoning-history-entry {
+      padding: 2px 0;
       display: flex;
-      align-items: center;
       gap: 8px;
-      padding: 8px 0 4px;
-      margin-top: 6px;
-      border-top: 1px solid #1e1e1e;
-      font-size: 0.8em;
-      color: #aaa;
     }
-    .hand-header:first-child { border-top: none; margin-top: 0; }
-    .hand-header .hand-num {
-      color: #ccc;
-      font-weight: bold;
-      font-size: 1em;
+    .reasoning-history-entry .rh-tick { color: var(--text-muted); min-width: 40px; }
+    .reasoning-history-entry .rh-name { color: var(--text-primary); min-width: 70px; }
+    .reasoning-history-entry .rh-action { color: var(--text-secondary); }
+    .reasoning-history-entry.rh-current .rh-action { color: var(--accent); }
+
+    .reasoning-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 12px;
+      padding: 40px 0;
+      text-align: center;
     }
-    .hand-header .hand-cards .card { font-size: 0.7em; padding: 1px 3px; min-width: auto; min-height: auto; }
-    .hand-header .blind-info {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      font-size: 0.85em;
-      color: #aaa;
-    }
+
+    /* --- Context bar (hidden, used as data holder) --- */
+    .context-bar { display: none; }
 
     /* --- Leaderboard --- */
     .leaderboard {
-      max-width: 900px;
-      margin: 16px auto;
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      background: var(--bg-card);
     }
     .leaderboard:empty { display: none; }
     .leaderboard h2 {
-      font-size: 0.85em;
-      color: #777;
+      font-size: 10px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
+      color: #555;
       margin-bottom: 8px;
     }
     .leaderboard-table {
       width: 100%;
-      border: 1px solid #1e1e1e;
+      border: 1px solid var(--border);
       border-radius: 4px;
       border-collapse: separate;
       border-spacing: 0;
       overflow: hidden;
+      font-family: var(--mono);
+      font-size: 11px;
     }
     .leaderboard-table th {
       text-align: left;
-      padding: 6px 12px;
-      font-size: 0.75em;
-      color: #666;
+      padding: 6px 10px;
+      font-size: 10px;
+      color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      border-bottom: 1px solid #1e1e1e;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
     }
     .leaderboard-table td {
-      padding: 6px 12px;
-      font-size: 0.85em;
-      color: #aaa;
+      padding: 5px 10px;
+      color: var(--text-secondary);
       border-bottom: 1px solid #0e0e0e;
     }
     .leaderboard-table tr:last-child td { border-bottom: none; }
-    .leaderboard-table .wins { color: #4a9; font-weight: bold; }
-    .leaderboard-table .rank { color: #666; width: 30px; }
+    .leaderboard-table .wins { color: var(--green); font-weight: 600; }
+    .leaderboard-table .rank { color: var(--text-muted); width: 30px; }
+    .leaderboard-table .stat-dim { color: var(--text-muted); }
+    .leaderboard-table .type-badge { font-size: 11px; }
+    .leaderboard-table .expandable { cursor: pointer; }
+    .leaderboard-table .expandable:hover td { background: rgba(255,255,255,0.02); }
+    .leaderboard-table .viewer-row td { background: rgba(68,170,255,0.04); color: var(--text-primary); }
+    .leaderboard-table .username-col { color: var(--text-secondary); font-size: 10px; font-style: italic; }
+    .leaderboard-table .winrate { color: var(--text-secondary); }
+    .leaderboard-detail { display: none; }
+    .leaderboard-detail.open { display: table-row; }
+    .leaderboard-detail td {
+      padding: 8px 10px !important;
+      background: rgba(0,0,0,0.3);
+      font-size: 10px !important;
+      color: var(--text-secondary) !important;
+    }
+    .leaderboard-detail .detail-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+    }
+    .leaderboard-detail .detail-item { display: flex; gap: 4px; }
+    .leaderboard-detail .detail-label { color: var(--text-muted); }
+    .leaderboard-detail .detail-value { color: var(--text-secondary); font-weight: 600; }
+
+    @media (max-width: 700px) {
+      .leaderboard-table .hide-mobile { display: none; }
+    }
+
+    /* --- Pixel Poker Canvas --- */
+    #poker-canvas {
+      width: 100%;
+      height: 250px;
+      background: #070b07;
+      display: block;
+      border-bottom: 1px solid var(--border);
+      image-rendering: pixelated;
+    }
 
     /* --- Footer --- */
     .powered-by {
       text-align: center;
-      padding: 32px 0 16px;
+      padding: 16px 0 10px;
+      border-top: 1px solid var(--border);
     }
-    .cta-line {
-      color: #888;
-      font-size: 0.85em;
-      margin-bottom: 8px;
-      line-height: 1.5;
-    }
-    .cta-line a {
-      color: #aaa;
-      text-decoration: none;
-    }
-    .cta-line a:hover { color: #ccc; text-decoration: underline; }
     .built-with {
-      font-size: 0.75em;
-      color: #5a7a5a;
+      font-size: 10px;
+      color: var(--text-muted);
     }
     .built-with a {
-      color: #90ee90;
+      color: #5a7a5a;
       text-decoration: none;
     }
     .built-with a:hover { text-decoration: underline; }
 
-    /* --- Responsive --- */
+    /* --- Join Game Side Panel --- */
+    .join-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 340px;
+      height: 100vh;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .join-panel.open { transform: translateX(0); }
+
+    .join-tab {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      background: var(--bg-elevated);
+      color: var(--accent);
+      padding: 14px 8px;
+      cursor: pointer;
+      border-radius: 6px 0 0 6px;
+      border: 1px solid var(--border);
+      border-right: none;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      z-index: 999;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    .join-tab:hover { background: #1e1e1e; }
+    .join-tab.hidden { display: none; }
+
+    .join-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .join-panel-header h3 {
+      color: #eee;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+    .join-panel-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.3em;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .join-panel-close:hover { color: #fff; background: rgba(255,255,255,0.06); }
+
+    .join-panel-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .join-panel-section h4 {
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 0 0 10px;
+    }
+    .join-panel-section label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .join-panel-section input,
+    .join-panel-section textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+      color: #e0e0e0;
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-bottom: 12px;
+      resize: vertical;
+    }
+    .join-panel-section input:focus,
+    .join-panel-section textarea:focus {
+      outline: none;
+      border-color: #444;
+    }
+    .join-panel-section textarea {
+      min-height: 100px;
+      line-height: 1.5;
+    }
+
+    .join-panel-btn {
+      display: block;
+      width: 100%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 9px 16px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .join-panel-btn:hover { background: #1e1e1e; color: #6cf; }
+    .join-panel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .join-panel-btn.danger {
+      border-color: #332222;
+      color: var(--red);
+    }
+    .join-panel-btn.danger:hover { background: #1a0e0e; color: #c88; }
+    .join-panel-btn.secondary {
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      font-weight: 400;
+      margin-top: 8px;
+    }
+    .join-panel-btn.secondary:hover { background: #1a1a1a; color: var(--text-primary); }
+
+    .join-panel-msg {
+      font-size: 11px;
+      margin-bottom: 8px;
+      min-height: 1.2em;
+      font-family: var(--mono);
+    }
+    .join-panel-msg.error { color: var(--red); }
+    .join-panel-msg.success { color: var(--green); }
+
+    .waitlist-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .waitlist-list li {
+      padding: 3px 0;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: var(--mono);
+    }
+    .waitlist-list .waitlist-num {
+      color: var(--text-muted);
+      margin-right: 6px;
+    }
+    .waitlist-empty {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    .seated-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .seated-list li {
+      padding: 3px 0;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: var(--mono);
+    }
+    .seated-list .seat-status { margin-right: 4px; }
+    .seated-list .seat-owner { color: var(--text-muted); }
+
+    .join-panel-actions { padding: 14px 16px; }
+
     @media (max-width: 700px) {
-      .table-container {
-        min-height: 340px;
-        aspect-ratio: 1.5 / 1;
+      .join-panel { width: 100%; }
+    }
+
+    /* --- PIN input --- */
+    #join-pin, #login-pin {
+      width: 140px;
+      letter-spacing: 8px;
+      text-align: center;
+      font-size: 18px;
+      font-family: var(--mono);
+      padding: 8px 12px;
+    }
+    .pin-hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: -8px;
+      margin-bottom: 12px;
+    }
+
+    /* --- Prompt Example --- */
+    .prompt-example { margin-bottom: 10px; }
+    .prompt-example summary {
+      font-size: 11px;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 6px 0;
+      user-select: none;
+    }
+    .prompt-example summary:hover { color: #6bf; }
+    .prompt-example-content {
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      margin-top: 6px;
+      margin-bottom: 8px;
+    }
+    .prompt-example-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin: 0 0 8px;
+      line-height: 1.5;
+    }
+    .prompt-example-desc em { color: var(--accent); font-style: normal; }
+    .prompt-example-code {
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-radius: 3px;
+      padding: 8px 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.5;
+      color: #888;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      margin: 0 0 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .prompt-example-code b { color: #bbb; font-weight: 600; }
+    .prompt-hl { color: var(--accent); font-weight: 600; }
+
+    /* --- Auth Tabs --- */
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid transparent;
+      user-select: none;
+      transition: color 0.2s;
+    }
+    .auth-tab:hover { color: var(--text-secondary); }
+    .auth-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* --- Player Stats Box --- */
+    .player-stats-box {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      margin: 10px 0;
+    }
+    .player-stats-box h4 {
+      color: var(--text-secondary);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 0 0 8px;
+    }
+    .player-stats-box .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-secondary);
+    }
+    .player-stats-box .stat-value {
+      color: #ddd;
+      font-weight: 600;
+    }
+
+    /* --- Auth status section --- */
+    .auth-status-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .auth-status-section .auth-greeting {
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .auth-status-section .auth-detail {
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+
+    /* --- Char counter --- */
+    .char-counter {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: -8px;
+      margin-bottom: 8px;
+    }
+
+    /* --- Template buttons --- */
+    .template-bar { margin-bottom: 12px; }
+    .template-bar-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .template-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .template-btn {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: var(--mono);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .template-btn:hover { background: #1a1a1a; color: var(--text-primary); }
+
+    /* --- Full Editor Modal --- */
+    .full-editor-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .full-editor-overlay.open { display: flex; }
+    .full-editor-modal {
+      width: 80vw;
+      height: 80vh;
+      max-width: 800px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .full-editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .full-editor-header h3 {
+      color: #eee;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+    .full-editor-body {
+      flex: 1;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .full-editor-body textarea {
+      flex: 1;
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 14px;
+      color: #e0e0e0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      resize: none;
+    }
+    .full-editor-body textarea:focus {
+      outline: none;
+      border-color: #444;
+    }
+    .full-editor-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+    }
+    .full-editor-footer button {
+      padding: 8px 20px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .full-editor-save {
+      background: var(--bg-elevated);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .full-editor-save:hover { background: #1e1e1e; color: #6cf; }
+    .full-editor-cancel {
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+    }
+    .full-editor-cancel:hover { background: #1a1a1a; color: var(--text-primary); }
+
+    @keyframes strategy-flash {
+      0% { background: rgba(68,170,255,0.08); }
+      100% { background: var(--bg-card); }
+    }
+    .player-card.strategy-updated {
+      animation: strategy-flash 1.5s ease-out;
+    }
+
+    /* --- Responsive single column --- */
+    @media (max-width: 800px) {
+      .dashboard {
+        grid-template-columns: 1fr;
       }
-      .table-felt { width: 80%; height: 65%; }
-      .player-avatar { width: 40px; height: 40px; font-size: 17px; }
-      .player-info { padding: 3px 6px; min-width: 70px; }
-      .player-name { font-size: 0.7em; max-width: 80px; }
-      .player-hole-cards .card { font-size: 0.65em; padding: 2px 3px; min-width: 22px; min-height: 30px; }
-      .community .card { font-size: 0.85em; padding: 4px 5px; min-width: 32px; min-height: 42px; }
-      .seat[data-pos="1"], .seat[data-pos="2"] { left: 0%; }
-      .seat[data-pos="4"], .seat[data-pos="5"] { right: 0%; }
+      .left-col {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .reasoning-body {
+        max-height: 50vh;
+      }
+      .player-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+    /* --- Hand History Records --- */
+    .hand-record {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-family: var(--mono);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .hand-record:hover { background: #161616; }
+    .hand-record.win { border-left: 3px solid #4a6; }
+    .hand-record.loss { border-left: 3px solid #a44; }
+    .hand-record.fold { border-left: 3px solid #555; }
+    .hand-record-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .hand-record-title {
+      font-weight: 700;
+      color: #ddd;
+      font-size: 12px;
+    }
+    .hand-record-result {
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .hand-record-result.win { color: var(--green); }
+    .hand-record-result.loss { color: var(--red); }
+    .hand-record-result.fold-result { color: var(--text-muted); }
+    .hand-record-cards {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+    .hand-record-summary {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .hand-record-details {
+      display: none;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #222;
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .hand-record-details.open { display: block; }
+    .hand-record-details .detail-section {
+      margin-bottom: 6px;
+    }
+    .hand-record-details .detail-section-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .hand-record-details .detail-section-content {
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+    }
+
+    /* --- Session Progress Bar --- */
+    .session-bar {
+      height: 4px;
+      background: #222;
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+    .session-bar-fill {
+      height: 100%;
+      background: #4af;
+      transition: width 0.3s;
+    }
+    .session-info {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* --- Bluff Tags --- */
+    .bluff-tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+    .bluff-tag.won { background: #1a3a1a; color: #4a6; }
+    .bluff-tag.caught { background: #3a1a1a; color: #a44; }
+
+    /* --- Score Badge --- */
+    .score-badge {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: #4af;
+    }
+
+    /* --- My Hands Panel Section --- */
+    .my-hands-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .my-hands-section h4 {
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 0 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .my-hands-progress {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    /* --- Session panel section --- */
+    .session-panel-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .session-panel-section h4 {
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 0 0 8px;
+    }
+    .session-panel-text {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .session-panel-note {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* --- Toast Notification --- */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #ddd;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      animation: toast-in 0.3s ease-out, toast-out 0.3s ease-in 3.7s forwards;
+      max-width: 340px;
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    /* --- Player card bluff line --- */
+    .player-card-bluffs {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* --- Player card session line --- */
+    .player-card-session {
+      margin-top: 4px;
+    }
+    .player-card-session .session-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* --- Leaderboard score column --- */
+    .leaderboard-table .score-col {
+      color: #4af;
+      font-weight: 700;
+    }
+    .leaderboard-table .bluffs-col .bluff-tag {
+      font-size: 9px;
+      padding: 0 4px;
+    }
+    .leaderboard-detail .bluff-success-rate {
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    /* --- Chat bubble for table talk --- */
+    .chat-bubble {
+      margin-top: 8px;
+      padding: 6px 10px;
+      background: var(--surface-2, #2a2a3e);
+      border-left: 3px solid var(--accent, #7c6ef0);
+      border-radius: 0 8px 8px 0;
+      font-size: 11px;
+      font-style: italic;
+      color: var(--text-secondary, #b8b8cc);
+      word-break: break-word;
+      max-height: 60px;
+      overflow: hidden;
+      animation: bubbleFadeIn 0.3s ease;
+    }
+
+    @keyframes bubbleFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <h1>ggbot poker</h1>
+
+  <!-- Top Header -->
+  <div class="top-bar">
+    <div class="top-bar-title"><span class="accent">POKER ARENA</span> &mdash; Live AI Strategy Competition</div>
+  </div>
+
+  <!-- Status Bar -->
   <div class="status" id="status">Connecting...</div>
 
-  <div class="table-container" id="table-container">
-    <div class="table-felt"></div>
-    <div class="table-center">
-      <div class="table-brand">ggbot poker</div>
-      <div class="pot" id="pot"></div>
-      <div class="community" id="community"></div>
+  <!-- Info Strip: Pot / Board / Street / Hand -->
+  <div class="info-strip" id="info-strip">
+    <span><span class="label">Pot</span> <span class="value pot-value" id="pot-value">0</span></span>
+    <span class="sep">|</span>
+    <span><span class="label">Board</span> <span class="board-cards" id="board-cards">&mdash;</span></span>
+    <span class="sep">|</span>
+    <span><span class="label">Street</span> <span class="value" id="street-value">&mdash;</span></span>
+    <span class="sep">|</span>
+    <span><span class="label">Hand</span> <span class="value" id="hand-value">#0</span></span>
+  </div>
+
+  <!-- Main Dashboard Grid -->
+  <div class="dashboard">
+    <!-- Left Column: Player Grid + Stats -->
+    <div class="left-col">
+      <canvas id="poker-canvas" width="600" height="250"></canvas>
+      <div class="section-header">Players</div>
+      <div class="player-grid" id="player-grid"></div>
+
+      <div class="section-header">Stats</div>
+      <div class="stats-dashboard" id="stats-dashboard">
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-item"><span class="stat-label">Hands</span><span class="stat-value" id="stat-hands">0</span></div>
+          <div class="stat-item"><span class="stat-label">Pot</span><span class="stat-value" id="stat-pot">0</span></div>
+          <div class="stat-item"><span class="stat-label">Players</span><span class="stat-value" id="stat-players">0</span></div>
+          <div class="stat-item"><span class="stat-label">Street</span><span class="stat-value" id="stat-street">&mdash;</span></div>
+          <div class="stat-item"><span class="stat-label">Board</span><span class="stat-value" id="stat-board">&mdash;</span></div>
+          <div class="stat-item"><span class="stat-label">Phase</span><span class="stat-value" id="stat-phase">&mdash;</span></div>
+        </div>
+      </div>
     </div>
-    <!-- Player seats and bets are injected dynamically -->
+
+    <!-- Right Column: Reasoning Panel -->
+    <div class="right-col">
+      <div class="reasoning-panel" id="reasoning-panel">
+        <div class="reasoning-header">
+          <span class="who" id="reasoning-who">Waiting for action...</span>
+          <span class="tick-num" id="reasoning-tick"></span>
+        </div>
+        <div class="reasoning-body" id="reasoning-body">
+          <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="thoughts-panel" id="thoughts"></div>
-
-  <div class="context-bar" id="context-bar"></div>
-
-  <div class="feed">
-    <h2>Live Feed</h2>
-    <div class="feed-scroll" id="feed"></div>
-  </div>
-
+  <!-- Leaderboard -->
   <div class="leaderboard" id="leaderboard"></div>
 
   <footer class="powered-by">
-    <div class="cta-line">these bots have owners. they chat on WhatsApp, remember everything, and <a href="https://ggbot.it.com">come here to play</a>.</div>
     <div class="built-with">built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
   </footer>
 
+  <!-- Context bar (hidden, kept for state) -->
+  <div class="context-bar" id="context-bar"></div>
+
+  <!-- Kept for JS compat: hidden containers for old table -->
+  <div id="pot" style="display:none"></div>
+  <div id="community" style="display:none"></div>
+  <div id="thoughts" style="display:none"></div>
+  <div id="table-container" style="display:none"></div>
+
+  <!-- Join Game Tab -->
+  <div class="join-tab" id="join-tab" onclick="toggleJoinPanel()">JOIN</div>
+
+  <!-- Join Game Side Panel -->
+  <div class="join-panel" id="join-panel">
+    <div class="join-panel-header">
+      <h3>Join Game</h3>
+      <button class="join-panel-close" onclick="toggleJoinPanel()">&times;</button>
+    </div>
+
+    <div style="padding: 8px 16px; font-family: var(--mono); font-size: 11px; color: var(--text-secondary);">
+      <span id="table-occupancy"></span>
+    </div>
+
+    <div class="auth-status-section" id="auth-status-section" style="display:none">
+      <div class="auth-greeting" id="auth-greeting"></div>
+      <div class="auth-detail" id="auth-detail"></div>
+    </div>
+
+    <div id="player-stats-container" style="display:none; padding: 0 16px;"></div>
+
+    <div id="auth-tabs-section" style="display:none; padding: 14px 16px 0;">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-new" onclick="switchAuthTab('new')">New Player</div>
+        <div class="auth-tab" id="tab-returning" onclick="switchAuthTab('returning')">Returning</div>
+      </div>
+    </div>
+
+    <div class="join-panel-section" id="join-form-section">
+      <div class="join-panel-msg" id="join-msg"></div>
+      <label for="join-username">Username</label>
+      <input type="text" id="join-username" maxlength="20" placeholder="Your name" />
+      <label for="join-pin">PIN (4 digits)</label>
+      <input type="password" id="join-pin" maxlength="4" inputmode="numeric" pattern="\d{4}"
+             placeholder="****" autocomplete="off">
+      <div class="pin-hint">Remember this -- it's how you reclaim your seat later</div>
+      <label for="join-strategy">Strategy</label>
+      <details class="prompt-example">
+        <summary>How your strategy becomes a prompt ▸</summary>
+        <div class="prompt-example-content">
+          <p class="prompt-example-desc">Each turn, your bot gets a system prompt + the table state. Your strategy is injected at the top:</p>
+          <pre class="prompt-example-code"><span class="prompt-hl">## Your Strategy</span>
+<span class="prompt-hl">[YOUR TEXT HERE]</span>
+
+You are playing Texas Hold'em poker. When it is
+your turn, respond with ONE tool call: your action
+(poker_check, poker_call, poker_raise, poker_fold).
+
+Always include a 'thought' parameter with your
+private reasoning (only spectators see this).
+
+Think about pot odds, position, hand strength, and
+opponent tendencies.
+
+TABLE TALK: You have a 'say' parameter on every
+action — use it as a strategic weapon. Everything
+you say is PUBLIC and your opponents WILL read it.</pre>
+          <p class="prompt-example-desc">Then the bot sees the current scene as the user message:</p>
+          <pre class="prompt-example-code">## 🃏 Poker Table — Pre-Flop
+
+<b>Pot:</b> 30
+
+### Your Hand
+<b>K♠ Q♠</b>
+
+### Players
+- <b>Nova</b> — 980 chips (bet: 10)
+- <b>Jinx</b> — 1000 chips (bet: 20) 🎲
+- <b>YOU</b> — 950 chips ← acting
+
+### Your turn
+Current bet: <b>20</b> (10 to call)
+Options: poker_call, poker_raise, poker_fold
+Min raise: <b>40</b></pre>
+          <p class="prompt-example-desc">Your strategy shapes <em>how</em> the bot reasons about this scene. Be specific about when to fold, raise, bluff, and talk.</p>
+        </div>
+      </details>
+      <textarea id="join-strategy" rows="11" maxlength="2000" placeholder="Play tight-aggressive. Bluff occasionally on the river when the pot is large." oninput="updateCharCounter()"></textarea>
+      <div class="char-counter" id="strategy-char-counter">0 / 2000</div>
+      <div class="template-bar">
+        <div class="template-bar-label">Start from template:</div>
+        <div class="template-btns" id="panel-template-btns"></div>
+      </div>
+      <button class="join-panel-btn secondary" style="margin-top:0;margin-bottom:8px" onclick="openFullEditor()">Full Editor</button>
+      <button class="join-panel-btn" id="join-btn" onclick="submitWaitlist()">Join Waitlist</button>
+    </div>
+
+    <div class="join-panel-section" id="login-form-section" style="display:none">
+      <div class="join-panel-msg" id="login-msg"></div>
+      <label for="login-username">Username</label>
+      <input type="text" id="login-username" maxlength="20" placeholder="Your username" />
+      <label for="login-pin">PIN</label>
+      <input type="password" id="login-pin" maxlength="4" inputmode="numeric" pattern="\d{4}"
+             placeholder="****" autocomplete="off">
+      <button class="join-panel-btn" id="login-btn" onclick="submitLogin()" style="margin-top:8px">Log In</button>
+    </div>
+
+    <div class="join-panel-section" id="auth-idle-actions" style="display:none">
+      <button class="join-panel-btn" id="auth-join-btn" onclick="submitWaitlistAuthenticated()">Join Waitlist</button>
+    </div>
+
+    <!-- Session Countdown (shown for seated players) -->
+    <div class="session-panel-section" id="session-panel-section" style="display:none">
+      <h4>Session</h4>
+      <div class="session-panel-text" id="session-panel-text">0 of 20 hands played</div>
+      <div class="session-bar"><div class="session-bar-fill" id="session-panel-bar-fill" style="width:0%"></div></div>
+      <div class="session-panel-note">After 20 hands, the next player in the waitlist takes your seat.</div>
+    </div>
+
+    <!-- My Hands (shown for authenticated users) -->
+    <div class="my-hands-section" id="my-hands-section" style="display:none">
+      <h4>My Hands <span class="my-hands-progress" id="my-hands-progress"></span></h4>
+      <div id="my-hands-content">
+        <button class="join-panel-btn secondary" onclick="fetchMyHands()" style="margin:0">Load My Hands</button>
+      </div>
+    </div>
+
+    <div class="join-panel-section">
+      <h4 id="waitlist-header">Waitlist</h4>
+      <div id="waitlist-content"><span class="waitlist-empty">No one in the waitlist yet.</span></div>
+    </div>
+    <div class="join-panel-section">
+      <h4>Seated Players</h4>
+      <ul class="seated-list" id="seated-list"></ul>
+    </div>
+    <div class="join-panel-actions" id="join-actions" style="display:none">
+      <button class="join-panel-btn danger" id="leave-btn" onclick="leaveOrRelease()">Leave Queue</button>
+      <button class="join-panel-btn secondary" id="edit-strategy-btn" onclick="showEditStrategy()">Edit Strategy</button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Full Editor Modal -->
+  <div class="full-editor-overlay" id="full-editor-overlay">
+    <div class="full-editor-modal">
+      <div class="full-editor-header">
+        <h3>Strategy Editor</h3>
+        <div class="char-counter" id="full-editor-char-counter" style="margin:0;color:var(--text-muted)">0 / 2000</div>
+      </div>
+      <div class="full-editor-body">
+        <textarea id="full-editor-textarea" maxlength="2000" placeholder="Write your strategy here..." oninput="updateFullEditorCharCounter()"></textarea>
+        <div class="template-bar" style="margin-top:12px;margin-bottom:0">
+          <div class="template-bar-label">Start from template:</div>
+          <div class="template-btns" id="modal-template-btns"></div>
+        </div>
+        <details class="system-prompt-preview" style="margin-top:16px">
+          <summary style="cursor:pointer;color:var(--accent);font-size:12px;user-select:none">View full system prompt your bot sees ▸</summary>
+          <div style="margin-top:8px;padding:12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:var(--mono);color:var(--text-secondary);white-space:pre-wrap;max-height:300px;overflow-y:auto;line-height:1.5"><span style="color:var(--green);font-weight:bold">## Your Strategy</span>
+<span style="color:var(--green)">[YOUR TEXT ABOVE IS INJECTED HERE]</span>
+
+You are playing Texas Hold'em poker. When it is your turn, respond with ONE tool call: your action (poker_check, poker_call, poker_raise, or poker_fold). Always include a 'thought' parameter with your private reasoning (only spectators see this). Think about pot odds, position, hand strength, and opponent tendencies. If you do not act, you will be auto-folded.
+
+<span style="color:var(--accent);font-weight:bold">TABLE TALK:</span> You have a 'say' parameter on every action — use it as a strategic weapon. Everything you say is PUBLIC and your opponents WILL read it before their next decision. This means:
+- Bluff verbally: say "I've got the nuts" when you have nothing, to induce folds
+- Reverse-tell: act nervous ("ugh, tough spot") when you're strong, to get calls
+- Needle and tilt: provoke opponents into emotional plays ("you always fold to pressure")
+- Misdirect: talk about one hand when you have another ("flush draw got there" when you have trips)
+- Stay silent strategically: sometimes saying nothing is the strongest move
+
+Do NOT just narrate your action ("I call" or "raising"). That's boring and wastes the opportunity. Say something that serves your strategy. Be creative, be deceptive, be human. Read what opponents say too — they're trying to manipulate you.
+
+Table talk is a weapon. Use the 'say' parameter on every action to talk at the table. Deceive, intimidate, misdirect, taunt, bluff verbally, project false confidence, or try to tilt your opponents. Be creative and in-character. Poker is psychological warfare — play the players, not just the cards. Never be boring or silent.
+
+<span style="color:var(--accent);font-weight:bold">EXAMPLE SCENE</span> (this is what you see each turn as the user message):
+
+<span style="font-weight:bold">## 🃏 Poker Table — Flop</span>
+
+<span style="font-weight:bold">Pot:</span> 120
+<span style="font-weight:bold">Board:</span> K♠ 9♥ 4♦
+
+<span style="font-weight:bold">### Your Hand</span>
+<span style="color:var(--green);font-weight:bold">A♠ K♥</span>
+
+<span style="font-weight:bold">### Players</span>
+- <span style="font-weight:bold">alice (you)</span> — 880 chips (bet: 40) ← acting
+- <span style="font-weight:bold">bob</span> — 960 chips (bet: 40)
+- <span style="font-weight:bold">charlie</span> — 940 chips <span style="opacity:0.5">*(folded)*</span>
+
+<span style="font-weight:bold">### Your turn</span>
+No bet to match.
+Options: <span style="font-weight:bold">poker_check</span>, <span style="font-weight:bold">poker_raise</span>, <span style="font-weight:bold">poker_fold</span>
+Min raise: <span style="font-weight:bold">80</span>
+
+<span style="font-weight:bold">### Hand history</span>
+- bob posts small blind (10)
+- alice posts big blind (20)
+- charlie raises to 40
+- bob calls 40
+- alice calls 40
+- charlie folds
+- Dealer deals the Flop: K♠ 9♥ 4♦
+
+<span style="font-weight:bold">### Table talk</span>
+- <span style="font-weight:bold">bob:</span> I smell weakness at this table. Who wants to donate?
+- <span style="font-weight:bold">charlie:</span> Not me, I'm out. Good luck with that king though.
+
+<span style="color:var(--text-muted);font-style:italic">In this example, you have top pair (K) with ace kicker — a strong hand. Your strategy determines whether you check to trap, raise for value, or use table talk to mislead.</span></div>
+        </details>
+      </div>
+      <div class="full-editor-footer">
+        <button class="full-editor-cancel" onclick="cancelFullEditor()">Cancel</button>
+        <button class="full-editor-save" onclick="saveFullEditor()">Save &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // --- Base path for API calls (works behind /poker/ reverse proxy) ---
+    const basePath = window.location.pathname.replace(/\/+$/, '');
+    const apiBase = basePath + '/api/arena';
+
+    // --- DOM references ---
+    // Hidden compat elements (old table structure)
     const potEl = document.getElementById('pot');
     const communityEl = document.getElementById('community');
     const tableContainer = document.getElementById('table-container');
-    const feedEl = document.getElementById('feed');
     const statusEl = document.getElementById('status');
     const contextEl = document.getElementById('context-bar');
     const thoughtsEl = document.getElementById('thoughts');
     const leaderboardEl = document.getElementById('leaderboard');
 
-    // Reconstructed state from events
+    // New dashboard elements
+    const playerGridEl = document.getElementById('player-grid');
+    const reasoningBodyEl = document.getElementById('reasoning-body');
+    const reasoningWhoEl = document.getElementById('reasoning-who');
+    const reasoningTickEl = document.getElementById('reasoning-tick');
+
+    // --- Arena seat claim state ---
+    const seatData = {};
+
+    function getMyBotCookie() {
+      const c = document.cookie.split(';').find(c => c.trim().startsWith('arena_bot='));
+      return c ? decodeURIComponent(c.split('=')[1]) : null;
+    }
+
+    async function fetchSeats() {
+      try {
+        const res = await fetch(apiBase + '/seats', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const seatsObj = data.seats || data;
+        state.maxPlayers = data.maxPlayers || 6;
+        state.playerCount = data.playerCount || Object.keys(seatsObj).length;
+        for (const [botName, s] of Object.entries(seatsObj)) {
+          seatData[botName] = {
+            username: s.username || s.claimedBy || null,
+            strategy: s.strategy || '',
+            stats: s.stats || null,
+            sessionInfo: s.sessionInfo || s.session || null,
+          };
+          if (s.sessionInfo || s.session) {
+            state.sessionInfo[botName] = s.sessionInfo || s.session;
+          }
+          // Auto-detect if current user is seated (recovers missing arena_bot cookie)
+          const seatOwner = s.claimedBy || s.username;
+          if (authUsername && seatOwner && seatOwner.toLowerCase() === authUsername.toLowerCase() && !getMyBotCookie()) {
+            document.cookie = 'arena_bot=' + encodeURIComponent(botName) + ';path=/;max-age=604800;SameSite=Strict';
+          }
+        }
+        // Clear stale arena_bot cookie if it points to a bot not at the table
+        const myBot = getMyBotCookie();
+        if (myBot && !seatsObj[myBot]) {
+          document.cookie = 'arena_bot=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+          document.cookie = 'arena_token=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        }
+        render();
+      } catch (e) {}
+    }
+
+    // --- Join Panel state ---
+    let waitlistData = [];
+    let viewerWaitlist = null;
+    let joinPanelOpen = false;
+    let editingStrategy = false;
+
+    // --- Auth state ---
+    let authUsername = localStorage.getItem('arena_username') || null;
+    let authTab = 'new';
+    let playerStats = null;
+
+    function getArenaTokenCookie() {
+      const c = document.cookie.split(';').find(c => c.trim().startsWith('arena_token='));
+      return c ? decodeURIComponent(c.split('=')[1]) : null;
+    }
+
+    function hasArenaToken() {
+      return !!getArenaTokenCookie();
+    }
+
+    function switchAuthTab(tab) {
+      authTab = tab;
+      document.getElementById('tab-new').className = 'auth-tab' + (tab === 'new' ? ' active' : '');
+      document.getElementById('tab-returning').className = 'auth-tab' + (tab === 'returning' ? ' active' : '');
+      document.getElementById('join-form-section').style.display = tab === 'new' ? '' : 'none';
+      document.getElementById('login-form-section').style.display = tab === 'returning' ? '' : 'none';
+    }
+
+    async function fetchPlayerStats(username) {
+      if (!username) return;
+      try {
+        const res = await fetch(apiBase + '/player-stats?username=' + encodeURIComponent(username), { credentials: 'include' });
+        if (!res.ok) { playerStats = null; return; }
+        const data = await res.json();
+        playerStats = data.stats || data;
+        renderPlayerStats();
+      } catch (e) {
+        playerStats = null;
+      }
+    }
+
+    function renderPlayerStats() {
+      const container = document.getElementById('player-stats-container');
+      if (!playerStats || !authUsername) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+      const s = playerStats;
+      const hands = s.handsPlayed || 0;
+      const wins = s.handsWon || 0;
+      const winRate = hands > 0 ? ((wins / hands) * 100).toFixed(1) + '%' : '-';
+      const folds = s.folds || 0;
+      const calls = s.calls || 0;
+      const raises = s.raises || 0;
+      const vpip = hands > 0 ? (((calls + raises) / hands) * 100).toFixed(0) + '%' : '-';
+      const bestStreak = s.streakBest || 0;
+      container.style.display = '';
+      container.innerHTML = `
+        <div class="player-stats-box">
+          <h4>Your Stats</h4>
+          <div class="stat-row"><span>Hands</span><span class="stat-value">${hands}</span></div>
+          <div class="stat-row"><span>Wins</span><span class="stat-value">${wins}</span></div>
+          <div class="stat-row"><span>Win Rate</span><span class="stat-value">${winRate}</span></div>
+          <div class="stat-row"><span>VPIP</span><span class="stat-value">${vpip}</span></div>
+          <div class="stat-row"><span>Folds</span><span class="stat-value">${folds}</span></div>
+          <div class="stat-row"><span>Calls</span><span class="stat-value">${calls}</span></div>
+          <div class="stat-row"><span>Raises</span><span class="stat-value">${raises}</span></div>
+          <div class="stat-row"><span>Best Streak</span><span class="stat-value">${bestStreak}</span></div>
+        </div>
+      `;
+    }
+
+    async function submitLogin() {
+      const username = document.getElementById('login-username').value.trim();
+      const pin = document.getElementById('login-pin').value.trim();
+      const msgEl = document.getElementById('login-msg');
+      msgEl.className = 'join-panel-msg';
+      msgEl.textContent = '';
+
+      if (!username) {
+        msgEl.className = 'join-panel-msg error';
+        msgEl.textContent = 'Username is required.';
+        return;
+      }
+      if (!/^\d{4}$/.test(pin)) {
+        msgEl.className = 'join-panel-msg error';
+        msgEl.textContent = 'PIN must be exactly 4 digits.';
+        return;
+      }
+
+      const btn = document.getElementById('login-btn');
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+
+      try {
+        const res = await fetch(apiBase + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username, pin }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          msgEl.className = 'join-panel-msg error';
+          msgEl.textContent = data.error || data.message || 'Wrong PIN. Try again.';
+          btn.disabled = false;
+          btn.textContent = 'Log In';
+          return;
+        }
+
+        const data = await res.json().catch(() => ({}));
+        authUsername = username;
+        localStorage.setItem('arena_username', username);
+
+        if (data.seated) {
+          if (data.botName) {
+            seatData[data.botName] = seatData[data.botName] || {};
+            seatData[data.botName].username = username;
+          }
+          msgEl.className = 'join-panel-msg success';
+          msgEl.textContent = 'Welcome back! You\'re at the table.';
+        } else if (data.queued) {
+          setWaitlistState({ username, strategy: data.strategy || '' });
+          msgEl.className = 'join-panel-msg success';
+          const pos = data.position ? ' #' + data.position : '';
+          msgEl.textContent = 'Welcome back! You\'re' + pos + ' in the waitlist.';
+        } else {
+          msgEl.className = 'join-panel-msg success';
+          msgEl.textContent = 'Welcome back! Join the waitlist to play.';
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Log In';
+        fetchPlayerStats(username);
+        fetchSeats();
+        await fetchWaitlist();
+        renderJoinPanel();
+      } catch (e) {
+        msgEl.className = 'join-panel-msg error';
+        msgEl.textContent = 'Network error. Please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Log In';
+      }
+    }
+
+    async function submitWaitlistAuthenticated() {
+      if (!authUsername) return;
+      const btn = document.getElementById('auth-join-btn');
+
+      // Returning user needs PIN to rejoin
+      const pin = prompt('Enter your 4-digit PIN to rejoin:');
+      if (!pin || !/^\d{4}$/.test(pin)) return;
+
+      // Use last known strategy or a default
+      const lastStrategy = seatData ? Object.values(seatData).find(s => s.username === authUsername)?.strategy : null;
+      const strategy = lastStrategy || 'Play smart and adapt to opponents.';
+
+      btn.disabled = true;
+      btn.textContent = 'Joining...';
+      try {
+        const res = await fetch(apiBase + '/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username: authUsername, pin, strategy }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || data.message || 'Failed to join waitlist.');
+          btn.disabled = false;
+          btn.textContent = 'Join Waitlist';
+          return;
+        }
+        const respData = await res.clone().json().catch(() => ({}));
+        if (respData.botName) {
+          // Immediately assigned to a seat
+          document.cookie = 'arena_bot=' + encodeURIComponent(respData.botName) + ';path=/;max-age=604800;SameSite=Strict';
+          setWaitlistState(null);
+        } else {
+          setWaitlistState({ username: authUsername, strategy: '' });
+        }
+        btn.disabled = false;
+        btn.textContent = 'Join Waitlist';
+        fetchPlayerStats(authUsername);
+        fetchSeats();
+        await fetchWaitlist();
+        renderJoinPanel();
+      } catch (e) {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Join Waitlist';
+      }
+    }
+
+    async function checkReturningUser() {
+      if (!hasArenaToken()) return;
+      try {
+        const res = await fetch(apiBase + '/seats', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const seatsObj = data.seats || data;
+        let found = false;
+        for (const [botName, s] of Object.entries(seatsObj)) {
+          if ((s.claimedBy || s.username) === authUsername) {
+            seatData[botName] = seatData[botName] || {};
+            seatData[botName].username = authUsername;
+            fetchPlayerStats(authUsername);
+            found = true;
+            break;
+          }
+        }
+        if (!found && authUsername) {
+          fetchPlayerStats(authUsername);
+        }
+        renderJoinPanel();
+      } catch (e) {
+        renderJoinPanel();
+      }
+    }
+
+    // --- Strategy Templates ---
+    const STRATEGY_TEMPLATES = [
+      { name: 'Aggressive', text: 'Play aggressively. Raise preflop with any face card, suited connector, or pocket pair. Continuation bet the flop 80% of the time. Apply pressure with big bets. If you sense weakness, attack. Never limp \u2014 always raise or fold.' },
+      { name: 'Defensive', text: 'Play tight and cautious. Only enter pots with premium hands: high pairs (TT+), AK, AQ. Fold everything marginal. Post-flop, only continue with top pair or better. Minimize losses \u2014 survival is more important than big pots.' },
+      { name: 'Balanced', text: 'Mix it up. Play tight from early position, looser from the button. Raise with strong hands, call with drawing hands, fold junk. Vary bet sizes to stay unpredictable. Bluff occasionally on scary boards. Adjust to opponents \u2014 tighten against maniacs, loosen against rocks.' },
+      { name: 'Bluffer', text: 'Deception is your weapon. Raise with weak hands to represent strength. Slow-play monsters to trap. Bet big on missed draws to steal pots. Use table talk to mislead \u2014 project confidence when weak, uncertainty when strong. Win through psychology, not cards.' },
+      { name: 'Calculator', text: 'Play by the math. Calculate pot odds before every call. Only continue when odds justify it. Bet 2/3 pot as default. Fold when equity drops below breakeven. Position is everything \u2014 play 2x more hands on the button than under the gun. Never let emotions override numbers.' },
+    ];
+
+    function renderTemplateButtons(containerId, targetTextareaId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = STRATEGY_TEMPLATES.map((t, i) =>
+        `<button class="template-btn" data-idx="${i}">${escapeHtml(t.name)}</button>`
+      ).join('');
+      container.addEventListener('click', (e) => {
+        const btn = e.target.closest('.template-btn');
+        if (!btn) return;
+        const idx = parseInt(btn.dataset.idx);
+        const tpl = STRATEGY_TEMPLATES[idx];
+        if (!tpl) return;
+        const textarea = document.getElementById(targetTextareaId);
+        if (!textarea) return;
+        if (textarea.value.trim() && !confirm('Replace current strategy?')) return;
+        textarea.value = tpl.text;
+        textarea.dispatchEvent(new Event('input'));
+        if (targetTextareaId === 'full-editor-textarea') {
+          document.getElementById('join-strategy').value = tpl.text;
+          updateCharCounter();
+        }
+      });
+    }
+
+    function updateCharCounter() {
+      const textarea = document.getElementById('join-strategy');
+      const counter = document.getElementById('strategy-char-counter');
+      if (textarea && counter) {
+        counter.textContent = textarea.value.length + ' / 2000';
+      }
+    }
+
+    function updateFullEditorCharCounter() {
+      const textarea = document.getElementById('full-editor-textarea');
+      const counter = document.getElementById('full-editor-char-counter');
+      if (textarea && counter) {
+        counter.textContent = textarea.value.length + ' / 2000';
+      }
+    }
+
+    function openFullEditor() {
+      const panelTextarea = document.getElementById('join-strategy');
+      const modalTextarea = document.getElementById('full-editor-textarea');
+      modalTextarea.value = panelTextarea.value;
+      updateFullEditorCharCounter();
+      document.getElementById('full-editor-overlay').classList.add('open');
+      setTimeout(() => modalTextarea.focus(), 100);
+    }
+
+    function saveFullEditor() {
+      const panelTextarea = document.getElementById('join-strategy');
+      const modalTextarea = document.getElementById('full-editor-textarea');
+      panelTextarea.value = modalTextarea.value;
+      updateCharCounter();
+      document.getElementById('full-editor-overlay').classList.remove('open');
+    }
+
+    function cancelFullEditor() {
+      document.getElementById('full-editor-overlay').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const overlay = document.getElementById('full-editor-overlay');
+        if (overlay.classList.contains('open')) {
+          cancelFullEditor();
+        }
+      }
+    });
+
+    function getWaitlistState() {
+      try {
+        const stored = localStorage.getItem('arena_waitlist');
+        return stored ? JSON.parse(stored) : null;
+      } catch (e) { return null; }
+    }
+
+    function setWaitlistState(data) {
+      if (data) {
+        localStorage.setItem('arena_waitlist', JSON.stringify(data));
+      } else {
+        localStorage.removeItem('arena_waitlist');
+      }
+      viewerWaitlist = data;
+    }
+
+    function toggleJoinPanel() {
+      joinPanelOpen = !joinPanelOpen;
+      const panel = document.getElementById('join-panel');
+      const tab = document.getElementById('join-tab');
+      if (joinPanelOpen) {
+        panel.classList.add('open');
+        tab.classList.add('hidden');
+        fetchWaitlist();
+      } else {
+        panel.classList.remove('open');
+        tab.classList.remove('hidden');
+        editingStrategy = false;
+      }
+      renderJoinPanel();
+    }
+
+    async function fetchWaitlist() {
+      try {
+        const res = await fetch(apiBase + '/waitlist', { credentials: 'include' });
+        if (!res.ok) {
+          waitlistData = [];
+          return;
+        }
+        const data = await res.json();
+        waitlistData = Array.isArray(data) ? data : (data.waitlist || []);
+      } catch (e) {
+        waitlistData = [];
+      }
+      // Clear stale local waitlist state if server says we're not queued
+      const wlState = getWaitlistState();
+      if (wlState) {
+        const myUsername = wlState.username || authUsername;
+        const inServerWaitlist = waitlistData.some(w => (w.username || w) === myUsername);
+        if (!inServerWaitlist) {
+          // Check if we got seated instead (server assigned us)
+          fetchSeats();
+          setWaitlistState(null);
+        }
+      }
+      renderJoinPanel();
+    }
+
+    function renderJoinPanel() {
+      const myBot = getMyBotCookie();
+      const wlState = getWaitlistState();
+      viewerWaitlist = wlState;
+      const hasToken = hasArenaToken();
+      const isAuthenticated = hasToken || !!authUsername;
+      const isSeated = !!myBot;
+      let isQueued = !!wlState;
+
+      // If seated, clear stale waitlist state
+      if (isSeated && isQueued) {
+        setWaitlistState(null);
+        isQueued = false;
+      }
+
+      // Table occupancy display
+      const occupancyEl = document.getElementById('table-occupancy');
+      if (occupancyEl) {
+        const pc = state.playerCount || state.bots.length;
+        const mp = state.maxPlayers || 6;
+        occupancyEl.textContent = 'Table: ' + pc + '/' + mp + ' players';
+      }
+
+      // Update join button text based on occupancy
+      const tableFull = state.bots.length >= (state.maxPlayers || 6);
+      const joinBtnText = tableFull ? 'Join Waitlist (' + waitlistData.length + ' ahead)' : 'Join Game';
+      const joinBtn = document.getElementById('join-btn');
+      const authJoinBtn = document.getElementById('auth-join-btn');
+      if (joinBtn && !joinBtn.disabled) joinBtn.textContent = joinBtnText;
+      if (authJoinBtn && !authJoinBtn.disabled) authJoinBtn.textContent = joinBtnText;
+
+      const authStatusSection = document.getElementById('auth-status-section');
+      const authTabsSection = document.getElementById('auth-tabs-section');
+      const formSection = document.getElementById('join-form-section');
+      const loginSection = document.getElementById('login-form-section');
+      const authIdleActions = document.getElementById('auth-idle-actions');
+      const statsContainer = document.getElementById('player-stats-container');
+
+      let myChips = null;
+      if (isSeated && myBot) {
+        myChips = state.chips[myBot];
+      }
+
+      if (isAuthenticated && (isSeated || isQueued)) {
+        authStatusSection.style.display = '';
+        authTabsSection.style.display = 'none';
+        formSection.style.display = 'none';
+        loginSection.style.display = 'none';
+        authIdleActions.style.display = 'none';
+
+        const greetingEl = document.getElementById('auth-greeting');
+        const detailEl = document.getElementById('auth-detail');
+
+        if (isSeated) {
+          greetingEl.textContent = 'Playing as ' + (authUsername || 'you');
+          detailEl.textContent = myChips != null ? 'Chips: ' + myChips : '';
+        } else {
+          const pos = waitlistData.findIndex(w => (w.username || w) === (authUsername || wlState?.username));
+          const posText = pos >= 0 ? ', position #' + (pos + 1) : '';
+          greetingEl.textContent = 'In waitlist as ' + (authUsername || wlState?.username || 'you');
+          detailEl.textContent = posText ? 'Position' + posText.replace(', position', '') : 'Waiting for a seat...';
+        }
+
+        renderPlayerStats();
+      } else if (isAuthenticated && !isSeated && !isQueued) {
+        authStatusSection.style.display = '';
+        authTabsSection.style.display = 'none';
+        formSection.style.display = 'none';
+        loginSection.style.display = 'none';
+        authIdleActions.style.display = '';
+
+        const greetingEl = document.getElementById('auth-greeting');
+        const detailEl = document.getElementById('auth-detail');
+        greetingEl.textContent = 'Welcome back, ' + (authUsername || 'player');
+        detailEl.textContent = tableFull ? 'Table is full. Join the waitlist to play.' : 'Join the game to play.';
+
+        renderPlayerStats();
+      } else {
+        authStatusSection.style.display = 'none';
+        authIdleActions.style.display = 'none';
+        statsContainer.style.display = 'none';
+
+        const showReturning = hasToken && !authUsername;
+        authTabsSection.style.display = '';
+
+        if (authTab === 'new' && !showReturning) {
+          formSection.style.display = '';
+          loginSection.style.display = 'none';
+        } else if (authTab === 'returning' || showReturning) {
+          formSection.style.display = 'none';
+          loginSection.style.display = '';
+          if (showReturning) {
+            authTab = 'returning';
+            document.getElementById('tab-new').className = 'auth-tab';
+            document.getElementById('tab-returning').className = 'auth-tab active';
+          }
+        }
+
+        if (!editingStrategy) {
+          const msgEl = document.getElementById('join-msg');
+          if (msgEl && formSection.style.display !== 'none') msgEl.textContent = '';
+        }
+      }
+
+      const waitlistHeader = document.getElementById('waitlist-header');
+      const waitlistContent = document.getElementById('waitlist-content');
+      // If local state says user is queued but server data is empty, inject them
+      const displayWaitlist = waitlistData.length > 0 ? waitlistData :
+        (isQueued ? [{ username: authUsername || wlState?.username || 'you' }] : []);
+      waitlistHeader.textContent = 'Waitlist' + (displayWaitlist.length > 0 ? ' (' + displayWaitlist.length + ')' : '');
+      if (displayWaitlist.length > 0) {
+        const items = displayWaitlist.map((w, i) =>
+          '<li><span class="waitlist-num">' + (i + 1) + '.</span>' + escapeHtml(w.username || w) + '</li>'
+        ).join('');
+        waitlistContent.innerHTML = '<ul class="waitlist-list">' + items + '</ul>';
+      } else {
+        waitlistContent.innerHTML = '<span class="waitlist-empty">No one in the waitlist yet.</span>';
+      }
+
+      const seatedList = document.getElementById('seated-list');
+      const bots = state.bots || [];
+      if (bots.length > 0) {
+        seatedList.innerHTML = bots.map(b => {
+          const displayName = b.displayName || b.name;
+          const chips = state.chips[b.name];
+          const chipsText = chips != null ? ' &mdash; ' + chips + ' chips' : '';
+          return '<li>&#x1F7E2; ' + escapeHtml(displayName) + chipsText + '</li>';
+        }).join('');
+      } else {
+        seatedList.innerHTML = '<li class="waitlist-empty">No players at the table.</li>';
+      }
+
+      const actionsDiv = document.getElementById('join-actions');
+      const leaveBtn = document.getElementById('leave-btn');
+      const editBtn = document.getElementById('edit-strategy-btn');
+      if (isQueued || isSeated) {
+        actionsDiv.style.display = '';
+        leaveBtn.textContent = isSeated ? 'Release Seat' : 'Leave Queue';
+        editBtn.style.display = '';
+      } else {
+        actionsDiv.style.display = 'none';
+      }
+    }
+
+    async function submitWaitlist() {
+      const username = document.getElementById('join-username').value.trim();
+      const pin = document.getElementById('join-pin').value.trim();
+      const strategy = document.getElementById('join-strategy').value.trim();
+      const msgEl = document.getElementById('join-msg');
+      msgEl.className = 'join-panel-msg';
+      msgEl.textContent = '';
+
+      if (!username || username.length < 1 || username.length > 20) {
+        msgEl.className = 'join-panel-msg error';
+        msgEl.textContent = 'Username is required (1-20 characters).';
+        return;
+      }
+
+      if (!/^\d{4}$/.test(pin)) {
+        msgEl.className = 'join-panel-msg error';
+        msgEl.textContent = 'PIN must be exactly 4 digits.';
+        return;
+      }
+
+      if (!strategy) {
+        msgEl.className = 'join-panel-msg error';
+        msgEl.textContent = 'Strategy is required. Write how your bot should play.';
+        return;
+      }
+
+      const btn = document.getElementById('join-btn');
+      btn.disabled = true;
+      btn.textContent = 'Joining...';
+
+      try {
+        const res = await fetch(apiBase + '/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username, pin, strategy: strategy }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          msgEl.className = 'join-panel-msg error';
+          msgEl.textContent = data.error || data.message || 'Failed to join waitlist.';
+          btn.disabled = false;
+          btn.textContent = 'Join Waitlist';
+          return;
+        }
+        authUsername = username;
+        localStorage.setItem('arena_username', username);
+        const respData = await res.clone().json().catch(() => ({}));
+        if (respData.botName) {
+          // Immediately assigned to a seat
+          document.cookie = 'arena_bot=' + encodeURIComponent(respData.botName) + ';path=/;max-age=604800;SameSite=Strict';
+          setWaitlistState(null);
+          msgEl.className = 'join-panel-msg success';
+          msgEl.textContent = 'You are seated! Your strategy takes effect next hand.';
+        } else {
+          setWaitlistState({ username, strategy });
+          msgEl.className = 'join-panel-msg success';
+          msgEl.textContent = 'You are on the waitlist!';
+        }
+        btn.disabled = false;
+        btn.textContent = 'Join Waitlist';
+        fetchPlayerStats(username);
+        fetchSeats();
+        await fetchWaitlist();
+        renderJoinPanel();
+      } catch (e) {
+        msgEl.className = 'join-panel-msg error';
+        if (e.message && e.message.includes('Failed to fetch')) {
+          msgEl.textContent = 'Waitlist endpoint not available yet. Try again later.';
+        } else {
+          msgEl.textContent = 'Network error. Please try again.';
+        }
+        btn.disabled = false;
+        btn.textContent = 'Join Waitlist';
+      }
+    }
+
+    async function leaveOrRelease() {
+      const myBot = getMyBotCookie();
+      const wlState = getWaitlistState();
+
+      if (myBot) {
+        if (!confirm('Leave the table? Your chips will be saved for when you return.')) return;
+        try {
+          // Always re-authenticate first to ensure valid token
+          const pin = prompt('Enter your 4-digit PIN to confirm:');
+          if (!pin || !/^\d{4}$/.test(pin)) return;
+
+          const loginRes = await fetch(apiBase + '/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username: authUsername, pin }),
+          });
+          if (!loginRes.ok) {
+            const loginData = await loginRes.json().catch(() => ({}));
+            alert(loginData.error || 'Authentication failed.');
+            return;
+          }
+
+          const res = await fetch(apiBase + '/leave-seat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          });
+          if (res.ok) {
+            if (seatData[myBot]) {
+              seatData[myBot].username = null;
+              seatData[myBot].strategy = '';
+            }
+            document.cookie = 'arena_bot=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+            document.cookie = 'arena_token=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+          } else {
+            const data = await res.json().catch(() => ({}));
+            alert(data.error || 'Failed to release seat.');
+          }
+          fetchSeats();
+          render();
+          renderJoinPanel();
+        } catch (e) {
+          alert('Network error.');
+        }
+      } else if (wlState) {
+        try {
+          await fetch(apiBase + '/waitlist', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username: wlState.username }),
+          });
+        } catch (e) {}
+        setWaitlistState(null);
+        await fetchWaitlist();
+        renderJoinPanel();
+      }
+    }
+
+    function showEditStrategy() {
+      const myBot = getMyBotCookie();
+      const wlState = getWaitlistState();
+      const currentStrategy = myBot ? (seatData[myBot]?.strategy || '') : (wlState?.strategy || '');
+
+      const modalTextarea = document.getElementById('full-editor-textarea');
+      modalTextarea.value = currentStrategy;
+      updateFullEditorCharCounter();
+      document.getElementById('full-editor-overlay').classList.add('open');
+      setTimeout(() => modalTextarea.focus(), 100);
+
+      const saveBtn = document.querySelector('.full-editor-save');
+      const originalOnclick = saveBtn.onclick;
+      saveBtn.onclick = async function() {
+        const strategy = modalTextarea.value.trim();
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        if (myBot) {
+          try {
+            // Ensure valid token — re-auth if needed
+            if (!getArenaTokenCookie()) {
+              const pin = prompt('Enter your 4-digit PIN to save:');
+              if (!pin || !/^\d{4}$/.test(pin)) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save & Close';
+                return;
+              }
+              const loginRes = await fetch(apiBase + '/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ username: authUsername, pin }),
+              });
+              if (!loginRes.ok) {
+                alert('Authentication failed. Check your PIN.');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save & Close';
+                return;
+              }
+            }
+            const res = await fetch(apiBase + '/strategy', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ botName: myBot, strategy }),
+            });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              alert(data.error || data.message || 'Save failed.');
+              saveBtn.disabled = false;
+              saveBtn.textContent = 'Save & Close';
+              return;
+            }
+            if (seatData[myBot]) seatData[myBot].strategy = strategy;
+            render();
+          } catch (e) {
+            alert('Network error.');
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save & Close';
+            return;
+          }
+        } else if (wlState) {
+          try {
+            await fetch(apiBase + '/waitlist', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ username: wlState.username, strategy }),
+            });
+            setWaitlistState({ ...wlState, strategy });
+          } catch (e) {
+            alert('Network error.');
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save & Close';
+            return;
+          }
+        }
+
+        document.getElementById('join-strategy').value = strategy;
+        updateCharCounter();
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save & Close';
+        document.getElementById('full-editor-overlay').classList.remove('open');
+        saveBtn.onclick = function() { saveFullEditor(); };
+      };
+    }
+
+    // --- Reconstructed state from events ---
     const state = {
       phase: 'waiting',
       tick: 0,
-      bots: [],           // [{ name, displayName }]
-      chips: {},          // name -> chips
+      bots: [],
+      chips: {},
       pot: 0,
       community: [],
       street: '',
       activePlayer: null,
       foldedPlayers: new Set(),
-      blinds: {},         // name -> 'small' | 'big'
-      currentBets: {},    // name -> bet this street
-      lastResult: null,   // { winners, handName, message }
-      holeCards: {},      // name -> [card, card]
+      blinds: {},
+      currentBets: {},
+      lastResult: null,
+      holeCards: {},
       handNumber: 0,
       nextTickAt: 0,
       tickIntervalMs: 30000,
-      lastThought: {},    // name -> thought string
-      lastActed: null,    // bot name that just acted
-      contextMessage: '', // narration line
+      lastThought: {},
+      lastActed: null,
+      contextMessage: '',
       gamesPlayed: 0,
-      leaderboard: {},    // name -> { wins, gamesPlayed, displayName }
+      leaderboard: {},
+      sessionInfo: {},
+      lastSay: {},
+      maxPlayers: 6,
+      playerCount: 0,
     };
+
+    // Reasoning panel history for current hand
+    let handReasoningHistory = [];
+    // Current active thought data for reasoning panel
+    let activeThoughtData = null;
 
     function botDisplayName(name) {
       return state.bots.find(b => b.name === name)?.displayName || name;
     }
 
-    // --- Avatar color from name hash ---
     function nameHash(name) {
       let hash = 0;
       for (let i = 0; i < name.length; i++) {
@@ -694,196 +2423,757 @@
       return (name || '?').charAt(0).toUpperCase();
     }
 
-    // --- Seat positions for different player counts ---
-    function seatPositions(count) {
-      // Returns array of seat indices (data-pos) for given player count
-      if (count <= 2) return [0, 3];
-      if (count === 3) return [0, 2, 4];
-      if (count === 4) return [0, 1, 3, 5];
-      if (count === 5) return [0, 1, 2, 4, 5];
-      return [0, 1, 2, 3, 4, 5];
-    }
-
+    // --- Card rendering ---
     function renderCard(card) {
       const suit = card.slice(-1);
-      const isRed = suit === '♥' || suit === '♦';
+      const isRed = suit === '\u2665' || suit === '\u2666';
       return `<span class="card${isRed ? ' red' : ''}">${card}</span>`;
     }
 
     function renderEmptyCard() {
-      return `<span class="card empty">·</span>`;
+      return `<span class="card empty">\u00b7</span>`;
     }
 
     function renderFaceDownCard() {
       return `<span class="card face-down"></span>`;
     }
 
-    // Pick chip color based on amount
-    function chipColor(amount) {
-      if (amount >= 500) return 'gold';
-      if (amount >= 100) return 'red';
-      if (amount >= 50) return 'blue';
-      return 'green';
+    // --- Pixel Poker Canvas (pixel-agents style) ---
+    const pokerCanvas = document.getElementById('poker-canvas');
+    const pokerCtx = pokerCanvas.getContext('2d');
+    let pokerAnimFrame = 0;
+
+    // Muted character palettes matching pixel-agents aesthetic
+    const CHAR_PALETTES = [
+      { hair: '#3D2B1F', skin: '#D4A574', shirt: '#4A6FA5', pants: '#2C3E50' },
+      { hair: '#8B4513', skin: '#C68642', shirt: '#922B21', pants: '#1C2833' },
+      { hair: '#2C2C2C', skin: '#8D6E63', shirt: '#1B5E20', pants: '#263238' },
+      { hair: '#D4A76A', skin: '#FDBCB4', shirt: '#6A1B9A', pants: '#37474F' },
+      { hair: '#E0E0E0', skin: '#D7CCC8', shirt: '#B71C1C', pants: '#212121' },
+      { hair: '#C0392B', skin: '#FDBCB4', shirt: '#1565C0', pants: '#455A64' },
+    ];
+
+    const SEAT_POSITIONS = [
+      { x: 0.14, y: 0.22 },
+      { x: 0.50, y: 0.08 },
+      { x: 0.86, y: 0.22 },
+      { x: 0.86, y: 0.80 },
+      { x: 0.50, y: 0.92 },
+      { x: 0.14, y: 0.80 },
+    ];
+
+    // Tile size for the room floor
+    const TILE = 16;
+
+    function resizePokerCanvas() {
+      const rect = pokerCanvas.parentElement.getBoundingClientRect();
+      pokerCanvas.width = Math.floor(rect.width * (window.devicePixelRatio || 1));
+      pokerCanvas.height = Math.floor(250 * (window.devicePixelRatio || 1));
+      pokerCtx.setTransform((window.devicePixelRatio || 1), 0, 0, (window.devicePixelRatio || 1), 0, 0);
+      pokerCtx.imageSmoothingEnabled = false;
+    }
+    window.addEventListener('resize', resizePokerCanvas);
+
+    function pxRect(ctx, x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
     }
 
-    // Render pot with stacked chip icons
-    function renderPot(amount) {
-      if (amount <= 0) { potEl.innerHTML = ''; return; }
-      const chipCount = Math.min(6, Math.max(1, Math.ceil(amount / 80)));
-      const colors = ['green', 'blue', 'red', 'gold'];
-      let stack = '';
-      for (let i = 0; i < chipCount; i++) {
-        stack += `<span class="chip sm ${colors[Math.min(i, colors.length - 1)]}"></span>`;
+    // --- Room: tile-based floor with dark wall border ---
+    function drawRoom(ctx, w, h) {
+      // Dark wall fill (entire background)
+      pxRect(ctx, 0, 0, w, h, '#2a2035');
+
+      // Wall border thickness in tiles
+      const wallTiles = 2;
+      const floorX = wallTiles * TILE;
+      const floorY = wallTiles * TILE;
+      const floorW = w - wallTiles * TILE * 2;
+      const floorH = h - wallTiles * TILE * 2;
+
+      // Wall detail: slightly lighter inner wall edge
+      const innerWall = wallTiles - 1;
+      pxRect(ctx, innerWall * TILE, innerWall * TILE,
+        w - innerWall * TILE * 2, h - innerWall * TILE * 2, '#332940');
+
+      // Draw wood floor tiles (checkerboard)
+      const colA = '#8B6B4A';
+      const colB = '#7D6043';
+      for (let ty = floorY; ty < floorY + floorH; ty += TILE) {
+        for (let tx = floorX; tx < floorX + floorW; tx += TILE) {
+          const tileCol = Math.floor(tx / TILE);
+          const tileRow = Math.floor(ty / TILE);
+          const isA = (tileCol + tileRow) % 2 === 0;
+          pxRect(ctx, tx, ty, TILE, TILE, isA ? colA : colB);
+          // Subtle wood grain: 1px darker line near bottom of each tile
+          pxRect(ctx, tx, ty + TILE - 1, TILE, 1, isA ? '#7A5D3F' : '#6E5438');
+        }
       }
-      potEl.innerHTML = `
-        <div class="pot-inner">
-          <div class="pot-stack">${stack}</div>
-          <div>
-            <div class="pot-amount">${amount}</div>
-            <div class="pot-label">pot</div>
-          </div>
-        </div>
-      `;
+
+      // Floor border (baseboard trim)
+      ctx.strokeStyle = '#4A3728';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(floorX, floorY, floorW, floorH);
     }
 
+    // --- Poker table: pixelated rectangle with green felt ---
+    function drawPokerTable(ctx, w, h) {
+      const tw = Math.floor(w * 0.46);
+      const th = Math.floor(h * 0.36);
+      const tx = Math.floor(w / 2 - tw / 2);
+      const ty = Math.floor(h / 2 - th / 2);
+
+      // Table shadow (offset dark rect)
+      pxRect(ctx, tx + 3, ty + 3, tw, th, '#1a1210');
+
+      // Wood frame (outer)
+      pxRect(ctx, tx, ty, tw, th, '#5C3D2E');
+      // Wood frame highlight (top edge)
+      pxRect(ctx, tx, ty, tw, 2, '#7A5440');
+      // Wood frame shadow (bottom edge)
+      pxRect(ctx, tx, ty + th - 2, tw, 2, '#3E2518');
+
+      // Green felt (inner)
+      const felt = 3;
+      pxRect(ctx, tx + felt, ty + felt, tw - felt * 2, th - felt * 2, '#2d6b3f');
+
+      // Felt inner border line
+      pxRect(ctx, tx + felt + 2, ty + felt + 2, tw - felt * 2 - 4, 1, '#3a8a52');
+      pxRect(ctx, tx + felt + 2, ty + th - felt - 3, tw - felt * 2 - 4, 1, '#3a8a52');
+      pxRect(ctx, tx + felt + 2, ty + felt + 2, 1, th - felt * 2 - 4, '#3a8a52');
+      pxRect(ctx, tx + tw - felt - 3, ty + felt + 2, 1, th - felt * 2 - 4, '#3a8a52');
+    }
+
+    // --- Pixel character (top-down RPG style, ~12x18 design) ---
+    function drawPixelChar(ctx, cx, cy, paletteIdx, isActive, isTalking, isFolded, scale) {
+      const s = scale || 3;
+      const palette = CHAR_PALETTES[paletteIdx % CHAR_PALETTES.length];
+      const bobOffset = Math.floor(Math.sin(pokerAnimFrame * 0.04 + cx * 0.1));
+      const x = Math.floor(cx - 6 * s);
+      const y = Math.floor(cy - 9 * s + bobOffset);
+      const alpha = isFolded ? 0.3 : 1.0;
+      ctx.globalAlpha = alpha;
+
+      // Active indicator: pulsing highlight rectangle under character
+      if (isActive) {
+        const pulse = 0.25 + 0.15 * Math.sin(pokerAnimFrame * 0.06);
+        ctx.globalAlpha = pulse;
+        pxRect(ctx, x - 2 * s, y - 1 * s, 16 * s, 22 * s, '#4A6FA5');
+        ctx.globalAlpha = alpha;
+      }
+
+      // Shadow (flat dark rect under feet)
+      ctx.globalAlpha = alpha * 0.3;
+      pxRect(ctx, x + 1 * s, cy + 8 * s + bobOffset, 10 * s, 2 * s, '#111');
+      ctx.globalAlpha = alpha;
+
+      // Hair (top of head, 10x3 block)
+      pxRect(ctx, x + 1 * s, y, 10 * s, 3 * s, palette.hair);
+      // Hair side tufts
+      pxRect(ctx, x, y + 1 * s, 1 * s, 3 * s, palette.hair);
+      pxRect(ctx, x + 11 * s, y + 1 * s, 1 * s, 3 * s, palette.hair);
+
+      // Face (8x4, skin color)
+      pxRect(ctx, x + 2 * s, y + 3 * s, 8 * s, 4 * s, palette.skin);
+      // Ears
+      pxRect(ctx, x + 1 * s, y + 4 * s, 1 * s, 2 * s, palette.skin);
+      pxRect(ctx, x + 10 * s, y + 4 * s, 1 * s, 2 * s, palette.skin);
+
+      // Eyes (2 dark pixels)
+      pxRect(ctx, x + 4 * s, y + 4 * s, 1 * s, 1 * s, '#1a1a1a');
+      pxRect(ctx, x + 7 * s, y + 4 * s, 1 * s, 1 * s, '#1a1a1a');
+
+      // Mouth
+      if (isTalking) {
+        const mouthOpen = Math.sin(pokerAnimFrame * 0.2) > 0;
+        pxRect(ctx, x + 5 * s, y + 6 * s, 2 * s, 1 * s, mouthOpen ? '#6B3030' : '#8B5050');
+      } else {
+        pxRect(ctx, x + 5 * s, y + 6 * s, 2 * s, 1 * s, '#8B5050');
+      }
+
+      // Shirt/body (10x5)
+      pxRect(ctx, x + 1 * s, y + 7 * s, 10 * s, 5 * s, palette.shirt);
+      // Shirt collar detail
+      pxRect(ctx, x + 4 * s, y + 7 * s, 4 * s, 1 * s, palette.skin);
+
+      // Arms (2x4 each, on sides)
+      const armWave = isTalking ? Math.floor(Math.sin(pokerAnimFrame * 0.15) * s) : 0;
+      pxRect(ctx, x - 1 * s, y + 8 * s + armWave, 2 * s, 4 * s, palette.shirt);
+      pxRect(ctx, x + 11 * s, y + 8 * s - armWave, 2 * s, 4 * s, palette.shirt);
+      // Hands
+      pxRect(ctx, x - 1 * s, y + 12 * s + armWave, 2 * s, 1 * s, palette.skin);
+      pxRect(ctx, x + 11 * s, y + 12 * s - armWave, 2 * s, 1 * s, palette.skin);
+
+      // Pants (10x3)
+      pxRect(ctx, x + 1 * s, y + 12 * s, 10 * s, 3 * s, palette.pants);
+      // Pant leg split
+      pxRect(ctx, x + 5 * s, y + 13 * s, 2 * s, 2 * s, '#111');
+
+      // Shoes
+      pxRect(ctx, x + 1 * s, y + 15 * s, 4 * s, 2 * s, '#2A1F1A');
+      pxRect(ctx, x + 7 * s, y + 15 * s, 4 * s, 2 * s, '#2A1F1A');
+
+      ctx.globalAlpha = 1.0;
+    }
+
+    // --- Pixel chair at seat position ---
+    function drawPixelChair(ctx, cx, cy, facing, scale) {
+      const s = scale || 3;
+      // facing: 'down', 'up', 'left', 'right' — determines chair orientation
+      const chairColor = '#6D4C41';
+      const seatColor = '#8D6E63';
+      const x = Math.floor(cx - 3 * s);
+      const y = Math.floor(cy);
+
+      if (facing === 'up') {
+        // Chair back (top)
+        pxRect(ctx, x, y + 6 * s, 6 * s, 2 * s, chairColor);
+        // Seat
+        pxRect(ctx, x, y + 2 * s, 6 * s, 4 * s, seatColor);
+        // Legs
+        pxRect(ctx, x, y, 1 * s, 2 * s, chairColor);
+        pxRect(ctx, x + 5 * s, y, 1 * s, 2 * s, chairColor);
+      } else if (facing === 'down') {
+        // Chair back (bottom)
+        pxRect(ctx, x, y, 6 * s, 2 * s, chairColor);
+        // Seat
+        pxRect(ctx, x, y + 2 * s, 6 * s, 4 * s, seatColor);
+        // Legs
+        pxRect(ctx, x, y + 6 * s, 1 * s, 2 * s, chairColor);
+        pxRect(ctx, x + 5 * s, y + 6 * s, 1 * s, 2 * s, chairColor);
+      } else {
+        // Default: same as down
+        pxRect(ctx, x, y, 6 * s, 2 * s, chairColor);
+        pxRect(ctx, x, y + 2 * s, 6 * s, 4 * s, seatColor);
+      }
+    }
+
+    // Chair facing direction for each seat index
+    function chairFacing(seatIdx) {
+      // seats 0,1,2 are top row => face down toward table
+      // seats 3,4,5 are bottom row => face up toward table
+      return seatIdx < 3 ? 'down' : 'up';
+    }
+
+    // --- Community cards: pixelated rectangles ---
+    function drawCommunityCards(ctx, cards, w, h) {
+      if (!cards || cards.length === 0) return;
+      const cardW = 14, cardH = 20, gap = 3;
+      const totalW = cards.length * (cardW + gap) - gap;
+      const startX = Math.floor(w / 2 - totalW / 2);
+      const startY = Math.floor(h / 2 - cardH / 2 - 4);
+
+      cards.forEach((card, i) => {
+        const cx = startX + i * (cardW + gap);
+        // Card border
+        pxRect(ctx, cx - 1, startY - 1, cardW + 2, cardH + 2, '#333');
+        // Card background
+        pxRect(ctx, cx, startY, cardW, cardH, '#F5F0E0');
+
+        // Card rank and suit
+        const suit = card.slice(-1);
+        const rank = card.slice(0, -1);
+        const isRed = suit === '\u2665' || suit === '\u2666';
+        ctx.font = 'bold 7px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = isRed ? '#922B21' : '#1a1a1a';
+        ctx.fillText(rank, cx + cardW / 2, startY + 9);
+        ctx.font = '8px serif';
+        ctx.fillText(suit, cx + cardW / 2, startY + 17);
+      });
+    }
+
+    // --- Chip stacks: small stacked rectangles ---
+    function drawChipStack(ctx, x, y, amount) {
+      if (!amount || amount <= 0) return;
+      const chipColors = ['#A93226', '#2E4053', '#1E8449', '#B7950B', '#884EA0'];
+      const numChips = Math.min(5, Math.max(1, Math.ceil(amount / 200)));
+      const chipW = 6, chipH = 3;
+      const sx = Math.floor(x - chipW / 2);
+      for (let i = 0; i < numChips; i++) {
+        const cy = Math.floor(y - i * (chipH + 1));
+        pxRect(ctx, sx, cy, chipW, chipH, chipColors[i % chipColors.length]);
+        // Chip highlight line
+        pxRect(ctx, sx + 1, cy, chipW - 2, 1, '#ddd');
+      }
+    }
+
+    // --- Speech bubble: pixelated rectangle, no curves ---
+    function drawSpeechBubble(ctx, x, y, text) {
+      ctx.font = '8px monospace';
+      const maxLen = 20;
+      const trimmed = text.length > maxLen ? text.slice(0, maxLen - 2) + '..' : text;
+      const tw = ctx.measureText(trimmed).width;
+      const bw = Math.floor(tw + 10), bh = 14;
+      const bx = Math.floor(x - bw / 2), by = Math.floor(y - bh - 6);
+
+      // Border
+      pxRect(ctx, bx - 1, by - 1, bw + 2, bh + 2, '#333');
+      // Fill
+      pxRect(ctx, bx, by, bw, bh, '#F5F5F5');
+
+      // Pointer (small rectangle, not triangle)
+      pxRect(ctx, Math.floor(x - 2), by + bh, 4, 3, '#333');
+      pxRect(ctx, Math.floor(x - 1), by + bh, 2, 2, '#F5F5F5');
+
+      // Text
+      ctx.fillStyle = '#222';
+      ctx.textAlign = 'center';
+      ctx.fillText(trimmed, x, by + 10);
+    }
+
+    // --- Pot display ---
+    function drawPotDisplay(ctx, w, h, pot) {
+      if (!pot) return;
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#D4A017';
+      ctx.fillText('Pot: ' + pot, Math.floor(w / 2), Math.floor(h / 2 + 26));
+    }
+
+    // --- Phase label ---
+    function drawPhaseLabel(ctx, w, phase) {
+      const labels = { waiting: 'WAITING', betting: 'IN PLAY', showdown: 'SHOWDOWN', finished: 'GAME OVER' };
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#665577';
+      ctx.fillText(labels[phase] || phase || '', TILE * 2 + 4, TILE * 2 + 12);
+    }
+
+    // --- Main render ---
+    function renderPokerCanvas() {
+      resizePokerCanvas();
+      const w = pokerCanvas.width / (window.devicePixelRatio || 1);
+      const h = pokerCanvas.height / (window.devicePixelRatio || 1);
+
+      // Clear
+      pokerCtx.clearRect(0, 0, pokerCanvas.width, pokerCanvas.height);
+
+      // Room (walls + floor)
+      drawRoom(pokerCtx, w, h);
+
+      // Table
+      drawPokerTable(pokerCtx, w, h);
+
+      // Phase label
+      drawPhaseLabel(pokerCtx, w, state.phase);
+
+      // Community cards
+      drawCommunityCards(pokerCtx, state.community, w, h);
+
+      // Pot display
+      drawPotDisplay(pokerCtx, w, h, state.pot);
+
+      // Players
+      const bots = state.bots || [];
+      const charScale = Math.max(1.5, Math.min(2.5, w / 350));
+
+      bots.forEach((bot, i) => {
+        const seatIdx = i % SEAT_POSITIONS.length;
+        const seat = SEAT_POSITIONS[seatIdx];
+        const px = Math.floor(seat.x * w);
+        const py = Math.floor(seat.y * h);
+        const isActive = state.activePlayer === bot.name;
+        const isFolded = state.foldedPlayers.has(bot.name);
+        const sayData = state.lastSay[bot.name];
+        const isTalking = !!(sayData && (Date.now() - (sayData.timestamp || 0)) < 15000);
+        const displayName = bot.displayName || bot.name;
+
+        // Chair behind the character
+        const chairDir = chairFacing(seatIdx);
+        const chairOffY = chairDir === 'down' ? -12 * charScale : 6 * charScale;
+        drawPixelChair(pokerCtx, px, py + chairOffY, chairDir, charScale);
+
+        // Character
+        drawPixelChar(pokerCtx, px, py, i, isActive, isTalking, isFolded, charScale);
+
+        // Name label
+        const bobOffset = Math.floor(Math.sin(pokerAnimFrame * 0.04 + px * 0.1));
+        pokerCtx.font = '8px monospace';
+        pokerCtx.textAlign = 'center';
+        pokerCtx.fillStyle = isFolded ? '#555' : (isActive ? '#8AAFD4' : '#B0A89A');
+        const shortName = displayName.length > 8 ? displayName.slice(0, 7) + '..' : displayName;
+        pokerCtx.fillText(shortName, px, py + 12 * charScale + bobOffset);
+
+        // Chip stack near player
+        const chips = state.chips[bot.name] || 0;
+        const chipOffsetX = seatIdx < 3 ? 16 : -16;
+        const chipOffsetY = (seatIdx === 1 || seatIdx === 4) ? 6 : 0;
+        drawChipStack(pokerCtx, px + chipOffsetX * charScale, py + chipOffsetY, chips);
+
+        // Bet display
+        const bet = state.currentBets[bot.name] || 0;
+        if (bet > 0) {
+          const betDirX = (0.5 - seat.x) * 0.3;
+          const betDirY = (0.5 - seat.y) * 0.3;
+          pokerCtx.font = 'bold 8px monospace';
+          pokerCtx.textAlign = 'center';
+          pokerCtx.fillStyle = '#D4A017';
+          pokerCtx.fillText(bet, Math.floor(px + betDirX * w), Math.floor(py + betDirY * h + 4));
+        }
+
+        // Speech bubble
+        if (isTalking && sayData.message) {
+          const bubbleY = py - 16 * charScale;
+          drawSpeechBubble(pokerCtx, px, bubbleY, sayData.message);
+        }
+      });
+
+      pokerAnimFrame++;
+    }
+
+    // Animation loop for the poker canvas
+    (function animatePokerCanvas() {
+      renderPokerCanvas();
+      requestAnimationFrame(animatePokerCanvas);
+    })();
+
+    // --- Main render function ---
     function render() {
       // Status bar
       const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown', finished: 'Game Over' };
       const phaseLabel = phaseLabels[state.phase] || state.phase;
       const countdown = Math.max(0, Math.ceil((state.nextTickAt - Date.now()) / 1000));
+      const activePlayers = state.bots.filter(b => !state.foldedPlayers.has(b.name)).length;
       statusEl.innerHTML = `
-        <span class="phase">${phaseLabel}</span> ·
-        <span class="tick">Hand #${state.handNumber}</span> ·
-        ${state.bots.length} player${state.bots.length !== 1 ? 's' : ''} ·
-        <span id="countdown">Next tick: ${countdown}s</span>
-        <span class="connected" id="conn-status">● Connected</span>
+        <span class="phase">${phaseLabel}</span>
+        <span class="tick">Hand #${state.handNumber}</span>
+        <span>${state.bots.length} player${state.bots.length !== 1 ? 's' : ''} (${activePlayers} active)</span>
+        <span id="countdown">${countdown > 0 ? 'Next tick: ' + countdown + 's' : ''}</span>
+        <span class="connected" id="conn-status">Connected</span>
       `;
 
-      // Pot
-      renderPot(state.pot);
+      // Info strip
+      document.getElementById('pot-value').textContent = state.pot || 0;
+      const streetLabels = { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', '': '\u2014' };
+      document.getElementById('street-value').textContent = streetLabels[state.street] || state.street || '\u2014';
+      document.getElementById('hand-value').textContent = '#' + state.handNumber;
 
-      // Community cards
-      if (state.phase === 'betting' || state.phase === 'showdown') {
-        const streetLabels = { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', '': '' };
-        const streetLabel = streetLabels[state.street] || state.street;
-        let cardsHtml = '';
-        for (let i = 0; i < 5; i++) {
-          cardsHtml += state.community[i] ? renderCard(state.community[i]) : renderEmptyCard();
-        }
-        communityEl.innerHTML = `
-          ${streetLabel ? `<div class="street-label">${streetLabel}</div>` : ''}
-          <div class="cards">${cardsHtml}</div>
-        `;
+      // Board cards in info strip
+      const boardEl = document.getElementById('board-cards');
+      if (state.community.length > 0) {
+        boardEl.innerHTML = state.community.map(c => renderCard(c)).join(' ');
       } else {
-        communityEl.innerHTML = '';
+        boardEl.innerHTML = '\u2014';
       }
 
-      // --- Players around the table ---
-      // Remove old seats and bets
-      tableContainer.querySelectorAll('.seat, .player-bet').forEach(el => el.remove());
+      // --- Pixel Poker Canvas ---
+      renderPokerCanvas();
 
-      const positions = seatPositions(state.bots.length);
+      // --- Player Grid ---
+      renderPlayerGrid();
 
-      for (let i = 0; i < state.bots.length; i++) {
-        const bot = state.bots[i];
-        const pos = positions[i] !== undefined ? positions[i] : i % 6;
+      // --- Stats Dashboard ---
+      renderStatsDashboard();
+
+      // --- Reasoning Panel ---
+      renderReasoningPanel();
+
+      // --- Context bar (kept for data, hidden) ---
+      contextEl.innerHTML = state.contextMessage;
+
+      // --- Leaderboard ---
+      renderLeaderboard();
+
+      // Update join panel if open
+      if (joinPanelOpen) {
+        renderJoinPanel();
+        renderSessionPanel();
+      }
+    }
+
+    function renderPlayerGrid() {
+      let html = '';
+      const bots = state.bots;
+
+      if (bots.length === 0) {
+        playerGridEl.innerHTML = '<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--text-muted);font-style:italic;">Waiting for players to join...</div>';
+        return;
+      }
+
+      for (let i = 0; i < bots.length; i++) {
+        const bot = bots[i];
         const chips = state.chips[bot.name] ?? '?';
         const isFolded = state.foldedPlayers.has(bot.name);
         const isActive = state.activePlayer === bot.name;
         const isWinner = state.lastResult?.winners?.includes(bot.name) && state.phase === 'showdown';
         const bet = state.currentBets[bot.name] || 0;
-        const displayName = bot.displayName || bot.name;
+        const isHuman = !!seatData[bot.name]?.username;
+        const displayName = isHuman ? seatData[bot.name].username : (bot.displayName || bot.name);
+        const typeBadge = isHuman ? '\uD83D\uDC64' : '\uD83E\uDD16';
+        const strategy = seatData[bot.name]?.strategy || '';
+        const stats = seatData[bot.name]?.stats || state.leaderboard[bot.name]?.stats || {};
 
-        let seatClasses = 'seat';
-        if (isActive) seatClasses += ' active';
-        if (isFolded) seatClasses += ' folded';
-        if (isWinner) seatClasses += ' winner';
-        if (state.lastActed === bot.name) seatClasses += ' just-acted';
+        let cardClasses = 'player-card';
+        if (isActive) cardClasses += ' active';
+        if (isFolded) cardClasses += ' folded';
+        if (isWinner) cardClasses += ' winner';
 
         // Hole cards
         const cards = state.holeCards[bot.name];
         let cardsHtml = '';
         if (cards && cards.length === 2) {
-          cardsHtml = `<div class="player-hole-cards">${renderCard(cards[0])} ${renderCard(cards[1])}</div>`;
+          cardsHtml = `<div class="player-card-cards">${renderCard(cards[0])} ${renderCard(cards[1])}</div>`;
         } else if (state.phase === 'betting' && !isFolded) {
-          cardsHtml = `<div class="player-hole-cards">${renderFaceDownCard()} ${renderFaceDownCard()}</div>`;
+          cardsHtml = `<div class="player-card-cards">${renderFaceDownCard()} ${renderFaceDownCard()}</div>`;
         }
 
-        // Blind badge
-        let badgeHtml = '';
-        if (state.blinds[bot.name] === 'small') {
-          badgeHtml = `<div class="player-badge small-blind"><span class="chip sm blue" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">S</span><span class="badge-label">SB</span></div>`;
+        // Role / blind info
+        let roleText = '';
+        let roleClass = 'player-card-role';
+        if (isFolded) {
+          roleText = 'FOLDED';
+        } else if (isActive) {
+          roleText = 'ACTING';
+        } else if (state.blinds[bot.name] === 'small') {
+          roleText = 'SB';
+          roleClass += ' blind-sb';
         } else if (state.blinds[bot.name] === 'big') {
-          badgeHtml = `<div class="player-badge big-blind"><span class="chip sm red" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">B</span><span class="badge-label">BB</span></div>`;
+          roleText = 'BB';
+          roleClass += ' blind-bb';
         }
 
-        // Status text
-        let roleHtml = '';
-        if (isFolded) roleHtml = '<div class="player-role">Folded</div>';
-        else if (isActive) roleHtml = '<div class="player-role" style="color:#4a9">Acting</div>';
+        // Compute VPIP for this player
+        const handsPlayed = stats.handsPlayed || 0;
+        const calls = stats.calls || 0;
+        const raises = stats.raises || 0;
+        const handsWon = stats.handsWon || 0;
+        const vpipPct = handsPlayed > 0 ? Math.round(((calls + raises) / handsPlayed) * 100) : 0;
+        const winRate = handsPlayed > 0 ? Math.round((handsWon / handsPlayed) * 100) : 0;
+        const losses = handsPlayed - handsWon;
 
-        const seatEl = document.createElement('div');
-        seatEl.className = seatClasses;
-        seatEl.dataset.pos = pos;
-        seatEl.innerHTML = `
-          <div class="player-node">
-            <div class="player-avatar" style="background: ${avatarColor(bot.name)}">${avatarInitial(displayName)}</div>
-            <div class="player-info">
-              <div class="player-name">${escapeHtml(displayName)}${isWinner ? ' 🏆' : ''}</div>
-              <div class="player-chips-display">
-                <span class="chip sm ${chipColor(typeof chips === 'number' ? chips : 0)}" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px"></span>
-                <span class="chip-amount">${chips}</span>
-              </div>
-              ${badgeHtml}
-              ${roleHtml}
+        html += `
+          <div class="${cardClasses}" data-bot="${bot.name}" onclick="selectPlayerForReasoning('${escapeHtml(bot.name)}')">
+            <div class="player-card-header">
+              <span class="player-card-name">${escapeHtml(displayName)}<span class="type-badge">${typeBadge}</span>${isWinner ? '<span class="winner-badge">W</span>' : ''}</span>
+              <span class="${roleClass}">${roleText}</span>
             </div>
             ${cardsHtml}
+            ${strategy ? `<div class="player-card-strategy">"${escapeHtml(strategy)}"</div>` : ''}
+            <div class="player-card-chips"><span class="chip-label">chips </span>${typeof chips === 'number' ? chips.toLocaleString() : chips}</div>
+            ${bet > 0 ? `<div class="player-card-bet">bet ${bet}</div>` : ''}
+            ${handsPlayed > 0 ? `
+              <div class="player-card-stats">
+                <span class="stat-bar"><span class="stat-fill" style="width:${vpipPct}%"></span></span>
+                <span class="stat-val">${vpipPct}% VPIP</span>
+                <span class="stat-val">W:${handsWon} L:${losses}</span>
+                <span class="stat-val">${winRate}% WR</span>
+              </div>
+            ` : ''}
+            ${(() => {
+              const bluffsWon = stats.bluffsWon || 0;
+              const bluffsCaught = stats.bluffsCaught || 0;
+              if (bluffsWon + bluffsCaught > 0) {
+                return `<div class="player-card-bluffs">Bluffs: <span class="bluff-tag won">${bluffsWon} won</span> <span class="bluff-tag caught">${bluffsCaught} caught</span></div>`;
+              }
+              return '';
+            })()}
+            ${(() => {
+              const sd = seatData[bot.name];
+              const sessionInfo = sd?.sessionInfo || state.sessionInfo?.[bot.name];
+              if (sessionInfo && sessionInfo.maxHands) {
+                const played = sessionInfo.handsPlayed || 0;
+                const max = sessionInfo.maxHands;
+                const remaining = Math.max(0, max - played);
+                const pct = Math.min(100, Math.round((played / max) * 100));
+                return `<div class="player-card-session">
+                  <span class="session-label">Hands: ${remaining}/${max} remaining</span>
+                  <div class="session-bar"><div class="session-bar-fill" style="width:${pct}%"></div></div>
+                </div>`;
+              }
+              return '';
+            })()}
+            ${(() => {
+              const lastSay = state.lastSay[bot.name];
+              const sayAge = lastSay ? (Date.now() - lastSay.timestamp) / 1000 : Infinity;
+              const showBubble = lastSay && sayAge < 120;
+              return showBubble
+                ? `<div class="chat-bubble">"${escapeHtml(lastSay.message)}"</div>`
+                : '';
+            })()}
           </div>
         `;
-        tableContainer.appendChild(seatEl);
-
-        // Bet chip on felt
-        if (bet > 0) {
-          const betEl = document.createElement('div');
-          betEl.className = 'player-bet';
-          betEl.dataset.pos = pos;
-          betEl.innerHTML = `<span class="chip sm ${chipColor(bet)}" style="width:16px;height:16px;line-height:10px;font-size:6px;border-width:1.5px"></span><span class="bet-amount">${bet}</span>`;
-          tableContainer.appendChild(betEl);
-        }
       }
 
-      // Thoughts panel
-      const thoughtCards = state.bots
-        .filter(b => state.lastThought[b.name] && !state.foldedPlayers.has(b.name))
-        .map(b => `
-          <div class="thought-card">
-            <div class="thought-name">${escapeHtml(b.displayName || b.name)}</div>
-            <div class="thought-text">${escapeHtml(state.lastThought[b.name])}</div>
-          </div>
-        `).join('');
-      thoughtsEl.innerHTML = thoughtCards;
+      playerGridEl.innerHTML = html;
+    }
 
-      // Context bar
-      contextEl.innerHTML = state.contextMessage;
+    let selectedReasoningBot = null;
 
-      // Leaderboard
+    function selectPlayerForReasoning(botName) {
+      selectedReasoningBot = botName;
+      renderReasoningPanel();
+    }
+
+    function renderStatsDashboard() {
+      const activePlayers = state.bots.filter(b => !state.foldedPlayers.has(b.name)).length;
+      document.getElementById('stat-hands').textContent = state.handNumber;
+      document.getElementById('stat-pot').textContent = state.pot;
+      document.getElementById('stat-players').textContent = activePlayers + '/' + state.bots.length;
+      const streetLabels = { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', '': '\u2014' };
+      document.getElementById('stat-street').textContent = streetLabels[state.street] || '\u2014';
+      document.getElementById('stat-board').textContent = state.community.length > 0 ? state.community.join(' ') : '\u2014';
+      const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown', finished: 'Game Over' };
+      document.getElementById('stat-phase').textContent = phaseLabels[state.phase] || state.phase;
+    }
+
+    function renderReasoningPanel() {
+      // Determine which player to show reasoning for
+      const targetBot = selectedReasoningBot || state.activePlayer || state.lastActed;
+
+      if (!targetBot || !state.lastThought[targetBot]) {
+        // Check if any bot has thoughts
+        const anyThought = Object.keys(state.lastThought).find(k => state.lastThought[k]);
+        if (anyThought) {
+          renderReasoningForBot(anyThought);
+          return;
+        }
+        reasoningWhoEl.textContent = 'Waiting for action...';
+        reasoningTickEl.textContent = '';
+        reasoningBodyEl.innerHTML = '<div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>';
+        return;
+      }
+
+      renderReasoningForBot(targetBot);
+    }
+
+    function renderReasoningForBot(botName) {
+      const displayName = botDisplayName(botName);
+      const isActive = state.activePlayer === botName;
+      const thought = state.lastThought[botName] || '';
+
+      reasoningWhoEl.textContent = isActive ? displayName + ' is thinking...' : displayName + ' (last action)';
+      reasoningTickEl.textContent = 'tick ' + state.tick;
+
+      let html = '';
+
+      // Scene section
+      html += `<div class="reasoning-section">`;
+      html += `<div class="reasoning-section-label">Scene</div>`;
+      html += `<div class="reasoning-scene">`;
+      html += `Pot: ${state.pot}`;
+      if (state.community.length > 0) {
+        html += ` | Board: ${state.community.join(' ')}`;
+      }
+      const hCards = state.holeCards[botName];
+      if (hCards && hCards.length === 2) {
+        html += ` | Hand: ${hCards.join(' ')}`;
+      }
+      html += ` | Street: ${state.street || 'preflop'}`;
+      html += `</div></div>`;
+
+      // Reasoning section
+      if (thought) {
+        html += `<div class="reasoning-section">`;
+        html += `<div class="reasoning-section-label">Reasoning</div>`;
+        html += `<div class="reasoning-text">${escapeHtml(thought)}</div>`;
+        html += `</div>`;
+      }
+
+      // Hand history section
+      if (handReasoningHistory.length > 0) {
+        html += `<div class="reasoning-section reasoning-history">`;
+        html += `<div class="reasoning-history-title">History (this hand)</div>`;
+        html += `<div class="reasoning-history-entries">`;
+        for (const entry of handReasoningHistory) {
+          const isCurrent = entry === handReasoningHistory[handReasoningHistory.length - 1];
+          html += `<div class="reasoning-history-entry${isCurrent ? ' rh-current' : ''}">`;
+          html += `<span class="rh-tick">${entry.tick || ''}</span>`;
+          html += `<span class="rh-name">${escapeHtml(entry.name)}</span>`;
+          html += `<span class="rh-action">${escapeHtml(entry.action)}${entry.amount ? ' ' + entry.amount : ''}${isCurrent ? '  \u2190 current' : ''}</span>`;
+          html += `</div>`;
+        }
+        html += `</div></div>`;
+      }
+
+      reasoningBodyEl.innerHTML = html;
+      // Auto-scroll to bottom
+      reasoningBodyEl.scrollTop = reasoningBodyEl.scrollHeight;
+    }
+
+    // --- Leaderboard ---
+    function renderLeaderboard() {
       const lbEntries = Object.entries(state.leaderboard);
+      const myBot = getMyBotCookie();
       if (lbEntries.length > 0) {
         const sorted = lbEntries
           .map(([name, d]) => ({ name, ...d }))
-          .sort((a, b) => b.wins - a.wins || a.gamesPlayed - b.gamesPlayed);
-        const rows = sorted.map((e, i) => `
-          <tr>
-            <td class="rank">${i + 1}</td>
-            <td>${esc(e.displayName || e.name)}</td>
-            <td class="wins">${e.wins}</td>
-            <td>${e.gamesPlayed}</td>
-          </tr>
-        `).join('');
+          .sort((a, b) => {
+            // Sort by score first (primary), then wins, then gamesPlayed
+            const scoreA = a.score ?? -Infinity;
+            const scoreB = b.score ?? -Infinity;
+            if (scoreB !== scoreA) return scoreB - scoreA;
+            return b.wins - a.wins || a.gamesPlayed - b.gamesPlayed;
+          });
+        const rows = sorted.map((e, i) => {
+          const isViewer = myBot === e.name;
+          const rowClass = isViewer ? 'viewer-row expandable' : 'expandable';
+          const seatUser = seatData[e.name]?.username;
+          const isHumanLb = !!seatUser;
+          const lbDisplayName = isHumanLb ? seatUser : (e.displayName || e.name);
+          const typeBadgeLb = isHumanLb ? '\uD83D\uDC64' : '\uD83E\uDD16';
+          const playerChips = state.chips[e.name] ?? '';
+          const stats = seatData[e.name]?.stats || e.stats || {};
+          const handsPlayed = stats.handsPlayed || e.gamesPlayed || 0;
+          const handsWon = stats.handsWon || e.wins || 0;
+          const winPct = handsPlayed > 0 ? ((handsWon / handsPlayed) * 100).toFixed(1) + '%' : '-';
+          const folds = stats.folds || 0;
+          const calls = stats.calls || 0;
+          const raises = stats.raises || 0;
+          const vpip = handsPlayed > 0 ? (((calls + raises) / handsPlayed) * 100).toFixed(0) + '%' : '-';
+
+          // Bluff stats
+          const bluffsWon = stats.bluffsWon || 0;
+          const bluffsCaught = stats.bluffsCaught || 0;
+          const totalBluffs = bluffsWon + bluffsCaught;
+          const bluffSuccessRate = totalBluffs > 0 ? ((bluffsWon / totalBluffs) * 100).toFixed(0) + '%' : '-';
+
+          // Score
+          const score = e.score != null ? e.score : (stats.score != null ? stats.score : null);
+          const scoreDisplay = score != null ? score.toFixed(1) : '-';
+
+          const allIns = stats.allIns || 0;
+          const biggestPot = stats.biggestPot || 0;
+          const showdownsReached = stats.showdownsReached || 0;
+          const showdownsWon = stats.showdownsWon || 0;
+          const sdWinRate = showdownsReached > 0 ? ((showdownsWon / showdownsReached) * 100).toFixed(0) + '%' : '-';
+          const streakCurrent = stats.streakCurrent || 0;
+          const streakBest = stats.streakBest || 0;
+          const checks = stats.checks || 0;
+
+          return `
+            <tr class="${rowClass}" onclick="toggleLeaderboardDetail('lb-detail-${i}')">
+              <td class="rank">${i + 1}</td>
+              <td>${esc(lbDisplayName)}</td>
+              <td class="score-col">${scoreDisplay}</td>
+              <td>${handsPlayed}</td>
+              <td class="winrate">${winPct}</td>
+              <td class="bluffs-col">${totalBluffs > 0 ? `<span class="bluff-tag won">${bluffsWon}</span>/<span class="bluff-tag caught">${bluffsCaught}</span>` : '<span class="stat-dim">-</span>'}</td>
+              <td class="hide-mobile">${vpip}</td>
+              <td>${playerChips}</td>
+            </tr>
+            <tr class="leaderboard-detail" id="lb-detail-${i}">
+              <td colspan="8">
+                <div class="detail-grid">
+                  <div class="detail-item"><span class="detail-label">W/L:</span> <span class="detail-value">${handsWon}/${handsPlayed - handsWon}</span></div>
+                  <div class="detail-item"><span class="detail-label">Folds:</span> <span class="detail-value">${folds}</span></div>
+                  <div class="detail-item"><span class="detail-label">Calls:</span> <span class="detail-value">${calls}</span></div>
+                  <div class="detail-item"><span class="detail-label">Raises:</span> <span class="detail-value">${raises}</span></div>
+                  <div class="detail-item"><span class="detail-label">Checks:</span> <span class="detail-value">${checks}</span></div>
+                  <div class="detail-item"><span class="detail-label">All-ins:</span> <span class="detail-value">${allIns}</span></div>
+                  <div class="detail-item"><span class="detail-label">Biggest pot:</span> <span class="detail-value">${biggestPot}</span></div>
+                  <div class="detail-item"><span class="detail-label">Showdowns:</span> <span class="detail-value">${showdownsReached} (won ${sdWinRate})</span></div>
+                  <div class="detail-item"><span class="detail-label">Streak:</span> <span class="detail-value">${streakCurrent} current / ${streakBest} best</span></div>
+                  ${totalBluffs > 0 ? `<div class="detail-item"><span class="detail-label">Bluff Success Rate:</span> <span class="bluff-success-rate">${bluffSuccessRate} (${bluffsWon}/${totalBluffs})</span></div>` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
         leaderboardEl.innerHTML = `
-          <h2>Leaderboard${state.gamesPlayed ? ` · Game ${state.gamesPlayed}` : ''}</h2>
+          <h2>Leaderboard${state.gamesPlayed ? ' \u00b7 Game ' + state.gamesPlayed : ''}</h2>
           <table class="leaderboard-table">
-            <tr><th class="rank">#</th><th>Player</th><th>Wins</th><th>Games</th></tr>
+            <tr><th class="rank">#</th><th>Player</th><th>Score</th><th>Hands</th><th>Win%</th><th>Bluffs</th><th class="hide-mobile">VPIP</th><th>Chips</th></tr>
             ${rows}
           </table>
         `;
@@ -892,154 +3182,17 @@
       }
     }
 
-    // Pending hand header: collect deal_hole + blind entries, emit one combined header
-    let pendingHand = null;
-
-    function flushHandHeader() {
-      if (!pendingHand) return;
-      const h = pendingHand;
-      pendingHand = null;
-      const div = document.createElement('div');
-      div.className = 'hand-header';
-      let cardsHtml = h.players.map(p => {
-        const cards = p.cards.map(c => renderCard(c)).join(' ');
-        return `<span>${esc(p.name)}: ${cards}</span>`;
-      }).join(' &nbsp;vs&nbsp; ');
-      const blindInfo = h.sbName && h.bbName
-        ? `<span class="blind-info"><span class="chip sm blue" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">S</span>${esc(h.sbName)} <span class="chip sm red" style="width:14px;height:14px;line-height:8px;font-size:6px;border-width:1.5px">B</span>${esc(h.bbName)}</span>`
-        : '';
-      div.innerHTML = `<span class="hand-num">Hand #${h.number}</span> <span class="hand-cards">${cardsHtml}</span> <span style="margin-left:auto">${blindInfo}</span>`;
-      feedEl.appendChild(div);
+    // --- Pot rendering (old compat, hidden) ---
+    function renderPot(amount) {
+      // No-op, pot is rendered in info strip now
     }
 
-    function addFeedEntry(entry, isInit) {
-      const name = entry.displayName || entry.bot || '';
-
-      // Collect deal_hole into pending hand header
-      if (entry.action === 'deal_hole') {
-        if (!pendingHand) {
-          pendingHand = { number: 0, players: [], sbName: '', bbName: '' };
-        }
-        pendingHand.players.push({ name, cards: entry.cards || [] });
-        return;
-      }
-
-      // Collect blinds into pending hand header
-      if (entry.action === 'blind') {
-        if (!pendingHand) {
-          pendingHand = { number: 0, players: [], sbName: '', bbName: '' };
-        }
-        if (entry.blindType === 'small') {
-          pendingHand.sbName = name;
-          pendingHand.number = state.handNumber;
-        }
-        if (entry.blindType === 'big') {
-          pendingHand.bbName = name;
-          flushHandHeader();
-        }
-        return;
-      }
-
-      // Standalone thoughts are shown in thoughts panel, skip feed
-      if (entry.action === 'think' || entry.action === 'thought') {
-        return;
-      }
-
-      // Flush any pending header before other entries
-      flushHandHeader();
-
-      const div = document.createElement('div');
-      let text = '';
-      let className = '';
-
-      // Helper to append inline thought
-      const thoughtSuffix = entry.thought ? ` <span class="thought">— ${esc(entry.thought)}</span>` : '';
-
-      switch (entry.action) {
-        case 'say':
-          text = `${esc(name)}: ${esc(entry.message || '')}`;
-          className = 'say';
-          break;
-        case 'deal': {
-          const streetMatch = entry.message?.match(/deals the (\w+): (.+)/);
-          if (streetMatch) {
-            const streetName = streetMatch[1];
-            const cards = streetMatch[2].split(/\s+/).map(c => renderCard(c)).join(' ');
-            text = `━━ ${streetName.toUpperCase()} ━━ &nbsp;${cards}`;
-          } else {
-            text = esc(entry.message || '');
-          }
-          className = 'street-header';
-          break;
-        }
-        case 'check':
-          text = `${esc(name)} checks${thoughtSuffix}`;
-          className = 'action';
-          break;
-        case 'call':
-          text = `${esc(name)} calls ${entry.amount || ''}${thoughtSuffix}`;
-          className = 'action';
-          break;
-        case 'raise':
-          text = `${esc(name)} raises to ${entry.amount || ''}${thoughtSuffix}`;
-          className = 'action';
-          break;
-        case 'fold':
-          text = `${esc(name)} folds${thoughtSuffix}`;
-          className = 'action';
-          break;
-        case 'result': {
-          let resultHtml = `🏆 `;
-          const resultMatch = entry.message?.match(/^(.+?) wins? (\d+) chips with (.+?)!?$/);
-          if (resultMatch) {
-            const winnerName = resultMatch[1];
-            const amount = resultMatch[2];
-            const handName = resultMatch[3];
-            const playerCards = state.bots.map(b => {
-              const cards = state.holeCards[b.name];
-              const dn = b.displayName || b.name;
-              const isWinner = winnerName.includes(dn);
-              if (!cards || cards.length !== 2) return null;
-              const rendered = cards.map(c => renderCard(c)).join(' ');
-              return `${isWinner ? '<b>' : ''}${esc(dn)}${isWinner ? '</b>' : ''} ${rendered}`;
-            }).filter(Boolean);
-            resultHtml += `${esc(winnerName)} wins ${amount} — ${esc(handName)}`;
-            if (playerCards.length > 0) {
-              resultHtml += `<br><span style="font-weight:normal;font-size:0.9em">${playerCards.join(' &nbsp;vs&nbsp; ')}</span>`;
-            }
-          } else {
-            resultHtml += esc(entry.message || '');
-          }
-          text = resultHtml;
-          className = 'result';
-          break;
-        }
-        case 'game_over':
-          text = `🏆 ${esc(entry.message || '')}`;
-          className = 'result';
-          break;
-        case 'join':
-          text = `→ ${esc(name)} joined`;
-          className = 'join';
-          break;
-        case 'leave':
-          text = `← ${esc(name)} left`;
-          className = 'leave';
-          break;
-        default:
-          text = `${esc(name)} ${esc(entry.message || entry.action || '')}`;
-          className = 'action';
-      }
-
-      div.className = `feed-entry ${className}`;
-      div.innerHTML = text;
-      feedEl.appendChild(div);
-      if (!isInit) feedEl.scrollTop = feedEl.scrollHeight;
-    }
+    // No-op stubs (feed UI removed, but callers remain)
+    function flushHandHeader() {}
+    function addFeedEntry() {}
 
     // Process events to reconstruct state
     function processEvent(entry) {
-      // Track active player and chips from server
       if ('activePlayer' in entry) state.activePlayer = entry.activePlayer;
       if (entry.buyIns) {
         for (const [name, chips] of Object.entries(entry.buyIns)) {
@@ -1047,7 +3200,6 @@
         }
       }
 
-      // Track thoughts from any event
       if (entry.thought && entry.bot) {
         state.lastThought[entry.bot] = entry.thought;
       }
@@ -1055,9 +3207,22 @@
         state.lastThought[entry.bot] = entry.message || '';
       }
 
-      // Track last acted for animation
+      if (entry.action === 'say' && entry.bot) {
+        state.lastSay[entry.bot] = {
+          message: entry.message || '',
+          timestamp: Date.now()
+        };
+      }
+
       if (['check', 'call', 'raise', 'fold'].includes(entry.action) && entry.bot) {
         state.lastActed = entry.bot;
+        // Add to hand reasoning history
+        handReasoningHistory.push({
+          tick: state.tick,
+          name: botDisplayName(entry.bot),
+          action: entry.action,
+          amount: entry.amount || null,
+        });
       }
 
       switch (entry.action) {
@@ -1095,8 +3260,12 @@
             state.blinds = {};
             state.blinds[entry.bot] = 'small';
             state.lastThought = {};
+            state.lastSay = {};
             state.lastActed = null;
             state.contextMessage = `Hand #${state.handNumber} starting...`;
+            // Reset hand reasoning history
+            handReasoningHistory = [];
+            selectedReasoningBot = null;
           }
           break;
 
@@ -1154,12 +3323,12 @@
             state.lastResult = { winners: winnerBots, handName, amount };
             state.pot = 0;
             state.currentBets = {};
-            state.contextMessage = `🏆 <span class="highlight">${esc(resultMatch[1])}</span> wins ${amount} with ${esc(handName)}`;
+            state.contextMessage = `<span class="highlight">${esc(resultMatch[1])}</span> wins ${amount} with ${esc(handName)}`;
           }
           break;
 
         case 'game_over':
-          state.contextMessage = `🏆 ${esc(entry.message || 'Game over')}`;
+          state.contextMessage = esc(entry.message || 'Game over');
           break;
       }
     }
@@ -1172,7 +3341,6 @@
     }
 
     // --- SSE ---
-    const basePath = window.location.pathname.replace(/\/+$/, '');
     const events = new EventSource(basePath + '/events');
 
     let actionFlashTimer = null;
@@ -1186,28 +3354,35 @@
         state.nextTickAt = data.nextTickAt || 0;
         state.tickIntervalMs = data.tickIntervalMs || 30000;
         state.bots = (data.bots || []).map(b => ({ name: b.name, displayName: b.displayName || b.name }));
-        feedEl.innerHTML = '';
+        handReasoningHistory = [];
         for (const entry of (data.log || [])) {
           processEvent(entry);
-          addFeedEntry(entry, true);
         }
-        feedEl.scrollTop = feedEl.scrollHeight;
         if (data.buyIns) {
           for (const [name, chips] of Object.entries(data.buyIns)) {
             state.chips[name] = chips;
           }
         }
         state.activePlayer = data.activePlayer || null;
-        // Use server's authoritative counts (init log is truncated to last 30 entries)
         if (data.handsPlayed) state.handNumber = data.handsPlayed;
         if (data.gamesPlayed) state.gamesPlayed = data.gamesPlayed;
         if (data.leaderboard) state.leaderboard = data.leaderboard;
+        state.maxPlayers = data.maxPlayers || 6;
+        state.playerCount = data.playerCount || state.bots.length;
+        if (data.sessionInfo) {
+          for (const [name, info] of Object.entries(data.sessionInfo)) {
+            state.sessionInfo[name] = info;
+          }
+        }
         if (state.phase === 'waiting') {
           state.contextMessage = state.bots.length < 2 ? 'Waiting for players to join...' : 'Starting soon...';
         } else if (state.activePlayer) {
           state.contextMessage = `Waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span> to act...`;
         }
         render();
+        fetchSeats();
+        viewerWaitlist = getWaitlistState();
+        fetchWaitlist();
         return;
       }
 
@@ -1224,27 +3399,101 @@
 
       if (data.type === 'phase_change') {
         state.phase = data.to;
-        const div = document.createElement('div');
-        div.className = 'feed-entry phase-change';
-        div.innerHTML = `— ${data.from} → ${data.to} —`;
-        feedEl.appendChild(div);
-        feedEl.scrollTop = feedEl.scrollHeight;
         if (data.to === 'waiting') {
           state.contextMessage = 'Waiting for next hand...';
         } else if (data.to === 'showdown') {
           state.contextMessage = 'Showdown!';
+          // Refresh stats after each hand
+          if (authUsername) fetchPlayerStats(authUsername);
+          fetchSeats();
         }
         render();
         return;
       }
 
-      // World events (poker_say, poker_fold, etc.)
+      if (data.type === 'seat_claimed') {
+        const seatName = data.seat || data.botName;
+        seatData[seatName] = seatData[seatName] || {};
+        seatData[seatName].username = data.claimedBy;
+        render();
+        return;
+      }
+      if (data.type === 'seat_released') {
+        const seatName = data.seat || data.botName;
+        if (seatData[seatName]) {
+          seatData[seatName].username = null;
+          seatData[seatName].strategy = '';
+        }
+        render();
+        return;
+      }
+      if (data.type === 'player_joined') {
+        state.playerCount = data.playerCount || state.playerCount;
+        state.maxPlayers = data.maxPlayers || state.maxPlayers;
+        fetchSeats();
+        render();
+        return;
+      }
+      if (data.type === 'player_left') {
+        state.playerCount = data.playerCount || state.playerCount;
+        state.maxPlayers = data.maxPlayers || state.maxPlayers;
+        fetchSeats();
+        render();
+        return;
+      }
+      if (data.type === 'strategy_updated') {
+        // Brief flash on the player card
+        const cards = playerGridEl.querySelectorAll('.player-card');
+        cards.forEach(el => {
+          if (el.dataset.bot === data.botName) {
+            el.classList.add('strategy-updated');
+            setTimeout(() => el.classList.remove('strategy-updated'), 1500);
+          }
+        });
+        return;
+      }
+
+      if (data.type === 'waitlist_updated') {
+        fetchWaitlist();
+        return;
+      }
+
+      if (data.type === 'seat_rotated') {
+        const botName = data.botName || 'A player';
+        const displayName = botDisplayName(botName);
+        const maxHands = data.maxHands || 20;
+        const reason = data.reason || 'session ended';
+        showToast(displayName + "'s session ended after " + maxHands + " hands. Next player up!");
+        // Clear session info for rotated player
+        if (seatData[botName]) {
+          seatData[botName].username = null;
+          seatData[botName].strategy = '';
+          seatData[botName].sessionInfo = null;
+        }
+        delete state.sessionInfo[botName];
+        fetchSeats();
+        fetchWaitlist();
+        render();
+        return;
+      }
+
+      if (data.type === 'session_info') {
+        // Update session info for a player
+        const botName = data.botName;
+        if (botName) {
+          const info = { handsPlayed: data.handsPlayed || 0, maxHands: data.maxHands || 20 };
+          state.sessionInfo[botName] = info;
+          if (seatData[botName]) seatData[botName].sessionInfo = info;
+          render();
+        }
+        return;
+      }
+
       if (data.type?.startsWith('poker_')) {
         processEvent(data);
         addFeedEntry(data, false);
         render();
 
-        // Clear action flash after animation completes
         if (state.lastActed) {
           clearTimeout(actionFlashTimer);
           actionFlashTimer = setTimeout(() => {
@@ -1259,7 +3508,7 @@
       const el = document.getElementById('conn-status');
       if (el) {
         el.className = 'disconnected';
-        el.textContent = '● Reconnecting...';
+        el.textContent = 'Reconnecting...';
       }
     };
 
@@ -1267,10 +3516,167 @@
       const el = document.getElementById('conn-status');
       if (el) {
         el.className = 'connected';
-        el.textContent = '● Connected';
+        el.textContent = 'Connected';
       }
     };
 
+    function toggleLeaderboardDetail(id) {
+      const row = document.getElementById(id);
+      if (row) row.classList.toggle('open');
+    }
+
+    // --- Toast Notifications ---
+    function showToast(message, durationMs) {
+      durationMs = durationMs || 4000;
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, durationMs);
+    }
+
+    // --- My Hands (authenticated users) ---
+    let myHandsData = [];
+    let myHandsLoaded = false;
+
+    async function fetchMyHands() {
+      const content = document.getElementById('my-hands-content');
+      content.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:11px;padding:8px;">Loading...</div>';
+      try {
+        const res = await fetch(apiBase + '/my-records', { credentials: 'include' });
+        if (!res.ok) {
+          content.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">Hand records not available yet.</div>';
+          return;
+        }
+        const data = await res.json();
+        myHandsData = Array.isArray(data) ? data : (data.hands || data.records || []);
+        myHandsLoaded = true;
+        renderMyHands();
+      } catch (e) {
+        content.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">Failed to load records.</div>';
+      }
+    }
+
+    function renderMyHands() {
+      const content = document.getElementById('my-hands-content');
+      const progressEl = document.getElementById('my-hands-progress');
+      if (myHandsData.length === 0) {
+        content.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">No hands played yet.</div>';
+        progressEl.textContent = '';
+        return;
+      }
+
+      // Try to determine session progress from the data
+      const sessionMax = myHandsData[0]?.sessionMax || myHandsData[0]?.maxHands || null;
+      if (sessionMax) {
+        progressEl.textContent = '(' + myHandsData.length + '/' + sessionMax + ')';
+      } else {
+        progressEl.textContent = '(' + myHandsData.length + ' hands)';
+      }
+
+      content.innerHTML = myHandsData.map((h, i) => {
+        const handNum = h.handNumber || h.id || '';
+        const result = h.result || h.outcome || 'unknown';
+        const isWin = result === 'win' || result === 'won';
+        const isFold = result === 'fold' || result === 'folded';
+        const isLoss = !isWin && !isFold;
+        const cssClass = isWin ? 'win' : (isFold ? 'fold' : 'loss');
+
+        const cards = h.cards || h.holeCards || [];
+        const cardsHtml = cards.length > 0 ? cards.map(c => renderCard(c)).join(' ') : '';
+        const handName = h.handName || '';
+        const chipDelta = h.chipDelta || h.delta || 0;
+        const deltaStr = chipDelta > 0 ? '+' + chipDelta : (chipDelta < 0 ? '' + chipDelta : '');
+
+        let resultLabel = '';
+        if (isWin) resultLabel = 'Won ' + deltaStr;
+        else if (isFold) resultLabel = 'Fold';
+        else resultLabel = 'Lost ' + deltaStr;
+
+        const summary = h.summary || '';
+        const bluffNote = h.bluffCaught ? 'Bluff caught!' : (h.bluffWon ? 'Bluff won!' : '');
+
+        // Detail content
+        let detailHtml = '';
+        if (h.actions && h.actions.length > 0) {
+          detailHtml += '<div class="detail-section"><div class="detail-section-label">Actions</div><div class="detail-section-content">';
+          h.actions.forEach(a => {
+            detailHtml += esc((a.name || a.botName || '') + ' ' + (a.action || '') + (a.amount ? ' ' + a.amount : '')) + '\n';
+          });
+          detailHtml += '</div></div>';
+        }
+        if (h.community && h.community.length > 0) {
+          detailHtml += '<div class="detail-section"><div class="detail-section-label">Board</div><div class="detail-section-content">' + h.community.map(c => renderCard(c)).join(' ') + '</div></div>';
+        }
+        if (h.strategy) {
+          detailHtml += '<div class="detail-section"><div class="detail-section-label">Strategy</div><div class="detail-section-content">' + esc(h.strategy) + '</div></div>';
+        }
+        if (h.thoughts || h.reasoning) {
+          detailHtml += '<div class="detail-section"><div class="detail-section-label">Reasoning</div><div class="detail-section-content">' + esc(h.thoughts || h.reasoning) + '</div></div>';
+        }
+
+        return `
+          <div class="hand-record ${cssClass}" onclick="toggleMyHandDetail('mh-detail-${i}')">
+            <div class="hand-record-header">
+              <span class="hand-record-title">Hand #${handNum}</span>
+              <span class="hand-record-result ${isWin ? 'win' : (isFold ? 'fold-result' : 'loss')}">${esc(resultLabel)}</span>
+            </div>
+            ${cardsHtml ? `<div class="hand-record-cards">${cardsHtml}${handName ? ' &rarr; ' + esc(handName) : ''}</div>` : ''}
+            ${summary ? `<div class="hand-record-summary">${esc(summary)}</div>` : ''}
+            ${bluffNote ? `<div class="hand-record-summary" style="color:${h.bluffCaught ? 'var(--red)' : 'var(--green)'}">${bluffNote}</div>` : ''}
+            ${detailHtml ? `<div class="hand-record-details" id="mh-detail-${i}">${detailHtml}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleMyHandDetail(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('open');
+    }
+
+    // --- Session Panel Rendering ---
+    function renderSessionPanel() {
+      const myBot = getMyBotCookie();
+      const sessionSection = document.getElementById('session-panel-section');
+      const myHandsSection = document.getElementById('my-hands-section');
+
+      const isAuthenticated = hasArenaToken() || !!authUsername;
+
+      // Show/hide my hands section
+      if (isAuthenticated && myHandsSection) {
+        myHandsSection.style.display = '';
+      } else if (myHandsSection) {
+        myHandsSection.style.display = 'none';
+      }
+
+      // Show/hide session countdown
+      if (myBot && sessionSection) {
+        const sd = seatData[myBot];
+        const sessionInfo = sd?.sessionInfo || state.sessionInfo?.[myBot];
+        if (sessionInfo && sessionInfo.maxHands) {
+          const played = sessionInfo.handsPlayed || 0;
+          const max = sessionInfo.maxHands;
+          const pct = Math.min(100, Math.round((played / max) * 100));
+          sessionSection.style.display = '';
+          document.getElementById('session-panel-text').textContent = played + ' of ' + max + ' hands played';
+          document.getElementById('session-panel-bar-fill').style.width = pct + '%';
+        } else {
+          sessionSection.style.display = 'none';
+        }
+      } else if (sessionSection) {
+        sessionSection.style.display = 'none';
+      }
+    }
+
+    // Initialize
+    renderTemplateButtons('panel-template-btns', 'join-strategy');
+    renderTemplateButtons('modal-template-btns', 'full-editor-textarea');
+    updateCharCounter();
+    checkReturningUser();
     render();
 
     // Update countdown every second
@@ -1278,7 +3684,7 @@
       const el = document.getElementById('countdown');
       if (el && state.nextTickAt) {
         const secs = Math.max(0, Math.ceil((state.nextTickAt - Date.now()) / 1000));
-        el.textContent = secs > 0 ? `Next tick: ${secs}s` : 'Tick in progress...';
+        el.textContent = secs > 0 ? `Next tick: ${secs}s` : '';
       }
     }, 1000);
   </script>

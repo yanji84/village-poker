@@ -17,6 +17,7 @@ export function initState(worldConfig) {
   return {
     log: [],
     buyIns: {},       // botName → chip count (persists across hands)
+    chipBank: {},     // username → saved chip count (persists across leave/rejoin)
     handsPlayed: 0,
     gamesPlayed: 0,
     leaderboard: {},  // botName → { wins, gamesPlayed, displayName }
@@ -155,6 +156,7 @@ export const phases = {
             state.buyIns[bot] = BUY_IN;
           }
           state.handsPlayed = 0;
+          state.chipBank = {};
           return true;
         },
       },
@@ -174,7 +176,8 @@ export const phases = {
             state.leaderboard[bot] = { wins: 0, gamesPlayed: 0, displayName: state.remoteParticipants?.[bot]?.displayName || bot };
           }
           state.leaderboard[bot].gamesPlayed++;
-          state.leaderboard[bot].displayName = state.remoteParticipants?.[bot]?.displayName || bot;
+          state.leaderboard[bot].displayName = state.hubBots?.[bot]?.displayName || state.remoteParticipants?.[bot]?.displayName || bot;
+          state.leaderboard[bot].username = state.hubBots?.[bot]?.claimedBy || null;
         }
         state.leaderboard[winner].wins++;
 
@@ -193,6 +196,20 @@ export const phases = {
   },
 };
 
+// --- Helpers ---
+
+function emitSay(bot, params, state) {
+  if (!params?.say) return;
+  const seat = state.hand?.seats?.find(s => s.botName === bot.name);
+  logAction(state, {
+    bot: bot.name,
+    displayName: seat?.displayName || bot.displayName || bot.name,
+    action: 'say',
+    message: params.say,
+    visibility: 'public',
+  });
+}
+
 // --- Tool handlers ---
 
 export const tools = {
@@ -210,6 +227,7 @@ export const tools = {
       hand.pot += toCall;
       state.buyIns[bot.name] = player.chips;
       player.acted = true;
+      emitSay(bot, params, state);
       advanceAction(state);
       return {
         action: 'call',
@@ -221,6 +239,7 @@ export const tools = {
     }
 
     player.acted = true;
+    emitSay(bot, params, state);
     advanceAction(state);
 
     return {
@@ -245,6 +264,7 @@ export const tools = {
     hand.pot += toCall;
     state.buyIns[bot.name] = player.chips;
     player.acted = true;
+    emitSay(bot, params, state);
 
     advanceAction(state);
 
@@ -283,6 +303,7 @@ export const tools = {
     hand.currentBet = amount;
     state.buyIns[bot.name] = player.chips;
     player.acted = true;
+    emitSay(bot, params, state);
 
     // Reset acted for everyone else (they need to respond to the raise)
     for (const [name, other] of Object.entries(hand.players)) {
@@ -309,6 +330,7 @@ export const tools = {
 
     player.folded = true;
     player.acted = true;
+    emitSay(bot, params, state);
 
     advanceAction(state);
 
@@ -342,7 +364,11 @@ export const tools = {
 // --- Join/Leave hooks ---
 
 export function onJoin(state, botName, displayName) {
-  if (!state.buyIns[botName]) {
+  const username = displayName.toLowerCase();
+  if (state.chipBank?.[username] != null && state.chipBank[username] > 0) {
+    state.buyIns[botName] = state.chipBank[username];
+    delete state.chipBank[username];
+  } else if (!state.buyIns[botName]) {
     state.buyIns[botName] = BUY_IN;
   }
   return { message: `${displayName} sits down at the table (${state.buyIns[botName]} chips).` };
@@ -359,7 +385,14 @@ export function onLeave(state, botName, displayName) {
     }
   }
 
+  // Save chips for rejoin
+  const username = displayName.toLowerCase();
+  if (chips > 0) {
+    if (!state.chipBank) state.chipBank = {};
+    state.chipBank[username] = chips;
+  }
+
   delete state.buyIns[botName];
 
-  return { message: `${displayName} leaves the table${chips > 0 ? ` with ${chips} chips` : ''}.` };
+  return { message: `${displayName} leaves the table${chips > 0 ? ` with ${chips} chips (saved for return)` : ''}.` };
 }
