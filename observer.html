@@ -1745,24 +1745,41 @@
       font-weight: 600;
     }
 
-    /* --- Chat bubble for table talk --- */
-    .chat-bubble {
-      margin-top: 8px;
-      padding: 10px 12px;
-      background: var(--bg-elevated, #1a1a2e);
-      border-left: 3px solid var(--accent, #4af);
-      border-radius: 0 6px 6px 0;
-      font-size: 13px;
-      font-style: italic;
-      color: #ddd;
-      word-break: break-word;
+    /* --- Chat Feed (table talk conversation log) --- */
+    .chat-feed {
+      border-top: 1px solid var(--border);
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 8px 12px;
+      background: var(--bg-primary);
+    }
+    .chat-feed-msg {
+      margin-bottom: 6px;
+      font-size: 12px;
       line-height: 1.4;
-      animation: bubbleFadeIn 0.3s ease;
+    }
+    .chat-feed-name {
+      font-weight: 700;
+      color: var(--accent);
+      margin-right: 6px;
+    }
+    .chat-feed-text {
+      color: #ccc;
+      font-style: italic;
     }
 
-    @keyframes bubbleFadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* --- Reasoning TL;DR --- */
+    .reasoning-tldr {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ddd;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .reasoning-detail {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
     }
 
     /* --- Hand Result Toast --- */
@@ -2348,6 +2365,9 @@
       <div class="left-col">
         <div class="section-header">Players</div>
         <div class="player-grid" id="player-grid"></div>
+        <div class="chat-feed" id="chat-feed">
+          <div class="chat-feed-messages" id="chat-feed-messages"></div>
+        </div>
       </div>
 
       <div class="right-col">
@@ -3602,6 +3622,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // Reasoning panel history for current hand
     let handReasoningHistory = [];
+    let chatFeedMessages = [];
     // Current active thought data for reasoning panel
     let activeThoughtData = null;
 
@@ -4913,6 +4934,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       // --- Player Grid ---
       renderPlayerGrid();
 
+      // --- Chat Feed ---
+      renderChatFeed();
+
       // --- Stats Dashboard ---
 
       // --- Reasoning Panel ---
@@ -5011,14 +5035,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           ? `<div class="player-card-personality"><span class="archetype-name">${escapeHtml(personality.archetype)}</span><span class="archetype-tagline">${escapeHtml(personality.tagline)}</span></div>`
           : '';
 
-        // Chat bubble
-        const lastSay = state.lastSay[bot.name];
-        const sayAge = lastSay ? (Date.now() - lastSay.timestamp) / 1000 : Infinity;
-        const showBubble = lastSay && sayAge < 120;
-        const bubbleHtml = showBubble
-          ? `<div class="chat-bubble">"${escapeHtml(lastSay.message)}"</div>`
-          : '';
-
         html += `
           <div class="${cardClasses}" data-bot="${bot.name}" onclick="selectPlayerForReasoning('${escapeHtml(bot.name)}')" title="Click to see reasoning">
             ${isEliminated ? '<div class="elimination-stamp">ELIMINATED</div>' : ''}
@@ -5029,12 +5045,45 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             ${cardsHtml}
             ${isWinner && state.lastResult?.handName ? `<div class="hand-strength-label">${escapeHtml(state.lastResult.handName)}</div>` : ''}
             <div class="player-card-chips"><span class="chip-label">chips </span>${typeof chips === 'number' ? chips.toLocaleString() : chips}${bet > 0 ? ` <span class="player-card-bet-inline">(bet ${bet})</span>` : ''}</div>
-            ${bubbleHtml}
           </div>
         `;
       }
 
       playerGridEl.innerHTML = html;
+    }
+
+    function renderChatFeed() {
+      const container = document.getElementById('chat-feed-messages');
+      if (!container) return;
+      if (chatFeedMessages.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = chatFeedMessages.map(msg =>
+        `<div class="chat-feed-msg"><span class="chat-feed-name">${escapeHtml(msg.name)}:</span><span class="chat-feed-text">"${escapeHtml(msg.message)}"</span></div>`
+      ).join('');
+      const feed = document.getElementById('chat-feed');
+      if (feed) feed.scrollTop = feed.scrollHeight;
+    }
+
+    function highlightReasoning(text) {
+      let html = escapeHtml(text);
+      // Highlight actions
+      html = html.replace(/\b(raise|call|fold|check|bet|all-in|bluff)\b/gi, '<strong style="color:var(--accent)">$1</strong>');
+      // Highlight hands
+      html = html.replace(/\b(pair|two pair|flush|straight|full house|three of a kind|four of a kind|set|trips)\b/gi, '<strong>$1</strong>');
+      // Highlight player names
+      if (state.bots && state.bots.length > 0) {
+        for (const bot of state.bots) {
+          const displayName = bot.displayName || bot.name;
+          const escapedName = escapeHtml(displayName);
+          if (escapedName.length > 1) {
+            const nameRegex = new RegExp('\\b' + escapedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+            html = html.replace(nameRegex, '<span style="color:var(--accent)">$&</span>');
+          }
+        }
+      }
+      return html;
     }
 
     let selectedReasoningBot = null;
@@ -5090,7 +5139,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       let html = '';
 
       if (thought) {
-        html += `<div class="reasoning-text">${escapeHtml(thought)}</div>`;
+        // Extract first sentence as TL;DR
+        const sentenceMatch = thought.match(/^(.*?[.!?])(\s|$)/);
+        let firstSentence, restOfThought;
+        if (sentenceMatch) {
+          firstSentence = sentenceMatch[1];
+          restOfThought = thought.slice(sentenceMatch[0].length).trim();
+        } else {
+          firstSentence = thought;
+          restOfThought = '';
+        }
+        html += `<div class="reasoning-tldr">${highlightReasoning(firstSentence)}</div>`;
+        if (restOfThought) {
+          html += `<div class="reasoning-detail">${highlightReasoning(restOfThought)}</div>`;
+        }
       } else {
         html += `<div class="reasoning-empty">No reasoning available yet.</div>`;
       }
@@ -5415,6 +5477,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           message: entry.message || '',
           timestamp: Date.now()
         };
+        // Push to chat feed
+        const sayDisplayName = botDisplayName(entry.bot);
+        chatFeedMessages.push({ name: sayDisplayName, message: entry.message || '', timestamp: Date.now() });
+        if (chatFeedMessages.length > 20) chatFeedMessages.shift();
       }
 
       if (['check', 'call', 'raise', 'fold'].includes(entry.action) && entry.bot) {
@@ -5467,6 +5533,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.blinds[entry.bot] = 'small';
             state.lastThought = {};
             state.lastSay = {};
+            chatFeedMessages = [];
             state.lastActed = null;
             state.contextMessage = `Hand #${state.handNumber} starting...`;
             // Reset hand reasoning history
