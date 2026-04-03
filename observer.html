@@ -2628,10 +2628,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Intro banner for first-time visitors ---
     function dismissIntro() {
       document.getElementById('intro-banner').style.display = 'none';
-      localStorage.setItem('intro_dismissed', 'true');
-    }
-    if (localStorage.getItem('intro_dismissed')) {
-      document.getElementById('intro-banner').style.display = 'none';
     }
 
     // --- Base path for API calls (works behind /poker/ reverse proxy) ---
