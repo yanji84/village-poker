@@ -4866,6 +4866,48 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Character
         drawPixelChar(pokerCtx, px, py, i, isActive, isTalking, isFolded, charScale);
 
+        // Hole cards next to character
+        const hCards = state.holeCards[bot.name];
+        if (hCards && hCards.length === 2 && !isFolded) {
+          const cw = 10, ch = 14;
+          const cx = Math.floor(px - cw - 1);
+          const cy = Math.floor(py - ch / 2 - 2 * charScale);
+          for (let ci = 0; ci < 2; ci++) {
+            const cardX = cx + ci * (cw + 2);
+            // Card background
+            pxRect(pokerCtx, cardX, cy, cw, ch, '#F5F0E0');
+            pxRect(pokerCtx, cardX, cy, cw, 1, '#333');
+            pxRect(pokerCtx, cardX, cy + ch - 1, cw, 1, '#333');
+            pxRect(pokerCtx, cardX, cy, 1, ch, '#333');
+            pxRect(pokerCtx, cardX + cw - 1, cy, 1, ch, '#333');
+            // Rank + suit
+            const card = hCards[ci];
+            const rank = card.replace(/[♠♥♦♣]/g, '');
+            const suit = card.replace(/[^♠♥♦♣]/g, '');
+            const isRed = suit === '♥' || suit === '♦';
+            pokerCtx.font = 'bold 7px monospace';
+            pokerCtx.textAlign = 'center';
+            pokerCtx.fillStyle = isRed ? '#922B21' : '#222';
+            pokerCtx.fillText(rank, cardX + cw / 2, cy + 7);
+            pokerCtx.font = '6px sans-serif';
+            pokerCtx.fillText(suit, cardX + cw / 2, cy + 13);
+          }
+        } else if (hCards === undefined && !isFolded && state.phase === 'betting') {
+          // Face-down cards for unknown hands
+          const cw = 10, ch = 14;
+          const cx = Math.floor(px - cw - 1);
+          const cy = Math.floor(py - ch / 2 - 2 * charScale);
+          for (let ci = 0; ci < 2; ci++) {
+            const cardX = cx + ci * (cw + 2);
+            pxRect(pokerCtx, cardX, cy, cw, ch, '#2a4a8a');
+            pxRect(pokerCtx, cardX, cy, cw, 1, '#333');
+            pxRect(pokerCtx, cardX + cw - 1, cy, 1, ch, '#333');
+            // Diamond pattern
+            pxRect(pokerCtx, cardX + 3, cy + 4, 4, 4, '#3a5a9a');
+            pxRect(pokerCtx, cardX + 3, cy + 9, 4, 4, '#3a5a9a');
+          }
+        }
+
         // Name label
         const bobOffset = Math.floor(Math.sin(pokerAnimFrame * 0.04 + px * 0.1));
         pokerCtx.font = '8px monospace';
