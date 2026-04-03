@@ -125,7 +125,7 @@
       color: var(--text-muted);
     }
 
-    /* --- Action Ticker --- */
+    /* --- Action Ticker (Notable Events Broadcast) --- */
     .action-ticker {
       padding: 4px 16px;
       font-family: var(--mono);
@@ -140,14 +140,7 @@
       text-overflow: ellipsis;
       transition: opacity 0.3s;
     }
-    .action-ticker .ticker-name { font-weight: 700; color: var(--text-primary); }
-    .action-ticker .ticker-fold { color: #a44; }
-    .action-ticker .ticker-raise { color: #f0d060; font-weight: 700; }
-    .action-ticker .ticker-call { color: #4a6; }
-    .action-ticker .ticker-check { color: #888; }
-    .action-ticker .ticker-allin { color: #f44; font-weight: 700; }
-    .action-ticker .ticker-deal { color: #4af; }
-    .action-ticker .ticker-result { color: #f0d060; font-weight: 700; }
+    .action-ticker b { font-weight: 700; color: var(--text-primary); }
 
     /* --- Cards (minimal monospace labels) --- */
     .card {
@@ -5372,7 +5365,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.pot += (entry.amount || 0);
           state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
           state.blinds[entry.bot] = entry.blindType;
-          setTicker(botDisplayName(entry.bot), entry.message || (entry.blindType + ' blind ' + (entry.amount || '')), 'check');
           if (entry.blindType === 'small') {
             state.handNumber++;
             state.pot = entry.amount || 0;
@@ -5391,7 +5383,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             chatFeedMessages = [];
             state.lastActed = null;
             state.contextMessage = `Hand #${state.handNumber} starting...`;
-            setTicker('', 'Hand #' + state.handNumber + ' starting', 'deal');
+            if (!state._isInitReplay) broadcastNotable('🃏 Hand #' + state.handNumber + ' starting');
             // Reset hand reasoning history
             handReasoningHistory = [];
             // Trigger card dealing animation on canvas
@@ -5420,7 +5412,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           if (state.activePlayer) {
             state.contextMessage += ` &middot; waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span>`;
           }
-          setTicker(botDisplayName(entry.bot), 'checks', 'check');
           break;
 
         case 'call':
@@ -5431,10 +5422,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             if (isAllIn) {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
-              setTicker(botDisplayName(entry.bot), 'calls ' + (entry.amount || '') + ' ALL-IN', 'allin');
+              if (!state._isInitReplay) broadcastNotable('⚡ <b>' + escapeHtml(botDisplayName(entry.bot)) + '</b> goes ALL-IN for ' + (entry.amount || '') + '!');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
-              setTicker(botDisplayName(entry.bot), 'calls ' + (entry.amount || ''), 'call');
             }
           }
           break;
@@ -5449,10 +5439,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             if (isAllIn) {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
-              setTicker(botDisplayName(entry.bot), 'raises to ' + (entry.amount || '') + ' ALL-IN', 'allin');
+              if (!state._isInitReplay) broadcastNotable('⚡ <b>' + escapeHtml(botDisplayName(entry.bot)) + '</b> goes ALL-IN for ' + (entry.amount || '') + '!');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
-              setTicker(botDisplayName(entry.bot), 'raises to ' + (entry.amount || ''), 'raise');
             }
           }
           break;
@@ -5461,7 +5450,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.foldedPlayers.add(entry.bot);
           if (state.activePlayer === entry.bot) state.activePlayer = null;
           state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
-          setTicker(botDisplayName(entry.bot), 'folds', 'fold');
           break;
 
         case 'deal':
@@ -5482,7 +5470,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             }
             const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
             state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
-            setTicker('Dealer', entry.message, 'deal');
           }
           break;
 
@@ -5500,7 +5487,22 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.pot = 0;
             state.currentBets = {};
             state.contextMessage = `<span class="highlight">${esc(resultMatch[1])}</span> wins ${amount} with ${esc(handName)}`;
-            setTicker('', entry.message, 'result');
+            // Broadcast notable results (not "Last player standing" and pot > 2000)
+            if (!state._isInitReplay && handName !== 'Last player standing' && amount > 2000) {
+              broadcastNotable('🏆 <b>' + escapeHtml(resultMatch[1]) + '</b> wins ' + amount.toLocaleString() + ' with ' + escapeHtml(handName) + '!');
+            }
+            // Big pot broadcast
+            if (!state._isInitReplay && amount > 5000) {
+              broadcastNotable('💰 Massive pot: ' + amount.toLocaleString() + ' chips!');
+            }
+            // Check for eliminations
+            if (!state._isInitReplay && state.chips) {
+              for (const bot of (state.bots || [])) {
+                if (state.chips[bot.name] === 0) {
+                  broadcastNotable('💀 <b>' + escapeHtml(botDisplayName(bot.name)) + '</b> eliminated!');
+                }
+              }
+            }
             // Live-update game stats
             if (state.gameStats) {
               state.gameStats.totalHands = (state.gameStats.totalHands || 0) + 1;
@@ -5523,10 +5525,40 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
     }
 
-    function setTicker(name, actionText, cssClass) {
+    // --- Notable Events Broadcast (ticker) ---
+    const tickerQueue = [];
+    const MAX_TICKER_QUEUE = 10;
+    let currentTickerIdx = 0;
+    let tickerRotateTimer = null;
+
+    function broadcastNotable(message) {
+      tickerQueue.push({ text: message, ts: Date.now() });
+      if (tickerQueue.length > MAX_TICKER_QUEUE) tickerQueue.shift();
+      currentTickerIdx = tickerQueue.length - 1;
+      renderTickerMessage();
+      clearInterval(tickerRotateTimer);
+      tickerRotateTimer = setInterval(rotateTicker, 4000);
+    }
+
+    function rotateTicker() {
+      if (tickerQueue.length === 0) return;
+      currentTickerIdx = (currentTickerIdx + 1) % tickerQueue.length;
+      const now = Date.now();
+      while (tickerQueue.length > 0 && now - tickerQueue[0].ts > 120000) {
+        tickerQueue.shift();
+        if (currentTickerIdx >= tickerQueue.length) currentTickerIdx = 0;
+      }
+      renderTickerMessage();
+    }
+
+    function renderTickerMessage() {
       const el = document.getElementById('action-ticker');
-      if (!el) return;
-      el.innerHTML = (name ? '<span class="ticker-name">' + escapeHtml(name) + '</span> ' : '') + '<span class="ticker-' + cssClass + '">' + escapeHtml(actionText) + '</span>';
+      if (!el || tickerQueue.length === 0) {
+        if (el) el.innerHTML = '';
+        return;
+      }
+      const idx = Math.min(currentTickerIdx, tickerQueue.length - 1);
+      el.innerHTML = tickerQueue[idx].text;
     }
 
     function esc(s) { return escapeHtml(s); }
@@ -5633,6 +5665,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (data.type === 'player_joined') {
         state.playerCount = data.playerCount || state.playerCount;
         state.maxPlayers = data.maxPlayers || state.maxPlayers;
+        broadcastNotable('🟢 <b>' + escapeHtml(data.displayName || data.botName || 'Unknown') + '</b> joins the table');
         fetchSeats();
         render();
         return;
@@ -5640,6 +5673,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (data.type === 'player_left') {
         state.playerCount = data.playerCount || state.playerCount;
         state.maxPlayers = data.maxPlayers || state.maxPlayers;
+        broadcastNotable('🔴 <b>' + escapeHtml(data.displayName || data.botName || 'Unknown') + '</b> leaves the table');
         fetchSeats();
         render();
         return;
