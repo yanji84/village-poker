@@ -3556,7 +3556,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // Blinds escalation: mirrors game.js getBlinds()
     const BLIND_ESCALATION_INTERVAL = 20;
     function getBlindLevel(handNumber) {
-      const level = Math.min(Math.floor(handNumber / BLIND_ESCALATION_INTERVAL), 5);
+      const level = Math.min(Math.floor(handNumber / BLIND_ESCALATION_INTERVAL), 2); // cap at 40/80 to match server
       const multiplier = Math.pow(2, level);
       return { small: 10 * multiplier, big: 20 * multiplier, level };
     }
