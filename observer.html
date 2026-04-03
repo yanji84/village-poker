@@ -2291,8 +2291,6 @@
     <span class="sep">|</span>
     <span><span class="label">Street</span> <span class="value" id="street-value">&mdash;</span></span>
     <span class="sep">|</span>
-    <span><span class="label">Hand</span> <span class="value" id="hand-value">#0</span></span>
-    <span class="sep">|</span>
     <span><span class="label">Blinds</span> <span class="value" id="blinds-value">10/20</span></span>
   </div>
 
@@ -4735,7 +4733,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const activePlayers = state.bots.filter(b => !state.foldedPlayers.has(b.name)).length;
       statusEl.innerHTML = `
         <span class="phase">${phaseLabel}</span>
-        <span class="tick">Hand #${state.handNumber}</span>
         <span>${state.bots.length} player${state.bots.length !== 1 ? 's' : ''} (${activePlayers} active)</span>
         <span class="connected" id="conn-status">Connected</span>
       `;
@@ -4764,7 +4761,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
       const streetLabels = { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', '': '\u2014' };
       document.getElementById('street-value').textContent = streetLabels[state.street] || state.street || '\u2014';
-      document.getElementById('hand-value').textContent = '#' + state.handNumber;
 
       // Blinds in info strip
       const blindInfo = getBlindLevel(state.handNumber);
@@ -5383,7 +5379,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             chatFeedMessages = [];
             state.lastActed = null;
             state.contextMessage = `Hand #${state.handNumber} starting...`;
-            if (!state._isInitReplay) broadcastNotable('🃏 Hand #' + state.handNumber + ' starting');
+            if (!state._isInitReplay) broadcastNotable('🃏 New hand starting');
             // Reset hand reasoning history
             handReasoningHistory = [];
             // Trigger card dealing animation on canvas
@@ -5526,44 +5522,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
     }
 
-    // --- Notable Events Broadcast (ticker) ---
-    const tickerQueue = [];
-    const MAX_TICKER_QUEUE = 10;
-    let currentTickerIdx = 0;
-    let tickerRotateTimer = null;
-
+    // --- Event Ticker (shows last event only) ---
     function broadcastNotable(message) {
-      tickerQueue.push({ text: message, ts: Date.now() });
-      if (tickerQueue.length > MAX_TICKER_QUEUE) tickerQueue.shift();
-      currentTickerIdx = tickerQueue.length - 1;
-      renderTickerMessage();
-      clearInterval(tickerRotateTimer);
-      tickerRotateTimer = setInterval(rotateTicker, 4000);
-    }
-
-    function rotateTicker() {
-      if (tickerQueue.length === 0) return;
-      currentTickerIdx = (currentTickerIdx + 1) % tickerQueue.length;
-      const now = Date.now();
-      while (tickerQueue.length > 0 && now - tickerQueue[0].ts > 120000) {
-        tickerQueue.shift();
-        if (currentTickerIdx >= tickerQueue.length) currentTickerIdx = 0;
-      }
-      renderTickerMessage();
-    }
-
-    function renderTickerMessage() {
       const el = document.getElementById('action-ticker');
-      if (!el) return;
-      if (tickerQueue.length === 0) {
-        el.innerHTML = '<span style="color:var(--text-muted)">🎰 Watching for notable moments...</span>';
-        return;
-      }
-      const idx = Math.min(currentTickerIdx, tickerQueue.length - 1);
-      el.innerHTML = tickerQueue[idx].text;
+      if (el) el.innerHTML = message;
     }
-
-    renderTickerMessage(); // show default message on load
 
     function esc(s) { return escapeHtml(s); }
     function escapeHtml(str) {
