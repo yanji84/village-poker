@@ -5108,11 +5108,37 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       return { name: 'Fish', color: '#888', icon: '\uD83D\uDC1F' };
     }
 
+    // Fetch full leaderboard from API (includes historical players)
+    async function fetchLeaderboard() {
+      try {
+        const res = await fetch(apiBase + '/leaderboard', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.leaderboard) {
+          state._fullLeaderboard = data.leaderboard;
+          renderLeaderboard();
+        }
+      } catch (e) {}
+    }
+
     function renderLeaderboard() {
-      // Merge leaderboard data with seatData (seats API has the freshest stats)
+      // Merge leaderboard data with seatData and API leaderboard
       const merged = {};
+
+      // API leaderboard (includes historical players)
+      for (const entry of (state._fullLeaderboard || [])) {
+        merged[entry.botName] = {
+          displayName: entry.displayName,
+          username: entry.username,
+          stats: entry.stats,
+          atTable: entry.atTable,
+          chips: entry.chips,
+        };
+      }
+
+      // SSE init leaderboard
       for (const [name, d] of Object.entries(state.leaderboard)) {
-        merged[name] = { ...d };
+        if (!merged[name]) merged[name] = { ...d };
       }
       // Add any seated players not already in leaderboard
       for (const [name, sd] of Object.entries(seatData)) {
@@ -5192,7 +5218,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           return `
             <tr class="${rowClass}" onclick="toggleLeaderboardDetail('lb-detail-${i}')">
               <td class="rank">${i + 1}</td>
-              <td>${esc(lbDisplayName)}</td>
+              <td>${esc(lbDisplayName)}${e.atTable ? ' <span style="color:var(--green);font-size:9px">● playing</span>' : ''}</td>
               <td><span class="tier-badge" style="background:${tier.color};color:#000">${tier.icon} ${tier.name}</span></td>
               <td class="score-col">${elo.toFixed(1)}</td>
               <td style="color:${chipProfit >= 0 ? '#4a6' : '#a44'};font-weight:600">${chipProfit >= 0 ? '+' : ''}${chipProfit.toLocaleString()}</td>
@@ -5631,6 +5657,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         }
         render();
         fetchSeats();
+        fetchLeaderboard();
         viewerWaitlist = getWaitlistState();
         fetchWaitlist();
         return;
@@ -5656,6 +5683,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           // Refresh stats after each hand
           if (authUsername) fetchPlayerStats(authUsername);
           fetchSeats();
+          fetchLeaderboard();
         }
         render();
         return;
