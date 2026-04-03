@@ -5412,6 +5412,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           if (state.activePlayer) {
             state.contextMessage += ` &middot; waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span>`;
           }
+          if (!state._isInitReplay) broadcastNotable('<b>' + esc(botDisplayName(entry.bot)) + '</b> checks');
           break;
 
         case 'call':
@@ -5425,6 +5426,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               if (!state._isInitReplay) broadcastNotable('⚡ <b>' + escapeHtml(botDisplayName(entry.bot)) + '</b> goes ALL-IN for ' + (entry.amount || '') + '!');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
+              if (!state._isInitReplay) broadcastNotable('<b>' + esc(botDisplayName(entry.bot)) + '</b> calls ' + (entry.amount || ''));
             }
           }
           break;
@@ -5442,6 +5444,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               if (!state._isInitReplay) broadcastNotable('⚡ <b>' + escapeHtml(botDisplayName(entry.bot)) + '</b> goes ALL-IN for ' + (entry.amount || '') + '!');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
+              if (!state._isInitReplay) broadcastNotable('💪 <b>' + esc(botDisplayName(entry.bot)) + '</b> raises to ' + (entry.amount || ''));
             }
           }
           break;
@@ -5450,6 +5453,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.foldedPlayers.add(entry.bot);
           if (state.activePlayer === entry.bot) state.activePlayer = null;
           state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
+          if (!state._isInitReplay) broadcastNotable('<b>' + esc(botDisplayName(entry.bot)) + '</b> folds');
           break;
 
         case 'deal':
@@ -5470,6 +5474,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             }
             const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
             state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
+            if (!state._isInitReplay) broadcastNotable('🃏 ' + (streetLabels[state.street] || state.street) + ': ' + cards.join(' '));
           }
           break;
 
@@ -5487,13 +5492,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.pot = 0;
             state.currentBets = {};
             state.contextMessage = `<span class="highlight">${esc(resultMatch[1])}</span> wins ${amount} with ${esc(handName)}`;
-            // Broadcast notable results (not "Last player standing" and pot > 2000)
-            if (!state._isInitReplay && handName !== 'Last player standing' && amount > 2000) {
-              broadcastNotable('🏆 <b>' + escapeHtml(resultMatch[1]) + '</b> wins ' + amount.toLocaleString() + ' with ' + escapeHtml(handName) + '!');
-            }
-            // Big pot broadcast
-            if (!state._isInitReplay && amount > 5000) {
-              broadcastNotable('💰 Massive pot: ' + amount.toLocaleString() + ' chips!');
+            // Broadcast all results
+            if (!state._isInitReplay) {
+              broadcastNotable('🏆 <b>' + escapeHtml(resultMatch[1]) + '</b> wins ' + amount.toLocaleString() + (handName !== 'Last player standing' ? ' with ' + escapeHtml(handName) : '') + '!');
             }
             // Check for eliminations
             if (!state._isInitReplay && state.chips) {
