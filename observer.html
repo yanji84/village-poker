@@ -4873,8 +4873,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           // Position cards toward the table center (away from avatar)
           const dirX = (0.5 - seat.x);
           const dirY = (0.5 - seat.y);
-          const cx = Math.floor(px + dirX * 30 - cw);
-          const cy = Math.floor(py + dirY * 25 - ch / 2);
+          const cx = Math.floor(px + dirX * 55 - cw);
+          const cy = Math.floor(py + dirY * 45 - ch / 2);
           for (let ci = 0; ci < 2; ci++) {
             const cardX = cx + ci * (cw + 2);
             // Card background
@@ -4900,8 +4900,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const cw = 10, ch = 14;
           const dirX2 = (0.5 - seat.x);
           const dirY2 = (0.5 - seat.y);
-          const cx = Math.floor(px + dirX2 * 30 - cw);
-          const cy = Math.floor(py + dirY2 * 25 - ch / 2);
+          const cx = Math.floor(px + dirX2 * 55 - cw);
+          const cy = Math.floor(py + dirY2 * 45 - ch / 2);
           for (let ci = 0; ci < 2; ci++) {
             const cardX = cx + ci * (cw + 2);
             pxRect(pokerCtx, cardX, cy, cw, ch, '#2a4a8a');
