@@ -1725,6 +1725,17 @@
       color: #4af;
       font-weight: 700;
     }
+    .tier-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .leaderboard-table .chip-profit-pos { color: #4a6; font-weight: 600; }
+    .leaderboard-table .chip-profit-neg { color: #a44; font-weight: 600; }
+    .leaderboard-table .provisional-tag { color: var(--text-muted); font-size: 9px; font-style: italic; }
     .leaderboard-table .bluffs-col .bluff-tag {
       font-size: 9px;
       padding: 0 4px;
@@ -5090,83 +5101,120 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     // --- Leaderboard ---
+    function getEloTier(elo) {
+      if (elo >= 1500) return { name: 'Legend', color: '#f0d060', icon: '\uD83D\uDC51' };
+      if (elo >= 1350) return { name: 'Whale', color: '#4af', icon: '\uD83D\uDC0B' };
+      if (elo >= 1250) return { name: 'Shark', color: '#4a6', icon: '\uD83E\uDD88' };
+      return { name: 'Fish', color: '#888', icon: '\uD83D\uDC1F' };
+    }
+
     function renderLeaderboard() {
-      const lbEntries = Object.entries(state.leaderboard);
+      // Merge leaderboard data with seatData (seats API has the freshest stats)
+      const merged = {};
+      for (const [name, d] of Object.entries(state.leaderboard)) {
+        merged[name] = { ...d };
+      }
+      // Add any seated players not already in leaderboard
+      for (const [name, sd] of Object.entries(seatData)) {
+        if (!merged[name] && sd.stats) {
+          merged[name] = { displayName: sd.username || name, stats: sd.stats };
+        }
+        // Prefer seatData stats (fresher from API)
+        if (sd.stats && merged[name]) {
+          merged[name].stats = sd.stats;
+          if (sd.username) merged[name].displayName = sd.username;
+        }
+      }
+      // Also add current bots
+      for (const bot of state.bots) {
+        if (!merged[bot.name]) {
+          merged[bot.name] = { displayName: bot.displayName || bot.name, stats: {} };
+        }
+      }
+      const lbEntries = Object.entries(merged);
       const myBot = getMyBotCookie();
       if (lbEntries.length > 0) {
         const sorted = lbEntries
           .map(([name, d]) => ({ name, ...d }))
           .sort((a, b) => {
-            // Sort by score first (primary), then wins, then gamesPlayed
-            const scoreA = a.score ?? -Infinity;
-            const scoreB = b.score ?? -Infinity;
-            if (scoreB !== scoreA) return scoreB - scoreA;
-            return b.wins - a.wins || a.gamesPlayed - b.gamesPlayed;
+            const eloA = a.stats?.elo || 1200;
+            const eloB = b.stats?.elo || 1200;
+            return eloB - eloA;
           });
+        const BB = 640;
         const rows = sorted.map((e, i) => {
           const isViewer = myBot === e.name;
           const rowClass = isViewer ? 'viewer-row expandable' : 'expandable';
           const seatUser = seatData[e.name]?.username;
           const isHumanLb = !!seatUser;
           const lbDisplayName = isHumanLb ? seatUser : (e.displayName || e.name);
-          const typeBadgeLb = isHumanLb ? '\uD83D\uDC64' : '\uD83E\uDD16';
-          const playerChips = state.chips[e.name] ?? '';
           const stats = seatData[e.name]?.stats || e.stats || {};
           const handsPlayed = stats.handsPlayed || e.gamesPlayed || 0;
           const handsWon = stats.handsWon || e.wins || 0;
           const winPct = handsPlayed > 0 ? ((handsWon / handsPlayed) * 100).toFixed(1) + '%' : '-';
+
+          // Elo & tier
+          const elo = stats.elo || 1200;
+          const tier = getEloTier(elo);
+
+          // Chip profit
+          const chipProfit = stats.chipProfit || 0;
+
+          // Showdown win rate
+          const showdownsReached = stats.showdownsReached || 0;
+          const showdownsWon = stats.showdownsWon || 0;
+          const sdWinPct = showdownsReached > 0 ? ((showdownsWon / showdownsReached) * 100).toFixed(1) + '%' : '-';
+
+          // BB/100
+          const bbPer100 = handsPlayed > 0 ? ((chipProfit / handsPlayed) * 100 / BB).toFixed(1) : '-';
+
+          // Hands with provisional tag
+          const handsDisplay = handsPlayed < 100
+            ? `${handsPlayed} <span class="provisional-tag">(provisional)</span>`
+            : `${handsPlayed}`;
+
+          // Expand detail stats
           const folds = stats.folds || 0;
           const calls = stats.calls || 0;
           const raises = stats.raises || 0;
-          const vpip = handsPlayed > 0 ? (((calls + raises) / handsPlayed) * 100).toFixed(0) + '%' : '-';
-
-          // Bluff stats
+          const checks = stats.checks || 0;
+          const allIns = stats.allIns || 0;
+          const biggestPot = stats.biggestPot || 0;
+          const streakCurrent = stats.streakCurrent || 0;
+          const streakBest = stats.streakBest || 0;
+          const lossStreakCurrent = stats.lossStreakCurrent || 0;
           const bluffsWon = stats.bluffsWon || 0;
           const bluffsCaught = stats.bluffsCaught || 0;
           const totalBluffs = bluffsWon + bluffsCaught;
           const bluffSuccessRate = totalBluffs > 0 ? ((bluffsWon / totalBluffs) * 100).toFixed(0) + '%' : '-';
-
-          // Score
-          const score = e.score != null ? e.score : (stats.score != null ? stats.score : null);
-          const scoreDisplay = score != null ? score.toFixed(1) : '-';
-
-          const allIns = stats.allIns || 0;
-          const biggestPot = stats.biggestPot || 0;
-          const showdownsReached = stats.showdownsReached || 0;
-          const showdownsWon = stats.showdownsWon || 0;
-          const sdWinRate = showdownsReached > 0 ? ((showdownsWon / showdownsReached) * 100).toFixed(0) + '%' : '-';
-          const streakCurrent = stats.streakCurrent || 0;
-          const streakBest = stats.streakBest || 0;
-          const lossStreakCurrent = stats.lossStreakCurrent || 0;
-          const checks = stats.checks || 0;
-
-          const lbPersonality = getPlayerPersonality(e.name, lbDisplayName, isHumanLb, stats);
-          const lbArchetype = lbPersonality ? ` <span style="color:var(--accent);font-size:9px;font-weight:400;opacity:0.7">${esc(lbPersonality.archetype)}</span>` : '';
+          const vpip = handsPlayed > 0 ? (((calls + raises) / handsPlayed) * 100).toFixed(0) + '%' : '-';
 
           return `
             <tr class="${rowClass}" onclick="toggleLeaderboardDetail('lb-detail-${i}')">
               <td class="rank">${i + 1}</td>
-              <td>${esc(lbDisplayName)}${lbArchetype}</td>
-              <td class="score-col">${scoreDisplay}</td>
-              <td>${handsPlayed}</td>
+              <td>${esc(lbDisplayName)}</td>
+              <td><span class="tier-badge" style="background:${tier.color};color:#000">${tier.icon} ${tier.name}</span></td>
+              <td class="score-col">${elo.toFixed(1)}</td>
+              <td style="color:${chipProfit >= 0 ? '#4a6' : '#a44'};font-weight:600">${chipProfit >= 0 ? '+' : ''}${chipProfit.toLocaleString()}</td>
               <td class="winrate">${winPct}</td>
-              <td class="bluffs-col">${totalBluffs > 0 ? `<span class="bluff-tag won">${bluffsWon}</span>/<span class="bluff-tag caught">${bluffsCaught}</span>` : '<span class="stat-dim">-</span>'}</td>
-              <td class="hide-mobile">${vpip}</td>
-              <td>${playerChips}</td>
+              <td class="hide-mobile">${sdWinPct}</td>
+              <td class="hide-mobile">${bbPer100}</td>
+              <td>${handsDisplay}</td>
             </tr>
             <tr class="leaderboard-detail" id="lb-detail-${i}">
-              <td colspan="8">
+              <td colspan="9">
                 <div class="detail-grid">
                   <div class="detail-item"><span class="detail-label">W/L:</span> <span class="detail-value">${handsWon}/${handsPlayed - handsWon}</span></div>
+                  <div class="detail-item"><span class="detail-label">VPIP:</span> <span class="detail-value">${vpip}</span></div>
                   <div class="detail-item"><span class="detail-label">Folds:</span> <span class="detail-value">${folds}</span></div>
                   <div class="detail-item"><span class="detail-label">Calls:</span> <span class="detail-value">${calls}</span></div>
                   <div class="detail-item"><span class="detail-label">Raises:</span> <span class="detail-value">${raises}</span></div>
                   <div class="detail-item"><span class="detail-label">Checks:</span> <span class="detail-value">${checks}</span></div>
                   <div class="detail-item"><span class="detail-label">All-ins:</span> <span class="detail-value">${allIns}</span></div>
                   <div class="detail-item"><span class="detail-label">Biggest pot:</span> <span class="detail-value">${biggestPot}</span></div>
-                  <div class="detail-item"><span class="detail-label">Showdowns:</span> <span class="detail-value">${showdownsReached} (won ${sdWinRate})</span></div>
+                  <div class="detail-item"><span class="detail-label">Showdowns:</span> <span class="detail-value">${showdownsReached} (won ${sdWinPct})</span></div>
                   <div class="detail-item"><span class="detail-label">Streak:</span> <span class="detail-value">${streakCurrent > 0 ? '\uD83D\uDD25 ' + streakCurrent + ' wins' : lossStreakCurrent > 0 ? '\u2744\uFE0F ' + lossStreakCurrent + ' losses' : '0'} / ${streakBest} best</span></div>
-                  ${totalBluffs > 0 ? `<div class="detail-item"><span class="detail-label">Bluff Success Rate:</span> <span class="bluff-success-rate">${bluffSuccessRate} (${bluffsWon}/${totalBluffs})</span></div>` : ''}
+                  ${totalBluffs > 0 ? `<div class="detail-item"><span class="detail-label">Bluffs:</span> <span class="bluff-success-rate">${bluffSuccessRate} (${bluffsWon}/${totalBluffs})</span></div>` : ''}
                 </div>
               </td>
             </tr>
@@ -5175,7 +5223,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         leaderboardEl.innerHTML = `
           <h2>Leaderboard${state.gamesPlayed ? ' \u00b7 Game ' + state.gamesPlayed : ''}</h2>
           <table class="leaderboard-table">
-            <tr><th class="rank">#</th><th>Player</th><th>Score</th><th>Hands</th><th>Win%</th><th>Bluffs</th><th class="hide-mobile">VPIP</th><th>Chips</th></tr>
+            <tr><th class="rank">#</th><th>Player</th><th>Tier</th><th>Elo</th><th>Chips Won</th><th>Win%</th><th class="hide-mobile">SD Win%</th><th class="hide-mobile">BB/100</th><th>Hands</th></tr>
             ${rows}
           </table>
         `;
