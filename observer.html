@@ -225,28 +225,48 @@
 
     /* --- Main Dashboard Grid --- */
     .dashboard {
-      display: grid;
-      grid-template-columns: 35% 65%;
+      display: flex;
+      flex-direction: column;
       min-height: calc(100vh - 130px);
     }
 
-    @media (max-width: 800px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-    }
-
     .left-col {
-      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      overflow-y: auto;
     }
 
     .right-col {
       display: flex;
       flex-direction: column;
       overflow: hidden;
+    }
+
+    /* Desktop: canvas full-width on top, players + reasoning side by side */
+    @media (min-width: 801px) {
+      .left-col {
+        flex-direction: row;
+        gap: 0;
+      }
+      .left-col > #poker-canvas {
+        width: 100%;
+      }
+      .dashboard {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .right-col {
+        border-top: 1px solid var(--border);
+      }
+      /* Players and reasoning side by side below canvas */
+      .players-reasoning-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: 300px;
+      }
+      .players-reasoning-row .left-col {
+        border-right: 1px solid var(--border);
+        flex-direction: column;
+      }
     }
 
     /* --- Section Headers --- */
@@ -745,7 +765,7 @@
     /* --- Pixel Poker Canvas --- */
     #poker-canvas {
       width: 100%;
-      height: 250px;
+      height: 300px;
       background: #070b07;
       display: block;
       border-bottom: 1px solid var(--border);
@@ -1219,6 +1239,86 @@
       color: var(--text-secondary);
     }
     .full-editor-cancel:hover { background: #1a1a1a; color: var(--text-primary); }
+
+    .editor-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .editor-tab {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .editor-tab:hover { color: var(--text-primary); }
+    .editor-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    #code-tab-content { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    #code-tab-content.active { display: flex; }
+    #strategy-tab-content { display: flex; flex: 1; flex-direction: column; overflow: hidden; }
+    #strategy-tab-content.hidden { display: none; }
+    #full-editor-code {
+      flex: 1;
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 14px;
+      color: #e0e0e0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      resize: none;
+    }
+    #full-editor-code:focus {
+      outline: none;
+      border-color: #444;
+    }
+    .code-template-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .code-template-bar .template-bar-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+    .code-api-ref {
+      margin-top: 12px;
+      font-size: 11px;
+    }
+    .code-api-ref summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 12px;
+      user-select: none;
+    }
+    .code-api-ref pre {
+      margin-top: 8px;
+      padding: 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
 
     @keyframes strategy-flash {
       0% { background: rgba(68,170,255,0.08); }
@@ -1857,6 +1957,19 @@
     }
 
     /* === Mobile Responsive Layout (375px phones) === */
+    @media (max-width: 800px) {
+      .players-reasoning-row {
+        display: flex;
+        flex-direction: column;
+      }
+      .left-col {
+        border-right: none;
+      }
+      #poker-canvas {
+        height: 200px;
+      }
+    }
+
     @media (max-width: 520px) {
       body {
         font-size: 12px;
@@ -2192,25 +2305,27 @@
 
   <!-- Main Dashboard Grid -->
   <div class="dashboard">
-    <!-- Left Column: Player Grid + Stats -->
-    <div class="left-col">
-      <canvas id="poker-canvas" width="600" height="250"></canvas>
-      <div class="section-header">Players</div>
-      <div class="player-grid" id="player-grid"></div>
+    <!-- Canvas: full width on desktop -->
+    <canvas id="poker-canvas" width="600" height="250"></canvas>
 
-    </div>
-
-    <!-- Right Column: Reasoning Panel -->
-    <div class="right-col">
-      <div class="reasoning-panel" id="reasoning-panel">
-        <div class="reasoning-header">
-          <span class="who" id="reasoning-who">Waiting for action...</span>
-        </div>
-        <div class="reasoning-body" id="reasoning-body">
-          <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
-        </div>
+    <!-- Players + Reasoning side by side on desktop, stacked on mobile -->
+    <div class="players-reasoning-row">
+      <div class="left-col">
+        <div class="section-header">Players</div>
+        <div class="player-grid" id="player-grid"></div>
       </div>
 
+      <div class="right-col">
+        <div class="reasoning-panel" id="reasoning-panel">
+          <div class="reasoning-header">
+            <span class="who" id="reasoning-who">Waiting for action...</span>
+          </div>
+          <div class="reasoning-body" id="reasoning-body">
+            <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -2373,7 +2488,12 @@ Min raise: <b>40</b></pre>
         <h3>Strategy Editor</h3>
         <div class="char-counter" id="full-editor-char-counter" style="margin:0;color:var(--text-muted)">0 / 2000</div>
       </div>
+      <div class="editor-tabs">
+        <button class="editor-tab active" onclick="switchEditorTab('strategy')">Strategy</button>
+        <button class="editor-tab" onclick="switchEditorTab('code')">Code</button>
+      </div>
       <div class="full-editor-body">
+        <div id="strategy-tab-content">
         <textarea id="full-editor-textarea" maxlength="2000" placeholder="Write your strategy here..." oninput="updateFullEditorCharCounter()"></textarea>
         <div class="template-bar" style="margin-top:12px;margin-bottom:0">
           <div class="template-bar-label">Start from template:</div>
@@ -2432,6 +2552,31 @@ Min raise: <span style="font-weight:bold">80</span>
 
 <span style="color:var(--text-muted);font-style:italic">In this example, you have top pair (K) with ace kicker — a strong hand. Your strategy determines whether you check to trap, raise for value, or use table talk to mislead.</span></div>
         </details>
+        </div>
+        <div id="code-tab-content">
+          <textarea id="full-editor-code" maxlength="5000" placeholder="// Write an analyze(state) function that returns a string.&#10;// The output is injected into your bot's prompt each hand.&#10;&#10;function analyze(state) {&#10;  return 'Hello from my analysis tool!';&#10;}" oninput="updateCodeCharCounter()"></textarea>
+          <div class="code-template-bar">
+            <div class="template-bar-label">Templates:</div>
+            <div class="template-btns" id="code-template-btns"></div>
+          </div>
+          <details class="code-api-ref">
+            <summary>API Reference</summary>
+            <pre>
+state.myCards    - [{rank, suit, name}]  e.g. [{rank:14, suit:'spades', name:'A&#9824;'}]
+state.board      - [{rank, suit, name}]  community cards
+state.pot        - number               current pot
+state.toCall     - number               chips to call
+state.chips      - number               your chip count
+state.street     - 'preflop'|'flop'|'turn'|'river'
+state.opponents  - [{name, chips, bet, folded}]
+state.blinds     - {small, big}
+state.handNumber - number
+
+Return a string. It gets injected into your bot's prompt.
+Runs in a sandbox with 100ms timeout and 8MB memory limit.
+            </pre>
+          </details>
+        </div>
       </div>
       <div class="full-editor-footer">
         <button class="full-editor-cancel" onclick="cancelFullEditor()">Cancel</button>
@@ -2693,7 +2838,7 @@ Min raise: <span style="font-weight:bold">80</span>
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ username: authUsername, pin, strategy }),
+          body: JSON.stringify({ username: authUsername, pin, strategy, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -2757,6 +2902,79 @@ Min raise: <span style="font-weight:bold">80</span>
       { name: 'Bluffer', text: 'Deception is your weapon. Raise with weak hands to represent strength. Slow-play monsters to trap. Bet big on missed draws to steal pots. Use table talk to mislead \u2014 project confidence when weak, uncertainty when strong. Win through psychology, not cards.' },
       { name: 'Calculator', text: 'Play by the math. Calculate pot odds before every call. Only continue when odds justify it. Bet 2/3 pot as default. Fold when equity drops below breakeven. Position is everything \u2014 play 2x more hands on the button than under the gun. Never let emotions override numbers.' },
     ];
+
+    const CODE_TEMPLATES = [
+      { name: 'Hand Strength', code: `function analyze(state) {
+  const isPair = state.myCards.length === 2 && state.myCards[0].rank === state.myCards[1].rank;
+  const highCard = Math.max(...state.myCards.map(c => c.rank));
+  const isSuited = state.myCards[0].suit === state.myCards[1].suit;
+
+  let strength = 0;
+  if (isPair) strength += 6;
+  if (highCard >= 13) strength += 3;
+  if (highCard >= 11) strength += 1;
+  if (isSuited) strength += 2;
+
+  if (strength >= 8) return "STRONG HAND - raise aggressively";
+  if (strength >= 5) return "DECENT HAND - call or small raise";
+  if (strength >= 3) return "MARGINAL - call if cheap";
+  return "WEAK - fold unless getting great odds";
+}` },
+      { name: 'Pot Odds', code: `function analyze(state) {
+  if (state.toCall === 0) return "No bet to face - check or bet for value";
+  const potOdds = state.pot / state.toCall;
+  const needed = 1 / (potOdds + 1);
+  return "Pot odds: " + potOdds.toFixed(1) + ":1. Need " + (needed*100).toFixed(0) + "% equity to call.";
+}` },
+    ];
+
+    function switchEditorTab(tab) {
+      const strategyContent = document.getElementById('strategy-tab-content');
+      const codeContent = document.getElementById('code-tab-content');
+      const charCounter = document.getElementById('full-editor-char-counter');
+      const tabs = document.querySelectorAll('.editor-tab');
+
+      tabs.forEach(t => t.classList.remove('active'));
+      if (tab === 'code') {
+        tabs[1].classList.add('active');
+        strategyContent.classList.add('hidden');
+        codeContent.classList.add('active');
+        charCounter.textContent = (document.getElementById('full-editor-code')?.value?.length || 0) + ' / 5000';
+      } else {
+        tabs[0].classList.add('active');
+        strategyContent.classList.remove('hidden');
+        codeContent.classList.remove('active');
+        updateFullEditorCharCounter();
+      }
+    }
+
+    function updateCodeCharCounter() {
+      const textarea = document.getElementById('full-editor-code');
+      const counter = document.getElementById('full-editor-char-counter');
+      if (textarea && counter && document.getElementById('code-tab-content').classList.contains('active')) {
+        counter.textContent = textarea.value.length + ' / 5000';
+      }
+    }
+
+    function renderCodeTemplateButtons() {
+      const container = document.getElementById('code-template-btns');
+      if (!container) return;
+      container.innerHTML = CODE_TEMPLATES.map((t, i) =>
+        `<button class="template-btn" data-idx="${i}">${escapeHtml(t.name)}</button>`
+      ).join('');
+      container.addEventListener('click', (e) => {
+        const btn = e.target.closest('.template-btn');
+        if (!btn) return;
+        const idx = parseInt(btn.dataset.idx);
+        const tpl = CODE_TEMPLATES[idx];
+        if (!tpl) return;
+        const textarea = document.getElementById('full-editor-code');
+        if (!textarea) return;
+        if (textarea.value.trim() && !confirm('Replace current code?')) return;
+        textarea.value = tpl.code;
+        textarea.dispatchEvent(new Event('input'));
+      });
+    }
 
     function renderTemplateButtons(containerId, targetTextareaId) {
       const container = document.getElementById(containerId);
@@ -3098,7 +3316,7 @@ Min raise: <span style="font-weight:bold">80</span>
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ username, pin, strategy: strategy }),
+          body: JSON.stringify({ username, pin, strategy: strategy, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -3110,6 +3328,8 @@ Min raise: <span style="font-weight:bold">80</span>
         }
         authUsername = username;
         localStorage.setItem('arena_username', username);
+        const joinCode = document.getElementById('full-editor-code')?.value?.trim();
+        if (joinCode) localStorage.setItem('arena_customCode_' + username, joinCode);
         const respData = await res.clone().json().catch(() => ({}));
         if (respData.botName) {
           // Immediately assigned to a seat
@@ -3208,6 +3428,17 @@ Min raise: <span style="font-weight:bold">80</span>
       const modalTextarea = document.getElementById('full-editor-textarea');
       modalTextarea.value = currentStrategy;
       updateFullEditorCharCounter();
+
+      // Load existing custom code from localStorage
+      const codeTextarea = document.getElementById('full-editor-code');
+      if (codeTextarea) {
+        const storedCode = authUsername ? localStorage.getItem('arena_customCode_' + authUsername) : null;
+        codeTextarea.value = storedCode || '';
+      }
+
+      // Reset to strategy tab
+      switchEditorTab('strategy');
+
       document.getElementById('full-editor-overlay').classList.add('open');
       setTimeout(() => modalTextarea.focus(), 100);
 
@@ -3215,6 +3446,7 @@ Min raise: <span style="font-weight:bold">80</span>
       const originalOnclick = saveBtn.onclick;
       saveBtn.onclick = async function() {
         const strategy = modalTextarea.value.trim();
+        const customCode = document.getElementById('full-editor-code')?.value?.trim() || null;
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
 
@@ -3245,7 +3477,7 @@ Min raise: <span style="font-weight:bold">80</span>
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
-              body: JSON.stringify({ botName: myBot, strategy }),
+              body: JSON.stringify({ botName: myBot, strategy, customCode }),
             });
             if (!res.ok) {
               const data = await res.json().catch(() => ({}));
@@ -3254,7 +3486,14 @@ Min raise: <span style="font-weight:bold">80</span>
               saveBtn.textContent = 'Save & Close';
               return;
             }
-            if (seatData[myBot]) seatData[myBot].strategy = strategy;
+            if (seatData[myBot]) {
+              seatData[myBot].strategy = strategy;
+              seatData[myBot].hasCode = !!customCode;
+            }
+            if (authUsername) {
+              if (customCode) localStorage.setItem('arena_customCode_' + authUsername, customCode);
+              else localStorage.removeItem('arena_customCode_' + authUsername);
+            }
             render();
           } catch (e) {
             alert('Network error.');
@@ -3268,7 +3507,7 @@ Min raise: <span style="font-weight:bold">80</span>
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
-              body: JSON.stringify({ username: wlState.username, strategy }),
+              body: JSON.stringify({ username: wlState.username, strategy, customCode }),
             });
             setWaitlistState({ ...wlState, strategy });
           } catch (e) {
@@ -3818,7 +4057,7 @@ Min raise: <span style="font-weight:bold">80</span>
     function resizePokerCanvas() {
       const rect = pokerCanvas.parentElement.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      const cssHeight = window.innerWidth <= 520 ? 180 : 250;
+      const cssHeight = window.innerWidth <= 520 ? 180 : window.innerWidth <= 800 ? 200 : 300;
       pokerCanvas.style.height = cssHeight + 'px';
       pokerCanvas.width = Math.floor(rect.width * dpr);
       pokerCanvas.height = Math.floor(cssHeight * dpr);
@@ -5642,6 +5881,7 @@ Min raise: <span style="font-weight:bold">80</span>
     // Initialize
     renderTemplateButtons('panel-template-btns', 'join-strategy');
     renderTemplateButtons('modal-template-btns', 'full-editor-textarea');
+    renderCodeTemplateButtons();
     updateCharCounter();
     checkReturningUser();
     render();
