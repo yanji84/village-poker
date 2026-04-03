@@ -294,11 +294,7 @@
       padding: 12px 14px;
       border-left: 3px solid transparent;
       transition: opacity 0.3s, border-color 0.3s, background 0.2s;
-      cursor: pointer;
       min-height: 80px;
-    }
-    .player-card:hover {
-      background: var(--bg-elevated);
     }
     .player-card.active {
       border-left-color: var(--accent);
@@ -4118,36 +4114,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
     window.addEventListener('resize', resizePokerCanvas);
 
-    // Click on canvas to select a bot by position
-    pokerCanvas.style.cursor = 'pointer';
-    pokerCanvas.addEventListener('click', (e) => {
-      const rect = pokerCanvas.getBoundingClientRect();
-      const scaleX = pokerCanvas.width / rect.width;
-      const scaleY = pokerCanvas.height / rect.height;
-      const cx = (e.clientX - rect.left) * scaleX;
-      const cy = (e.clientY - rect.top) * scaleY;
-      const dpr = window.devicePixelRatio || 1;
-      const w = pokerCanvas.width / dpr;
-      const h = pokerCanvas.height / dpr;
-      const bots = state.bots;
-
-      let closest = null;
-      let closestDist = Infinity;
-      for (let i = 0; i < bots.length; i++) {
-        const seatIdx = i % SEAT_POSITIONS.length;
-        const seat = SEAT_POSITIONS[seatIdx];
-        const sx = seat.x * w * dpr;
-        const sy = seat.y * h * dpr;
-        const dist = Math.sqrt((cx - sx) ** 2 + (cy - sy) ** 2);
-        if (dist < closestDist && dist < 80 * dpr) {
-          closestDist = dist;
-          closest = bots[i].name;
-        }
-      }
-      if (closest) {
-        selectPlayerForReasoning(closest);
-      }
-    });
 
     function pxRect(ctx, x, y, w, h, color) {
       ctx.fillStyle = color;
@@ -5036,7 +5002,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           : '';
 
         html += `
-          <div class="${cardClasses}" data-bot="${bot.name}" onclick="selectPlayerForReasoning('${escapeHtml(bot.name)}')" title="Click to see reasoning">
+          <div class="${cardClasses}" data-bot="${bot.name}">
             ${isEliminated ? '<div class="elimination-stamp">ELIMINATED</div>' : ''}
             <div class="player-card-header">
               <span class="player-card-name">${escapeHtml(displayName)}<span class="type-badge">${typeBadge}</span>${isWinner ? '<span class="winner-badge">W</span>' : ''}${streakBadge}</span>
@@ -5086,20 +5052,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       return html;
     }
 
-    let selectedReasoningBot = null;
-
-    function selectPlayerForReasoning(botName) {
-      selectedReasoningBot = botName;
-      renderReasoningPanel();
-      // Scroll reasoning panel into view
-      const panel = document.getElementById('reasoning-panel');
-      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-
     function renderReasoningPanel() {
-      // Determine which player to show reasoning for
-      const targetBot = selectedReasoningBot || state.activePlayer || state.lastActed;
+      // Always show the latest bot that acted
+      const targetBot = state.activePlayer || state.lastActed;
 
       if (!targetBot || !state.lastThought[targetBot]) {
         // Check if any bot has thoughts
@@ -5538,7 +5493,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.contextMessage = `Hand #${state.handNumber} starting...`;
             // Reset hand reasoning history
             handReasoningHistory = [];
-            selectedReasoningBot = null;
             // Clear ticker for new hand
             tickerItems = [];
             addTickerItem('Hand #' + state.handNumber, 'starting', 'deal');
