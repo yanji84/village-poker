@@ -233,7 +233,7 @@
     /* --- Player Grid --- */
     .player-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 1px;
       background: var(--border);
     }
@@ -345,8 +345,8 @@
       margin-bottom: 6px;
     }
     .player-card-cards .card {
-      font-size: 11px;
-      padding: 1px 4px;
+      font-size: 14px;
+      padding: 3px 6px;
     }
 
     .player-card-strategy {
@@ -721,7 +721,7 @@
     /* --- Pixel Poker Canvas --- */
     #poker-canvas {
       width: 100%;
-      height: 300px;
+      height: 380px;
       background: #070b07;
       display: block;
       border-bottom: 1px solid var(--border);
@@ -2443,6 +2443,7 @@
       <div class="left-col">
         <div class="section-header">Players</div>
         <div class="player-grid" id="player-grid"></div>
+        <div class="section-header" style="border-top: 1px solid var(--border);">Table Talk</div>
         <div class="chat-feed" id="chat-feed">
           <div class="chat-feed-messages" id="chat-feed-messages"></div>
         </div>
@@ -4866,24 +4867,25 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Character
         drawPixelChar(pokerCtx, px, py, i, isActive, isTalking, isFolded, charScale);
 
-        // Hole cards near character (positioned to not overlap avatar)
+        // Hole cards to the side of avatar (never overlapping)
         const hCards = state.holeCards[bot.name];
+        const cw = 10, ch = 14, cardGap = 2;
+        const cardsW = cw * 2 + cardGap;
+        // Place cards on the side closer to the table center
+        const onLeftHalf = seat.x < 0.5;
+        const cardBaseX = onLeftHalf
+          ? Math.floor(px + 12 * charScale)   // right side of avatar
+          : Math.floor(px - 12 * charScale - cardsW); // left side of avatar
+        const cardBaseY = Math.floor(py - ch / 2);
+
         if (hCards && hCards.length === 2 && !isFolded) {
-          const cw = 10, ch = 14;
-          // Position cards toward the table center (away from avatar)
-          const dirX = (0.5 - seat.x);
-          const dirY = (0.5 - seat.y);
-          const cx = Math.floor(px + dirX * 55 - cw);
-          const cy = Math.floor(py + dirY * 45 - ch / 2);
           for (let ci = 0; ci < 2; ci++) {
-            const cardX = cx + ci * (cw + 2);
-            // Card background
-            pxRect(pokerCtx, cardX, cy, cw, ch, '#F5F0E0');
-            pxRect(pokerCtx, cardX, cy, cw, 1, '#333');
-            pxRect(pokerCtx, cardX, cy + ch - 1, cw, 1, '#333');
-            pxRect(pokerCtx, cardX, cy, 1, ch, '#333');
-            pxRect(pokerCtx, cardX + cw - 1, cy, 1, ch, '#333');
-            // Rank + suit
+            const cardX = cardBaseX + ci * (cw + cardGap);
+            pxRect(pokerCtx, cardX, cardBaseY, cw, ch, '#F5F0E0');
+            pxRect(pokerCtx, cardX, cardBaseY, cw, 1, '#333');
+            pxRect(pokerCtx, cardX, cardBaseY + ch - 1, cw, 1, '#333');
+            pxRect(pokerCtx, cardX, cardBaseY, 1, ch, '#333');
+            pxRect(pokerCtx, cardX + cw - 1, cardBaseY, 1, ch, '#333');
             const card = hCards[ci];
             const rank = card.replace(/[♠♥♦♣]/g, '');
             const suit = card.replace(/[^♠♥♦♣]/g, '');
@@ -4891,25 +4893,18 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             pokerCtx.font = 'bold 7px monospace';
             pokerCtx.textAlign = 'center';
             pokerCtx.fillStyle = isRed ? '#922B21' : '#222';
-            pokerCtx.fillText(rank, cardX + cw / 2, cy + 7);
+            pokerCtx.fillText(rank, cardX + cw / 2, cardBaseY + 7);
             pokerCtx.font = '6px sans-serif';
-            pokerCtx.fillText(suit, cardX + cw / 2, cy + 13);
+            pokerCtx.fillText(suit, cardX + cw / 2, cardBaseY + 13);
           }
         } else if (hCards === undefined && !isFolded && state.phase === 'betting') {
-          // Face-down cards for unknown hands
-          const cw = 10, ch = 14;
-          const dirX2 = (0.5 - seat.x);
-          const dirY2 = (0.5 - seat.y);
-          const cx = Math.floor(px + dirX2 * 55 - cw);
-          const cy = Math.floor(py + dirY2 * 45 - ch / 2);
           for (let ci = 0; ci < 2; ci++) {
-            const cardX = cx + ci * (cw + 2);
-            pxRect(pokerCtx, cardX, cy, cw, ch, '#2a4a8a');
-            pxRect(pokerCtx, cardX, cy, cw, 1, '#333');
-            pxRect(pokerCtx, cardX + cw - 1, cy, 1, ch, '#333');
-            // Diamond pattern
-            pxRect(pokerCtx, cardX + 3, cy + 4, 4, 4, '#3a5a9a');
-            pxRect(pokerCtx, cardX + 3, cy + 9, 4, 4, '#3a5a9a');
+            const cardX = cardBaseX + ci * (cw + cardGap);
+            pxRect(pokerCtx, cardX, cardBaseY, cw, ch, '#2a4a8a');
+            pxRect(pokerCtx, cardX, cardBaseY, cw, 1, '#333');
+            pxRect(pokerCtx, cardX + cw - 1, cardBaseY, 1, ch, '#333');
+            pxRect(pokerCtx, cardX + 3, cardBaseY + 4, 4, 4, '#3a5a9a');
+            pxRect(pokerCtx, cardX + 3, cardBaseY + 9, 4, 4, '#3a5a9a');
           }
         }
 
@@ -5404,9 +5399,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           // BB/100
           const bbPer100 = handsPlayed > 0 ? ((chipProfit / handsPlayed) * 100 / BB).toFixed(1) : '-';
 
-          // Hands with provisional tag
+          // Hands with provisional tag (shown as tooltip to avoid column truncation)
           const handsDisplay = handsPlayed < 100
-            ? `${handsPlayed} <span class="provisional-tag">(provisional)</span>`
+            ? `${handsPlayed} <span class="provisional-tag" title="Fewer than 100 hands — stats are provisional">*</span>`
             : `${handsPlayed}`;
 
           // Expand detail stats
