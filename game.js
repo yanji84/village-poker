@@ -23,7 +23,7 @@ export const BLIND_ESCALATION_INTERVAL = 20;
  * Capped at level 5 (320/640) to prevent exceeding buy-in.
  */
 export function getBlinds(handsPlayed) {
-  const level = Math.min(Math.floor(handsPlayed / BLIND_ESCALATION_INTERVAL), 5);
+  const level = Math.min(Math.floor(handsPlayed / BLIND_ESCALATION_INTERVAL), 2); // cap at 40/80 so 1000 buy-in stays playable
   const multiplier = Math.pow(2, level);
   return {
     small: BASE_SMALL_BLIND * multiplier,
