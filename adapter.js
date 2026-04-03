@@ -74,6 +74,18 @@ export const phases = {
         return hand.activePlayer;
       }
 
+      // If only one player has chips and all others are folded or all-in,
+      // auto-check and advance — no decision needed from the LLM
+      if (activeP && !activeP.folded && activeP.chips > 0) {
+        const nonFolded = Object.entries(hand.players).filter(([, p]) => !p.folded);
+        const withChips = nonFolded.filter(([, p]) => p.chips > 0);
+        if (withChips.length <= 1 && nonFolded.length >= 2) {
+          activeP.acted = true;
+          advanceAction(state);
+          return hand.activePlayer;
+        }
+      }
+
       // First dispatch: mark as dispatched, give them a chance to act
       if (!hand.activePlayerDispatched) {
         hand.activePlayerDispatched = 1;

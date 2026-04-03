@@ -273,9 +273,12 @@
       background: var(--bg-card);
       padding: 12px 14px;
       border-left: 3px solid transparent;
-      transition: opacity 0.3s, border-color 0.3s;
-      cursor: default;
-      min-height: 120px;
+      transition: opacity 0.3s, border-color 0.3s, background 0.2s;
+      cursor: pointer;
+      min-height: 80px;
+    }
+    .player-card:hover {
+      background: var(--bg-elevated);
     }
     .player-card.active {
       border-left-color: var(--accent);
@@ -396,6 +399,11 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+    .player-card-bet-inline {
+      color: var(--accent);
+      font-weight: 400;
+      font-size: 11px;
+    }
 
     .player-card-bet {
       font-family: var(--mono);
@@ -429,33 +437,6 @@
     .player-card-stats .stat-val { color: var(--text-secondary); }
 
     /* --- Stats Dashboard (below player grid) --- */
-    .stats-dashboard {
-      padding: 12px 16px;
-      border-top: 1px solid var(--border);
-      background: var(--bg-card);
-    }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px 16px;
-      font-family: var(--mono);
-      font-size: 11px;
-    }
-    .stats-grid .stat-item {
-      display: flex;
-      justify-content: space-between;
-    }
-    .stats-grid .stat-label {
-      color: var(--text-muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .stats-grid .stat-value {
-      color: #ddd;
-      font-weight: 600;
-    }
-
     /* --- Reasoning Panel (right col, hero section) --- */
     .reasoning-panel {
       flex: 1;
@@ -471,6 +452,10 @@
       padding: 10px 16px;
       border-bottom: 1px solid var(--border);
       background: var(--bg-card);
+      transition: background 0.3s ease;
+    }
+    .reasoning-header.flash {
+      background: var(--accent);
     }
     .reasoning-header .who {
       font-size: 12px;
@@ -579,120 +564,6 @@
       font-size: 12px;
       padding: 40px 0;
       text-align: center;
-    }
-
-    /* --- Hand History Panel --- */
-    .hand-history-panel {
-      border-top: 1px solid var(--border);
-      background: var(--bg-card);
-    }
-    .hand-history-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.15s;
-    }
-    .hand-history-toggle:hover {
-      background: var(--bg-elevated);
-    }
-    .hand-history-toggle-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #555;
-    }
-    .hand-history-toggle-arrow {
-      font-size: 10px;
-      color: var(--text-muted);
-      transition: transform 0.2s;
-    }
-    .hand-history-panel.expanded .hand-history-toggle-arrow {
-      transform: rotate(180deg);
-    }
-    .hand-history-body {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-    .hand-history-panel.expanded .hand-history-body {
-      max-height: 600px;
-      overflow-y: auto;
-    }
-    .hand-history-empty {
-      color: var(--text-muted);
-      font-style: italic;
-      font-size: 11px;
-      padding: 16px;
-      text-align: center;
-    }
-    .hh-entry {
-      border-bottom: 1px solid var(--border);
-      padding: 10px 16px;
-    }
-    .hh-entry:last-child {
-      border-bottom: none;
-    }
-    .hh-entry-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-    .hh-hand-num {
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-    .hh-result {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: #f0d060;
-      font-weight: 600;
-    }
-    .hh-board {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-bottom: 5px;
-    }
-    .hh-board-label {
-      color: var(--text-muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .hh-board-cards {
-      color: var(--text-primary);
-      margin-left: 4px;
-    }
-    .hh-board-cards .card-red { color: #d66; }
-    .hh-board-cards .card-black { color: #ccc; }
-    .hh-actions {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-    .hh-action-name {
-      color: var(--text-primary);
-      font-weight: 600;
-    }
-    .hh-action-fold { color: var(--red); }
-    .hh-action-raise { color: #f0d060; }
-    .hh-action-call { color: var(--green); }
-    .hh-action-check { color: var(--text-muted); }
-    .hh-action-allin { color: #e44; font-weight: 700; }
-    .hh-action-deal { color: var(--accent); font-style: italic; }
-    .hh-blinds-info {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-bottom: 4px;
     }
 
     /* --- Context bar (hidden, used as data holder) --- */
@@ -1766,16 +1637,15 @@
     /* --- Chat bubble for table talk --- */
     .chat-bubble {
       margin-top: 8px;
-      padding: 6px 10px;
-      background: var(--surface-2, #2a2a3e);
-      border-left: 3px solid var(--accent, #7c6ef0);
-      border-radius: 0 8px 8px 0;
-      font-size: 11px;
+      padding: 10px 12px;
+      background: var(--bg-elevated, #1a1a2e);
+      border-left: 3px solid var(--accent, #4af);
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
       font-style: italic;
-      color: var(--text-secondary, #b8b8cc);
+      color: #ddd;
       word-break: break-word;
-      max-height: 60px;
-      overflow: hidden;
+      line-height: 1.4;
       animation: bubbleFadeIn 0.3s ease;
     }
 
@@ -2086,15 +1956,6 @@
       }
 
       /* Stats dashboard */
-      .stats-dashboard {
-        padding: 10px 12px;
-      }
-      .stats-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 4px 12px;
-        font-size: 10px;
-      }
-
       /* Reasoning panel: limit height on mobile so it doesn't push content */
       .reasoning-panel {
         max-height: 60vh;
@@ -2120,23 +1981,6 @@
       .reasoning-action {
         font-size: 12px;
         padding: 6px 10px;
-      }
-
-      /* Hand history: compact on mobile */
-      .hand-history-toggle {
-        padding: 8px 12px;
-      }
-      .hand-history-toggle-label {
-        font-size: 9px;
-      }
-      .hh-entry {
-        padding: 8px 12px;
-      }
-      .hh-actions {
-        font-size: 9px;
-      }
-      .hand-history-panel.expanded .hand-history-body {
-        max-height: 300px;
       }
 
       /* Leaderboard: compact */
@@ -2354,17 +2198,6 @@
       <div class="section-header">Players</div>
       <div class="player-grid" id="player-grid"></div>
 
-      <div class="section-header">Stats</div>
-      <div class="stats-dashboard" id="stats-dashboard">
-        <div class="stats-grid" id="stats-grid">
-          <div class="stat-item"><span class="stat-label">Hands</span><span class="stat-value" id="stat-hands">0</span></div>
-          <div class="stat-item"><span class="stat-label">Pot</span><span class="stat-value" id="stat-pot">0</span></div>
-          <div class="stat-item"><span class="stat-label">Players</span><span class="stat-value" id="stat-players">0</span></div>
-          <div class="stat-item"><span class="stat-label">Street</span><span class="stat-value" id="stat-street">&mdash;</span></div>
-          <div class="stat-item"><span class="stat-label">Board</span><span class="stat-value" id="stat-board">&mdash;</span></div>
-          <div class="stat-item"><span class="stat-label">Phase</span><span class="stat-value" id="stat-phase">&mdash;</span></div>
-        </div>
-      </div>
     </div>
 
     <!-- Right Column: Reasoning Panel -->
@@ -2372,23 +2205,12 @@
       <div class="reasoning-panel" id="reasoning-panel">
         <div class="reasoning-header">
           <span class="who" id="reasoning-who">Waiting for action...</span>
-          <span class="tick-num" id="reasoning-tick"></span>
         </div>
         <div class="reasoning-body" id="reasoning-body">
           <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
         </div>
       </div>
 
-      <!-- Hand History Panel -->
-      <div class="hand-history-panel" id="hand-history-panel">
-        <div class="hand-history-toggle" onclick="toggleHandHistory()">
-          <span class="hand-history-toggle-label">Hand History (last 5)</span>
-          <span class="hand-history-toggle-arrow">&#9660;</span>
-        </div>
-        <div class="hand-history-body" id="hand-history-body">
-          <div class="hand-history-empty">No completed hands yet.</div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -2396,7 +2218,6 @@
   <div class="leaderboard" id="leaderboard"></div>
 
   <!-- Game Stats -->
-  <div class="game-stats" id="game-stats"></div>
 
   <footer class="powered-by">
     <div class="built-with">built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
@@ -2625,7 +2446,6 @@ Min raise: <span style="font-weight:bold">80</span>
       <h3>Keyboard Shortcuts</h3>
       <ul class="shortcuts-list">
         <li><span>Toggle join panel</span> <kbd>j</kbd></li>
-        <li><span>Toggle hand history</span> <kbd>h</kbd></li>
         <li><span>Close open panel</span> <kbd>Esc</kbd></li>
         <li><span>Show this help</span> <kbd>?</kbd></li>
       </ul>
@@ -2663,7 +2483,7 @@ Min raise: <span style="font-weight:bold">80</span>
     const playerGridEl = document.getElementById('player-grid');
     const reasoningBodyEl = document.getElementById('reasoning-body');
     const reasoningWhoEl = document.getElementById('reasoning-who');
-    const reasoningTickEl = document.getElementById('reasoning-tick');
+    const reasoningTickEl = document.getElementById('reasoning-tick'); // may be null if removed
 
     // --- Arena seat claim state ---
     const seatData = {};
@@ -3020,10 +2840,6 @@ Min raise: <span style="font-weight:bold">80</span>
           toggleJoinPanel();
           return;
         }
-        if (handHistoryExpanded) {
-          toggleHandHistory();
-          return;
-        }
         return;
       }
 
@@ -3043,11 +2859,6 @@ Min raise: <span style="font-weight:bold">80</span>
         return;
       }
 
-      if (e.key === 'h' || e.key === 'H') {
-        e.preventDefault();
-        toggleHandHistory();
-        return;
-      }
     });
 
     function getWaitlistState() {
@@ -3524,108 +3335,6 @@ Min raise: <span style="font-weight:bold">80</span>
     // Current active thought data for reasoning panel
     let activeThoughtData = null;
 
-    // Hand history: last 5 completed hands
-    const MAX_HAND_HISTORY = 5;
-    let handHistoryList = []; // array of { handNum, blinds, board, actions, result, players }
-    let currentHandActions = []; // actions accumulated during the current hand
-    let currentHandPlayers = []; // player names at start of hand
-    let currentHandBlinds = { small: 10, big: 20 };
-    let handHistoryExpanded = false;
-
-    function toggleHandHistory() {
-      const panel = document.getElementById('hand-history-panel');
-      handHistoryExpanded = !handHistoryExpanded;
-      if (handHistoryExpanded) {
-        panel.classList.add('expanded');
-      } else {
-        panel.classList.remove('expanded');
-      }
-    }
-
-    function addHandHistoryAction(name, actionText, cssClass) {
-      currentHandActions.push({ name, actionText, cssClass });
-    }
-
-    function finalizeHandHistory(handNum, board, result) {
-      const entry = {
-        handNum,
-        blinds: { ...currentHandBlinds },
-        board: board.slice(),
-        actions: currentHandActions.slice(),
-        result, // { winners: [], handName, amount }
-        players: currentHandPlayers.slice(),
-      };
-      handHistoryList.push(entry);
-      if (handHistoryList.length > MAX_HAND_HISTORY) {
-        handHistoryList = handHistoryList.slice(-MAX_HAND_HISTORY);
-      }
-      renderHandHistory();
-    }
-
-    function formatCardHtml(card) {
-      if (!card || card.length < 2) return escapeHtml(card || '');
-      const suit = card.slice(-1);
-      const isRed = suit === '\u2665' || suit === '\u2666' || suit === 'h' || suit === 'd'
-        || card.includes('\u2665') || card.includes('\u2666');
-      const cls = isRed ? 'card-red' : 'card-black';
-      return '<span class="' + cls + '">' + escapeHtml(card) + '</span>';
-    }
-
-    function renderHandHistory() {
-      const body = document.getElementById('hand-history-body');
-      if (!body) return;
-
-      if (handHistoryList.length === 0) {
-        body.innerHTML = '<div class="hand-history-empty">No completed hands yet.</div>';
-        return;
-      }
-
-      // Render most recent first
-      let html = '';
-      for (let i = handHistoryList.length - 1; i >= 0; i--) {
-        const h = handHistoryList[i];
-        const winnerNames = (h.result?.winners || []).map(w => botDisplayName(w));
-        const resultText = winnerNames.join(', ') + ' wins ' + (h.result?.amount || 0)
-          + (h.result?.handName ? ' with ' + h.result.handName : '');
-
-        html += '<div class="hh-entry">';
-        html += '<div class="hh-entry-header">';
-        html += '<span class="hh-hand-num">Hand #' + h.handNum + '</span>';
-        html += '<span class="hh-result">' + escapeHtml(resultText) + '</span>';
-        html += '</div>';
-
-        html += '<div class="hh-blinds-info">Blinds ' + h.blinds.small + '/' + h.blinds.big + '</div>';
-
-        if (h.board.length > 0) {
-          html += '<div class="hh-board"><span class="hh-board-label">Board:</span> ';
-          html += '<span class="hh-board-cards">' + h.board.map(c => formatCardHtml(c)).join(' ') + '</span>';
-          html += '</div>';
-        }
-
-        // Compact action summary
-        html += '<div class="hh-actions">';
-        for (const a of h.actions) {
-          const actionClass = 'hh-action-' + a.cssClass;
-          html += '<span class="hh-action-name">' + escapeHtml(a.name) + '</span> ';
-          html += '<span class="' + actionClass + '">' + escapeHtml(a.actionText) + '</span>';
-          html += ' &middot; ';
-        }
-        // Remove trailing middot
-        html = html.replace(/ &middot; $/, '');
-        html += '</div>';
-
-        html += '</div>';
-      }
-
-      body.innerHTML = html;
-
-      // Update toggle label with count
-      const label = document.querySelector('.hand-history-toggle-label');
-      if (label) {
-        label.textContent = 'Hand History (' + handHistoryList.length + '/' + MAX_HAND_HISTORY + ')';
-      }
-    }
-
     // Live action ticker state
     const MAX_TICKER_ITEMS = 30;
     let tickerItems = []; // array of { text: string, cssClass: string }
@@ -3641,10 +3350,17 @@ Min raise: <span style="font-weight:bold">80</span>
       const track = document.getElementById('action-ticker-track');
       if (!track) return;
       if (tickerItems.length === 0) {
-        track.innerHTML = '<span class="action-ticker-empty">Waiting for actions...</span>';
-        track.style.animation = 'none';
+        if (track._lastTickerLen !== 0) {
+          track.innerHTML = '<span class="action-ticker-empty">Waiting for actions...</span>';
+          track.style.animation = 'none';
+          track._lastTickerLen = 0;
+        }
         return;
       }
+      // Only rebuild if content changed (avoids resetting scroll animation)
+      if (track._lastTickerLen === tickerItems.length) return;
+      track._lastTickerLen = tickerItems.length;
+
       // Build items HTML — duplicate for seamless loop
       const buildItems = (items) => items.map((item, i) => {
         const sep = '<span class="action-ticker-sep">&bull;</span>';
@@ -4110,6 +3826,37 @@ Min raise: <span style="font-weight:bold">80</span>
       pokerCtx.imageSmoothingEnabled = false;
     }
     window.addEventListener('resize', resizePokerCanvas);
+
+    // Click on canvas to select a bot by position
+    pokerCanvas.style.cursor = 'pointer';
+    pokerCanvas.addEventListener('click', (e) => {
+      const rect = pokerCanvas.getBoundingClientRect();
+      const scaleX = pokerCanvas.width / rect.width;
+      const scaleY = pokerCanvas.height / rect.height;
+      const cx = (e.clientX - rect.left) * scaleX;
+      const cy = (e.clientY - rect.top) * scaleY;
+      const dpr = window.devicePixelRatio || 1;
+      const w = pokerCanvas.width / dpr;
+      const h = pokerCanvas.height / dpr;
+      const bots = state.bots;
+
+      let closest = null;
+      let closestDist = Infinity;
+      for (let i = 0; i < bots.length; i++) {
+        const seatIdx = i % SEAT_POSITIONS.length;
+        const seat = SEAT_POSITIONS[seatIdx];
+        const sx = seat.x * w * dpr;
+        const sy = seat.y * h * dpr;
+        const dist = Math.sqrt((cx - sx) ** 2 + (cy - sy) ** 2);
+        if (dist < closestDist && dist < 80 * dpr) {
+          closestDist = dist;
+          closest = bots[i].name;
+        }
+      }
+      if (closest) {
+        selectPlayerForReasoning(closest);
+      }
+    });
 
     function pxRect(ctx, x, y, w, h, color) {
       ctx.fillStyle = color;
@@ -4735,14 +4482,8 @@ Min raise: <span style="font-weight:bold">80</span>
           pokerCtx.fillText(bet, Math.floor(px + betDirX * w), Math.floor(py + betDirY * h + 4));
         }
 
-        // Speech bubble
-        if (isTalking && sayData.message) {
-          const bubbleY = py - 16 * charScale;
-          drawSpeechBubble(pokerCtx, px, bubbleY, sayData.message);
-        }
-
-        // Thinking dots above active player (only when not talking, to avoid overlap)
-        if (isActive && !isTalking && state.phase === 'betting') {
+        // Thinking dots above active player
+        if (isActive && state.phase === 'betting') {
           drawThinkingDots(pokerCtx, px, py, charScale);
         }
 
@@ -4805,7 +4546,7 @@ Min raise: <span style="font-weight:bold">80</span>
 
       // --- Winner celebration ---
       // Trigger celebration when a new result arrives during showdown
-      if (state.phase === 'showdown' && state.lastResult && state.lastResult !== lastCelebrationResult) {
+      if (state.phase === 'showdown' && state.lastResult && state.lastResult !== lastCelebrationResult && !state._isInitReplay) {
         lastCelebrationResult = state.lastResult;
         const winners = state.lastResult.winners || [];
         if (winners.length > 0) {
@@ -4839,13 +4580,11 @@ Min raise: <span style="font-weight:bold">80</span>
       // Status bar
       const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown', finished: 'Game Over' };
       const phaseLabel = phaseLabels[state.phase] || state.phase;
-      const countdown = Math.max(0, Math.ceil((state.nextTickAt - Date.now()) / 1000));
       const activePlayers = state.bots.filter(b => !state.foldedPlayers.has(b.name)).length;
       statusEl.innerHTML = `
         <span class="phase">${phaseLabel}</span>
         <span class="tick">Hand #${state.handNumber}</span>
         <span>${state.bots.length} player${state.bots.length !== 1 ? 's' : ''} (${activePlayers} active)</span>
-        <span id="countdown">${countdown > 0 ? 'Next tick: ' + countdown + 's' : ''}</span>
         <span class="connected" id="conn-status">Connected</span>
       `;
 
@@ -4905,7 +4644,6 @@ Min raise: <span style="font-weight:bold">80</span>
       renderPlayerGrid();
 
       // --- Stats Dashboard ---
-      renderStatsDashboard();
 
       // --- Reasoning Panel ---
       renderReasoningPanel();
@@ -4917,7 +4655,6 @@ Min raise: <span style="font-weight:bold">80</span>
       renderLeaderboard();
 
       // --- Game Stats ---
-      renderGameStats();
 
       // Update join panel if open
       if (joinPanelOpen) {
@@ -4988,15 +4725,6 @@ Min raise: <span style="font-weight:bold">80</span>
           roleClass += ' blind-bb';
         }
 
-        // Compute VPIP for this player
-        const handsPlayed = stats.handsPlayed || 0;
-        const calls = stats.calls || 0;
-        const raises = stats.raises || 0;
-        const handsWon = stats.handsWon || 0;
-        const vpipPct = handsPlayed > 0 ? Math.round(((calls + raises) / handsPlayed) * 100) : 0;
-        const winRate = handsPlayed > 0 ? Math.round((handsWon / handsPlayed) * 100) : 0;
-        const losses = handsPlayed - handsWon;
-
         // Streak indicators
         const winStreak = stats.streakCurrent || 0;
         const lossStreak = stats.lossStreakCurrent || 0;
@@ -5013,58 +4741,25 @@ Min raise: <span style="font-weight:bold">80</span>
           ? `<div class="player-card-personality"><span class="archetype-name">${escapeHtml(personality.archetype)}</span><span class="archetype-tagline">${escapeHtml(personality.tagline)}</span></div>`
           : '';
 
+        // Chat bubble
+        const lastSay = state.lastSay[bot.name];
+        const sayAge = lastSay ? (Date.now() - lastSay.timestamp) / 1000 : Infinity;
+        const showBubble = lastSay && sayAge < 120;
+        const bubbleHtml = showBubble
+          ? `<div class="chat-bubble">"${escapeHtml(lastSay.message)}"</div>`
+          : '';
+
         html += `
-          <div class="${cardClasses}" data-bot="${bot.name}" onclick="selectPlayerForReasoning('${escapeHtml(bot.name)}')">
+          <div class="${cardClasses}" data-bot="${bot.name}" onclick="selectPlayerForReasoning('${escapeHtml(bot.name)}')" title="Click to see reasoning">
             ${isEliminated ? '<div class="elimination-stamp">ELIMINATED</div>' : ''}
             <div class="player-card-header">
               <span class="player-card-name">${escapeHtml(displayName)}<span class="type-badge">${typeBadge}</span>${isWinner ? '<span class="winner-badge">W</span>' : ''}${streakBadge}</span>
               <span class="${roleClass}">${roleText}</span>
             </div>
-            ${personalityHtml}
             ${cardsHtml}
             ${isWinner && state.lastResult?.handName ? `<div class="hand-strength-label">${escapeHtml(state.lastResult.handName)}</div>` : ''}
-            ${strategy ? `<div class="player-card-strategy">"${escapeHtml(strategy)}"</div>` : ''}
-            <div class="player-card-chips"><span class="chip-label">chips </span>${typeof chips === 'number' ? chips.toLocaleString() : chips}</div>
-            ${bet > 0 ? `<div class="player-card-bet">bet ${bet}</div>` : ''}
-            ${handsPlayed > 0 ? `
-              <div class="player-card-stats">
-                <span class="stat-bar"><span class="stat-fill" style="width:${vpipPct}%"></span></span>
-                <span class="stat-val">${vpipPct}% VPIP</span>
-                <span class="stat-val">W:${handsWon} L:${losses}</span>
-                <span class="stat-val">${winRate}% WR</span>
-              </div>
-            ` : ''}
-            ${(() => {
-              const bluffsWon = stats.bluffsWon || 0;
-              const bluffsCaught = stats.bluffsCaught || 0;
-              if (bluffsWon + bluffsCaught > 0) {
-                return `<div class="player-card-bluffs">Bluffs: <span class="bluff-tag won">${bluffsWon} won</span> <span class="bluff-tag caught">${bluffsCaught} caught</span></div>`;
-              }
-              return '';
-            })()}
-            ${(() => {
-              const sd = seatData[bot.name];
-              const sessionInfo = sd?.sessionInfo || state.sessionInfo?.[bot.name];
-              if (sessionInfo && sessionInfo.maxHands) {
-                const played = sessionInfo.handsPlayed || 0;
-                const max = sessionInfo.maxHands;
-                const remaining = Math.max(0, max - played);
-                const pct = Math.min(100, Math.round((played / max) * 100));
-                return `<div class="player-card-session">
-                  <span class="session-label">Hands: ${remaining}/${max} remaining</span>
-                  <div class="session-bar"><div class="session-bar-fill" style="width:${pct}%"></div></div>
-                </div>`;
-              }
-              return '';
-            })()}
-            ${(() => {
-              const lastSay = state.lastSay[bot.name];
-              const sayAge = lastSay ? (Date.now() - lastSay.timestamp) / 1000 : Infinity;
-              const showBubble = lastSay && sayAge < 120;
-              return showBubble
-                ? `<div class="chat-bubble">"${escapeHtml(lastSay.message)}"</div>`
-                : '';
-            })()}
+            <div class="player-card-chips"><span class="chip-label">chips </span>${typeof chips === 'number' ? chips.toLocaleString() : chips}${bet > 0 ? ` <span class="player-card-bet-inline">(bet ${bet})</span>` : ''}</div>
+            ${bubbleHtml}
           </div>
         `;
       }
@@ -5077,19 +4772,11 @@ Min raise: <span style="font-weight:bold">80</span>
     function selectPlayerForReasoning(botName) {
       selectedReasoningBot = botName;
       renderReasoningPanel();
+      // Scroll reasoning panel into view
+      const panel = document.getElementById('reasoning-panel');
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function renderStatsDashboard() {
-      const activePlayers = state.bots.filter(b => !state.foldedPlayers.has(b.name)).length;
-      document.getElementById('stat-hands').textContent = state.handNumber;
-      document.getElementById('stat-pot').textContent = state.pot;
-      document.getElementById('stat-players').textContent = activePlayers + '/' + state.bots.length;
-      const streetLabels = { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', '': '\u2014' };
-      document.getElementById('stat-street').textContent = streetLabels[state.street] || '\u2014';
-      document.getElementById('stat-board').textContent = state.community.length > 0 ? state.community.join(' ') : '\u2014';
-      const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown', finished: 'Game Over' };
-      document.getElementById('stat-phase').textContent = phaseLabels[state.phase] || state.phase;
-    }
 
     function renderReasoningPanel() {
       // Determine which player to show reasoning for
@@ -5103,7 +4790,7 @@ Min raise: <span style="font-weight:bold">80</span>
           return;
         }
         reasoningWhoEl.textContent = 'Waiting for action...';
-        reasoningTickEl.textContent = '';
+        if (reasoningTickEl) reasoningTickEl.textContent = '';
         reasoningBodyEl.innerHTML = '<div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>';
         return;
       }
@@ -5111,55 +4798,31 @@ Min raise: <span style="font-weight:bold">80</span>
       renderReasoningForBot(targetBot);
     }
 
+    let _lastReasoningBot = null;
     function renderReasoningForBot(botName) {
       const displayName = botDisplayName(botName);
       const isActive = state.activePlayer === botName;
       const thought = state.lastThought[botName] || '';
 
-      reasoningWhoEl.textContent = isActive ? displayName + ' is thinking...' : displayName + ' (last action)';
-      reasoningTickEl.textContent = 'tick ' + state.tick;
+      // Flash header when switching to a different bot
+      if (botName !== _lastReasoningBot) {
+        _lastReasoningBot = botName;
+        const header = document.querySelector('.reasoning-header');
+        if (header) {
+          header.classList.add('flash');
+          setTimeout(() => header.classList.remove('flash'), 400);
+        }
+      }
+
+      reasoningWhoEl.textContent = isActive ? displayName + ' is thinking...' : displayName;
+      if (reasoningTickEl) reasoningTickEl.textContent = 'tick ' + state.tick;
 
       let html = '';
 
-      // Scene section
-      html += `<div class="reasoning-section">`;
-      html += `<div class="reasoning-section-label">Scene</div>`;
-      html += `<div class="reasoning-scene">`;
-      const blinds = getBlindLevel(state.handNumber);
-      html += `Pot: ${state.pot}`;
-      if (state.community.length > 0) {
-        html += ` | Board: ${state.community.join(' ')}`;
-      }
-      const hCards = state.holeCards[botName];
-      if (hCards && hCards.length === 2) {
-        html += ` | Hand: ${hCards.join(' ')}`;
-      }
-      html += ` | Street: ${state.street || 'preflop'}`;
-      html += ` | Blinds: ${blinds.small}/${blinds.big}`;
-      html += `</div></div>`;
-
-      // Reasoning section
       if (thought) {
-        html += `<div class="reasoning-section">`;
-        html += `<div class="reasoning-section-label">Reasoning</div>`;
         html += `<div class="reasoning-text">${escapeHtml(thought)}</div>`;
-        html += `</div>`;
-      }
-
-      // Hand history section
-      if (handReasoningHistory.length > 0) {
-        html += `<div class="reasoning-section reasoning-history">`;
-        html += `<div class="reasoning-history-title">History (this hand)</div>`;
-        html += `<div class="reasoning-history-entries">`;
-        for (const entry of handReasoningHistory) {
-          const isCurrent = entry === handReasoningHistory[handReasoningHistory.length - 1];
-          html += `<div class="reasoning-history-entry${isCurrent ? ' rh-current' : ''}">`;
-          html += `<span class="rh-tick">${entry.tick || ''}</span>`;
-          html += `<span class="rh-name">${escapeHtml(entry.name)}</span>`;
-          html += `<span class="rh-action">${escapeHtml(entry.action)}${entry.amount ? ' ' + entry.amount : ''}${isCurrent ? '  \u2190 current' : ''}</span>`;
-          html += `</div>`;
-        }
-        html += `</div></div>`;
+      } else {
+        html += `<div class="reasoning-empty">No reasoning available yet.</div>`;
       }
 
       reasoningBodyEl.innerHTML = html;
@@ -5280,7 +4943,6 @@ Min raise: <span style="font-weight:bold">80</span>
 
     window.setGameStatsPeriod = function(period) {
       state.gameStatsPeriod = period;
-      renderGameStats();
     };
 
     function renderGameStats() {
@@ -5480,26 +5142,23 @@ Min raise: <span style="font-weight:bold">80</span>
             // Clear ticker for new hand
             tickerItems = [];
             addTickerItem('Hand #' + state.handNumber, 'starting', 'deal');
-            // Reset hand history action tracking for new hand
-            currentHandActions = [];
-            currentHandPlayers = (state.bots || []).map(b => b.name);
-            const blindLevel = getBlindLevel(state.handNumber);
-            currentHandBlinds = { small: blindLevel.small, big: blindLevel.big };
             // Trigger card dealing animation on canvas
             const bots = state.bots || [];
             if (bots.length >= 2) {
               const canvasEl = document.getElementById('poker-canvas');
               const cw = canvasEl ? canvasEl.width / (window.devicePixelRatio || 1) : 600;
               const ch = canvasEl ? canvasEl.height / (window.devicePixelRatio || 1) : 250;
-              dealAnim = {
-                startTime: Date.now(),
-                playerCount: bots.length,
-                seatPositions: bots.map((b, i) => {
-                  const seatIdx = i % SEAT_POSITIONS.length;
-                  const seat = SEAT_POSITIONS[seatIdx];
-                  return { x: Math.floor(seat.x * cw), y: Math.floor(seat.y * ch) };
-                }),
-              };
+              if (!state._isInitReplay) {
+                dealAnim = {
+                  startTime: Date.now(),
+                  playerCount: bots.length,
+                  seatPositions: bots.map((b, i) => {
+                    const seatIdx = i % SEAT_POSITIONS.length;
+                    const seat = SEAT_POSITIONS[seatIdx];
+                    return { x: Math.floor(seat.x * cw), y: Math.floor(seat.y * ch) };
+                  }),
+                };
+              }
             }
           }
           break;
@@ -5510,7 +5169,6 @@ Min raise: <span style="font-weight:bold">80</span>
             state.contextMessage += ` &middot; waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span>`;
           }
           addTickerItem(botDisplayName(entry.bot), 'checks', 'check');
-          addHandHistoryAction(botDisplayName(entry.bot), 'checks', 'check');
           break;
 
         case 'call':
@@ -5522,11 +5180,9 @@ Min raise: <span style="font-weight:bold">80</span>
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
               addTickerItem(botDisplayName(entry.bot), 'calls ' + (entry.amount || '') + ' ALL-IN!', 'allin');
-              addHandHistoryAction(botDisplayName(entry.bot), 'calls ' + (entry.amount || '') + ' ALL-IN!', 'allin');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
               addTickerItem(botDisplayName(entry.bot), 'calls ' + (entry.amount || ''), 'call');
-              addHandHistoryAction(botDisplayName(entry.bot), 'calls ' + (entry.amount || ''), 'call');
             }
           }
           break;
@@ -5542,11 +5198,9 @@ Min raise: <span style="font-weight:bold">80</span>
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
               addTickerItem(botDisplayName(entry.bot), 'raises to ' + (entry.amount || '') + ' ALL-IN!', 'allin');
-              addHandHistoryAction(botDisplayName(entry.bot), 'raises to ' + (entry.amount || '') + ' ALL-IN!', 'allin');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
               addTickerItem(botDisplayName(entry.bot), 'raises to ' + (entry.amount || ''), 'raise');
-              addHandHistoryAction(botDisplayName(entry.bot), 'raises to ' + (entry.amount || ''), 'raise');
             }
           }
           break;
@@ -5556,7 +5210,6 @@ Min raise: <span style="font-weight:bold">80</span>
           if (state.activePlayer === entry.bot) state.activePlayer = null;
           state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
           addTickerItem(botDisplayName(entry.bot), 'folds', 'fold');
-          addHandHistoryAction(botDisplayName(entry.bot), 'folds', 'fold');
           break;
 
         case 'deal':
@@ -5567,8 +5220,8 @@ Min raise: <span style="font-weight:bold">80</span>
             const oldLen = state.community.length;
             state.community = cards;
             state.currentBets = {};
-            // Trigger card reveal animation for newly dealt cards
-            if (cards.length > oldLen) {
+            // Trigger card reveal animation for newly dealt cards (not on init replay)
+            if (cards.length > oldLen && !state._isInitReplay) {
               cardRevealAnim = {
                 startTime: Date.now(),
                 newCardStartIdx: oldLen,
@@ -5578,7 +5231,6 @@ Min raise: <span style="font-weight:bold">80</span>
             const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
             state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
             addTickerItem('Dealer', streetLabels[state.street] || state.street, 'deal');
-            addHandHistoryAction('Dealer', streetLabels[state.street] || state.street, 'deal');
           }
           break;
 
@@ -5602,14 +5254,14 @@ Min raise: <span style="font-weight:bold">80</span>
               if (amount > (state.gameStats.biggestPot || 0)) state.gameStats.biggestPot = amount;
             }
 
-            // Show hand result toast (only if this is a new result)
+            // Show hand result toast (only for live events, not init replay)
             if (state.lastResult !== lastToastResult) {
               lastToastResult = state.lastResult;
-              showHandResultToast(winnerNames, amount, handName);
+              if (!state._isInitReplay) {
+                showHandResultToast(winnerNames, amount, handName);
+              }
             }
             addTickerItem(resultMatch[1], 'wins ' + amount + ' with ' + handName, 'result');
-            // Finalize hand history entry
-            finalizeHandHistory(state.handNumber, state.community, { winners: winnerBots, handName, amount });
           }
           break;
 
@@ -5641,9 +5293,11 @@ Min raise: <span style="font-weight:bold">80</span>
         state.tickIntervalMs = data.tickIntervalMs || 30000;
         state.bots = (data.bots || []).map(b => ({ name: b.name, displayName: b.displayName || b.name }));
         handReasoningHistory = [];
+        state._isInitReplay = true;
         for (const entry of (data.log || [])) {
           processEvent(entry);
         }
+        state._isInitReplay = false;
         if (data.buyIns) {
           for (const [name, chips] of Object.entries(data.buyIns)) {
             state.chips[name] = chips;
@@ -5992,14 +5646,7 @@ Min raise: <span style="font-weight:bold">80</span>
     checkReturningUser();
     render();
 
-    // Update countdown every second
-    setInterval(() => {
-      const el = document.getElementById('countdown');
-      if (el && state.nextTickAt) {
-        const secs = Math.max(0, Math.ceil((state.nextTickAt - Date.now()) / 1000));
-        el.textContent = secs > 0 ? `Next tick: ${secs}s` : '';
-      }
-    }, 1000);
+    // (countdown timer removed — adaptive ticks make fixed countdown meaningless)
   </script>
 </body>
 </html>

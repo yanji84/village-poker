@@ -231,10 +231,10 @@ function advanceStreet(state) {
     visibility: 'public',
   });
 
-  // Check if all remaining players are all-in — skip to showdown
+  // Check if all remaining players are all-in (or at most one has chips) — skip to showdown
   const activePlayers = hand.seats.filter(s => !hand.players[s.botName].folded);
-  const allAllIn = activePlayers.every(s => hand.players[s.botName].chips === 0);
-  if (allAllIn) {
+  const playersWithChips = activePlayers.filter(s => hand.players[s.botName].chips > 0);
+  if (playersWithChips.length <= 1) {
     // Deal remaining streets and resolve
     while (hand.community.length < 5) {
       const nextS = hand.community.length === 3 ? 'turn' : 'river';
