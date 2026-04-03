@@ -5668,6 +5668,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         return;
       }
 
+      if (data.type === 'evolution') {
+        broadcastNotable('🧬 Generation ' + data.generation + ' evolved! ' + (data.newBots?.length || 0) + ' new bots');
+        fetchLeaderboard();
+        return;
+      }
+
       if (data.type === 'seat_rotated') {
         const botName = data.botName || 'A player';
         const displayName = botDisplayName(botName);
