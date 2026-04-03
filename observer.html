@@ -5905,6 +5905,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.contextMessage = 'Waiting for next hand...';
         } else if (data.to === 'showdown') {
           state.contextMessage = 'Showdown!';
+          state.currentBets = {};
+          state.pot = 0;
           // Refresh stats after each hand
           if (authUsername) fetchPlayerStats(authUsername);
           fetchSeats();
