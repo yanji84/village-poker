@@ -5553,13 +5553,16 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     function renderTickerMessage() {
       const el = document.getElementById('action-ticker');
-      if (!el || tickerQueue.length === 0) {
-        if (el) el.innerHTML = '';
+      if (!el) return;
+      if (tickerQueue.length === 0) {
+        el.innerHTML = '<span style="color:var(--text-muted)">🎰 Watching for notable moments...</span>';
         return;
       }
       const idx = Math.min(currentTickerIdx, tickerQueue.length - 1);
       el.innerHTML = tickerQueue[idx].text;
     }
+
+    renderTickerMessage(); // show default message on load
 
     function esc(s) { return escapeHtml(s); }
     function escapeHtml(str) {
