@@ -937,6 +937,143 @@
 
     .join-panel-actions { padding: 14px 16px; }
 
+    /* --- Play Mode Toggle --- */
+    .play-mode-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .play-mode-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--text-secondary);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .play-mode-option:has(input:checked) {
+      border-color: #555;
+      color: var(--text-primary);
+    }
+    .play-mode-option input[type="radio"] {
+      margin: 0;
+      width: auto;
+    }
+
+    /* --- Human Action Panel --- */
+    .human-action-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-elevated);
+      border-top: 2px solid #444;
+      padding: 12px 16px;
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    }
+    .action-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .action-timer {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--yellow);
+      min-width: 40px;
+    }
+    .action-timer.urgent { color: var(--red); }
+    .action-info {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-family: var(--mono);
+    }
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .action-btn {
+      padding: 10px 20px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .action-btn.fold {
+      background: #2a1515;
+      color: var(--red);
+      border-color: #442222;
+    }
+    .action-btn.fold:hover { background: #3a1f1f; border-color: #663333; }
+    .action-btn.check {
+      background: #1a1a1a;
+      color: var(--text-secondary);
+      border-color: #333;
+    }
+    .action-btn.check:hover { background: #222; border-color: #555; }
+    .action-btn.call {
+      background: #152a15;
+      color: var(--green);
+      border-color: #224422;
+    }
+    .action-btn.call:hover { background: #1f3a1f; border-color: #336633; }
+    .raise-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .raise-controls input {
+      width: 80px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      padding: 8px;
+      font-family: var(--mono);
+      font-size: 13px;
+      text-align: center;
+    }
+    .action-btn.raise {
+      background: #2a2515;
+      color: var(--yellow);
+      border-color: #443d22;
+    }
+    .action-btn.raise:hover { background: #3a3520; border-color: #665d33; }
+    .action-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .action-say-row {
+      display: flex;
+      gap: 8px;
+    }
+    .action-say-row input {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
     @media (max-width: 700px) {
       .join-panel { width: 100%; }
     }
@@ -2379,6 +2516,15 @@
       <input type="password" id="join-pin" maxlength="4" inputmode="numeric" pattern="\d{4}"
              placeholder="****" autocomplete="off">
       <div class="pin-hint">Remember this -- it's how you reclaim your seat later</div>
+      <div class="play-mode-toggle">
+        <label class="play-mode-option">
+          <input type="radio" name="playMode" value="bot" checked onchange="togglePlayMode()"> AI Bot plays for me
+        </label>
+        <label class="play-mode-option">
+          <input type="radio" name="playMode" value="human" onchange="togglePlayMode()"> I play myself
+        </label>
+      </div>
+      <div id="strategy-section">
       <label for="join-strategy">Strategy</label>
       <details class="prompt-example">
         <summary>How your strategy becomes a prompt ▸</summary>
@@ -2427,6 +2573,7 @@ Min raise: <b>40</b></pre>
         <div class="template-btns" id="panel-template-btns"></div>
       </div>
       <button class="join-panel-btn secondary" style="margin-top:0;margin-bottom:8px" onclick="openFullEditor()">Full Editor</button>
+      </div>
       <button class="join-panel-btn" id="join-btn" onclick="submitWaitlist()">Join Waitlist</button>
     </div>
 
@@ -2471,6 +2618,26 @@ Min raise: <b>40</b></pre>
     <div class="join-panel-actions" id="join-actions" style="display:none">
       <button class="join-panel-btn danger" id="leave-btn" onclick="leaveOrRelease()">Leave Queue</button>
       <button class="join-panel-btn secondary" id="edit-strategy-btn" onclick="showEditStrategy()">Edit Strategy</button>
+    </div>
+  </div>
+
+  <!-- Human Action Panel -->
+  <div class="human-action-panel" id="human-action-panel" style="display:none">
+    <div class="action-top-row">
+      <div class="action-timer" id="action-timer">60s</div>
+      <div class="action-info" id="action-info"></div>
+    </div>
+    <div class="action-buttons">
+      <button class="action-btn fold" onclick="submitHumanAction('fold')">Fold</button>
+      <button class="action-btn check" onclick="submitHumanAction('check')" id="btn-check">Check</button>
+      <button class="action-btn call" onclick="submitHumanAction('call')" id="btn-call">Call <span id="call-amount"></span></button>
+      <div class="raise-controls">
+        <input type="number" id="raise-amount" min="0" />
+        <button class="action-btn raise" onclick="submitHumanAction('raise')">Raise</button>
+      </div>
+    </div>
+    <div class="action-say-row">
+      <input type="text" id="human-say" placeholder="Table talk (optional)" maxlength="200" />
     </div>
   </div>
 
@@ -3277,6 +3444,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const username = document.getElementById('join-username').value.trim();
       const pin = document.getElementById('join-pin').value.trim();
       const strategy = document.getElementById('join-strategy').value.trim();
+      const playMode = document.querySelector('input[name="playMode"]:checked')?.value || 'bot';
       const msgEl = document.getElementById('join-msg');
       msgEl.className = 'join-panel-msg';
       msgEl.textContent = '';
@@ -3293,7 +3461,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         return;
       }
 
-      if (!strategy) {
+      if (playMode !== 'human' && !strategy) {
         msgEl.className = 'join-panel-msg error';
         msgEl.textContent = 'Strategy is required. Write how your bot should play.';
         return;
@@ -3308,7 +3476,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ username, pin, strategy: strategy, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
+          body: JSON.stringify({ username, pin, strategy: strategy || 'Human player', playMode, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -3350,6 +3518,97 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         btn.disabled = false;
         btn.textContent = 'Join Waitlist';
       }
+    }
+
+    // --- Play Mode Toggle ---
+    function togglePlayMode() {
+      const playMode = document.querySelector('input[name="playMode"]:checked')?.value || 'bot';
+      const strategySection = document.getElementById('strategy-section');
+      if (strategySection) {
+        strategySection.style.display = playMode === 'human' ? 'none' : '';
+      }
+    }
+
+    // --- Human Action Panel ---
+    let humanActionTimer = null;
+    let humanActionCountdown = 60;
+
+    function showActionPanel(data) {
+      const panel = document.getElementById('human-action-panel');
+      const btnCheck = document.getElementById('btn-check');
+      const btnCall = document.getElementById('btn-call');
+      const callAmountEl = document.getElementById('call-amount');
+      const raiseInput = document.getElementById('raise-amount');
+      const infoEl = document.getElementById('action-info');
+
+      const toCall = data.toCall || 0;
+      const minRaise = data.minRaise || 0;
+      const chips = data.chips || 0;
+
+      // Show check or call based on toCall
+      if (toCall === 0) {
+        btnCheck.style.display = '';
+        btnCall.style.display = 'none';
+      } else {
+        btnCheck.style.display = 'none';
+        btnCall.style.display = '';
+        callAmountEl.textContent = toCall;
+      }
+
+      raiseInput.min = minRaise;
+      raiseInput.value = minRaise;
+      raiseInput.max = chips;
+
+      infoEl.textContent = 'Pot: ' + (data.pot || 0) + ' | Chips: ' + chips + (toCall > 0 ? ' | To call: ' + toCall : '');
+
+      panel.style.display = '';
+      document.getElementById('human-say').value = '';
+
+      // Start countdown
+      humanActionCountdown = 60;
+      const timerEl = document.getElementById('action-timer');
+      timerEl.textContent = '60s';
+      timerEl.classList.remove('urgent');
+
+      clearInterval(humanActionTimer);
+      humanActionTimer = setInterval(() => {
+        humanActionCountdown--;
+        timerEl.textContent = humanActionCountdown + 's';
+        if (humanActionCountdown <= 10) timerEl.classList.add('urgent');
+        if (humanActionCountdown <= 0) {
+          clearInterval(humanActionTimer);
+          hideActionPanel();
+        }
+      }, 1000);
+    }
+
+    function hideActionPanel() {
+      const panel = document.getElementById('human-action-panel');
+      panel.style.display = 'none';
+      clearInterval(humanActionTimer);
+    }
+
+    async function submitHumanAction(action) {
+      const amount = action === 'raise' ? parseInt(document.getElementById('raise-amount').value) : undefined;
+      const say = document.getElementById('human-say')?.value?.trim() || undefined;
+
+      // Disable buttons to prevent double-submit
+      const buttons = document.querySelectorAll('.human-action-panel .action-btn');
+      buttons.forEach(b => b.disabled = true);
+
+      try {
+        await fetch(apiBase + '/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ action, amount, say, thought: 'Human decision' }),
+        });
+      } catch (e) {
+        console.error('Failed to submit action:', e);
+      }
+
+      hideActionPanel();
+      buttons.forEach(b => b.disabled = false);
     }
 
     async function leaveOrRelease() {
@@ -5600,6 +5859,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (data.type === 'phase_change') {
         state.phase = data.to;
+        hideActionPanel();
         if (data.to === 'waiting') {
           state.contextMessage = 'Waiting for next hand...';
         } else if (data.to === 'showdown') {
@@ -5610,6 +5870,14 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           fetchLeaderboard();
         }
         render();
+        return;
+      }
+
+      if (data.type === 'your_turn') {
+        const myBot = getMyBotCookie();
+        if (data.botName === myBot) {
+          showActionPanel(data);
+        }
         return;
       }
 
