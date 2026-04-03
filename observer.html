@@ -1913,44 +1913,66 @@
 
     /* --- Intro Banner --- */
     .intro-banner {
-      background: #0d1117;
-      border-bottom: 1px solid var(--border);
-      padding: 16px 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     .intro-content {
-      max-width: 720px;
-      margin: 0 auto;
+      max-width: 520px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     .intro-content h2 {
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--accent);
-      margin-bottom: 6px;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
     }
     .intro-content p {
       color: var(--text-primary);
       font-size: 13px;
-      line-height: 1.6;
-      margin-bottom: 10px;
+      line-height: 1.7;
+      margin-bottom: 12px;
     }
     .intro-stats-explainer {
       font-size: 12px;
       color: var(--text-secondary);
-      line-height: 1.7;
-      margin-bottom: 12px;
+      line-height: 1.8;
+      margin-bottom: 16px;
     }
     .intro-stats-explainer strong {
-      color: var(--text-primary);
+      color: #ddd;
     }
     .intro-content button {
       background: var(--accent);
       color: #000;
       border: none;
-      padding: 5px 16px;
-      border-radius: 3px;
-      font-size: 12px;
+      padding: 8px 24px;
+      border-radius: 4px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      display: block;
+      margin: 0 auto;
     }
     .intro-content button:hover {
       opacity: 0.85;
@@ -2196,11 +2218,12 @@
       }
 
       /* Intro banner: compact */
-      .intro-banner {
-        padding: 12px 14px;
+      .intro-content {
+        padding: 24px 20px;
+        max-width: calc(100vw - 32px);
       }
       .intro-content h2 {
-        font-size: 13px;
+        font-size: 15px;
       }
       .intro-content p {
         font-size: 12px;
