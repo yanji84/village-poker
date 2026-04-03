@@ -125,6 +125,30 @@
       color: var(--text-muted);
     }
 
+    /* --- Action Ticker --- */
+    .action-ticker {
+      padding: 4px 16px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      height: 22px;
+      line-height: 14px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      transition: opacity 0.3s;
+    }
+    .action-ticker .ticker-name { font-weight: 700; color: var(--text-primary); }
+    .action-ticker .ticker-fold { color: #a44; }
+    .action-ticker .ticker-raise { color: #f0d060; font-weight: 700; }
+    .action-ticker .ticker-call { color: #4a6; }
+    .action-ticker .ticker-check { color: #888; }
+    .action-ticker .ticker-allin { color: #f44; font-weight: 700; }
+    .action-ticker .ticker-deal { color: #4af; }
+    .action-ticker .ticker-result { color: #f0d060; font-weight: 700; }
+
     /* --- Cards (minimal monospace labels) --- */
     .card {
       display: inline-block;
@@ -2278,6 +2302,8 @@
     <span class="sep">|</span>
     <span><span class="label">Blinds</span> <span class="value" id="blinds-value">10/20</span></span>
   </div>
+
+  <div class="action-ticker" id="action-ticker"></div>
 
   <!-- Main Dashboard Grid -->
   <div class="dashboard">
@@ -5346,6 +5372,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.pot += (entry.amount || 0);
           state.currentBets[entry.bot] = (state.currentBets[entry.bot] || 0) + (entry.amount || 0);
           state.blinds[entry.bot] = entry.blindType;
+          setTicker(botDisplayName(entry.bot), entry.message || (entry.blindType + ' blind ' + (entry.amount || '')), 'check');
           if (entry.blindType === 'small') {
             state.handNumber++;
             state.pot = entry.amount || 0;
@@ -5364,6 +5391,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             chatFeedMessages = [];
             state.lastActed = null;
             state.contextMessage = `Hand #${state.handNumber} starting...`;
+            setTicker('', 'Hand #' + state.handNumber + ' starting', 'deal');
             // Reset hand reasoning history
             handReasoningHistory = [];
             // Trigger card dealing animation on canvas
@@ -5392,6 +5420,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           if (state.activePlayer) {
             state.contextMessage += ` &middot; waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span>`;
           }
+          setTicker(botDisplayName(entry.bot), 'checks', 'check');
           break;
 
         case 'call':
@@ -5402,8 +5431,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             if (isAllIn) {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
+              setTicker(botDisplayName(entry.bot), 'calls ' + (entry.amount || '') + ' ALL-IN', 'allin');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
+              setTicker(botDisplayName(entry.bot), 'calls ' + (entry.amount || ''), 'call');
             }
           }
           break;
@@ -5418,8 +5449,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             if (isAllIn) {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
+              setTicker(botDisplayName(entry.bot), 'raises to ' + (entry.amount || '') + ' ALL-IN', 'allin');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
+              setTicker(botDisplayName(entry.bot), 'raises to ' + (entry.amount || ''), 'raise');
             }
           }
           break;
@@ -5428,6 +5461,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.foldedPlayers.add(entry.bot);
           if (state.activePlayer === entry.bot) state.activePlayer = null;
           state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
+          setTicker(botDisplayName(entry.bot), 'folds', 'fold');
           break;
 
         case 'deal':
@@ -5448,6 +5482,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             }
             const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
             state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
+            setTicker('Dealer', entry.message, 'deal');
           }
           break;
 
@@ -5465,6 +5500,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.pot = 0;
             state.currentBets = {};
             state.contextMessage = `<span class="highlight">${esc(resultMatch[1])}</span> wins ${amount} with ${esc(handName)}`;
+            setTicker('', entry.message, 'result');
             // Live-update game stats
             if (state.gameStats) {
               state.gameStats.totalHands = (state.gameStats.totalHands || 0) + 1;
@@ -5485,6 +5521,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.contextMessage = esc(entry.message || 'Game over');
           break;
       }
+    }
+
+    function setTicker(name, actionText, cssClass) {
+      const el = document.getElementById('action-ticker');
+      if (!el) return;
+      el.innerHTML = (name ? '<span class="ticker-name">' + escapeHtml(name) + '</span> ' : '') + '<span class="ticker-' + cssClass + '">' + escapeHtml(actionText) + '</span>';
     }
 
     function esc(s) { return escapeHtml(s); }
