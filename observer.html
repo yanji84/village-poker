@@ -125,74 +125,6 @@
       color: var(--text-muted);
     }
 
-    /* --- Live Action Ticker --- */
-    .action-ticker {
-      position: relative;
-      overflow: hidden;
-      padding: 5px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-primary);
-      font-family: var(--mono);
-      font-size: 11px;
-      height: 26px;
-      line-height: 16px;
-    }
-    .action-ticker-track {
-      display: flex;
-      gap: 0;
-      white-space: nowrap;
-      animation: ticker-scroll 30s linear infinite;
-      will-change: transform;
-    }
-    .action-ticker-track:hover {
-      animation-play-state: paused;
-    }
-    .action-ticker-item {
-      flex-shrink: 0;
-      color: var(--text-secondary);
-    }
-    .action-ticker-item .ticker-name {
-      color: var(--text-primary);
-      font-weight: 600;
-    }
-    .action-ticker-item .ticker-action-fold {
-      color: var(--red);
-    }
-    .action-ticker-item .ticker-action-raise {
-      color: #f0d060;
-      font-weight: 600;
-    }
-    .action-ticker-item .ticker-action-call {
-      color: var(--green);
-    }
-    .action-ticker-item .ticker-action-check {
-      color: var(--text-secondary);
-    }
-    .action-ticker-item .ticker-action-allin {
-      color: #e44;
-      font-weight: 700;
-    }
-    .action-ticker-item .ticker-action-deal {
-      color: var(--accent);
-    }
-    .action-ticker-item .ticker-action-result {
-      color: #f0d060;
-      font-weight: 700;
-    }
-    .action-ticker-sep {
-      flex-shrink: 0;
-      color: var(--text-muted);
-      margin: 0 12px;
-    }
-    .action-ticker-empty {
-      color: var(--text-muted);
-      font-style: italic;
-    }
-    @keyframes ticker-scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
     /* --- Cards (minimal monospace labels) --- */
     .card {
       display: inline-block;
@@ -2066,14 +1998,6 @@
         display: none;
       }
 
-      /* Ticker: smaller */
-      .action-ticker {
-        padding: 4px 12px;
-        height: 22px;
-        font-size: 10px;
-        line-height: 14px;
-      }
-
       /* Canvas: shorter on mobile */
       #poker-canvas {
         height: 180px;
@@ -2353,13 +2277,6 @@
     <span><span class="label">Hand</span> <span class="value" id="hand-value">#0</span></span>
     <span class="sep">|</span>
     <span><span class="label">Blinds</span> <span class="value" id="blinds-value">10/20</span></span>
-  </div>
-
-  <!-- Live Action Ticker -->
-  <div class="action-ticker" id="action-ticker">
-    <div class="action-ticker-track" id="action-ticker-track">
-      <span class="action-ticker-empty">Waiting for actions...</span>
-    </div>
   </div>
 
   <!-- Main Dashboard Grid -->
@@ -3633,58 +3550,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // Current active thought data for reasoning panel
     let activeThoughtData = null;
 
-    // Live action ticker state
-    const MAX_TICKER_ITEMS = 30;
-    let tickerItems = []; // array of { text: string, cssClass: string }
-
-    function addTickerItem(name, actionText, cssClass) {
-      tickerItems.push({ name, actionText, cssClass });
-      if (tickerItems.length > MAX_TICKER_ITEMS) {
-        tickerItems = tickerItems.slice(-MAX_TICKER_ITEMS);
-      }
-    }
-
-    function renderTicker() {
-      const track = document.getElementById('action-ticker-track');
-      if (!track) return;
-      if (tickerItems.length === 0) {
-        if (track._lastTickerLen !== 0) {
-          track.innerHTML = '<span class="action-ticker-empty">Waiting for actions...</span>';
-          track.style.animation = 'none';
-          track._lastTickerLen = 0;
-        }
-        return;
-      }
-      // Only rebuild if content changed (avoids resetting scroll animation)
-      if (track._lastTickerLen === tickerItems.length) return;
-      track._lastTickerLen = tickerItems.length;
-
-      // Build items HTML — duplicate for seamless loop
-      const buildItems = (items) => items.map((item, i) => {
-        const sep = '<span class="action-ticker-sep">&bull;</span>';
-        return (i > 0 ? sep : '') +
-          '<span class="action-ticker-item">' +
-          '<span class="ticker-name">' + escapeHtml(item.name) + '</span> ' +
-          '<span class="ticker-action-' + item.cssClass + '">' + escapeHtml(item.actionText) + '</span>' +
-          '</span>';
-      }).join('');
-
-      const itemsHtml = buildItems(tickerItems);
-      // Duplicate content for seamless scrolling loop
-      track.innerHTML = '<span class="ticker-half">' + itemsHtml + '</span>' +
-        '<span class="action-ticker-sep" style="margin:0 20px">&bull;</span>' +
-        '<span class="ticker-half">' + itemsHtml + '</span>';
-
-      // Adjust animation speed based on content width
-      const needsScroll = track.scrollWidth > track.parentElement.clientWidth;
-      if (needsScroll) {
-        const duration = Math.max(15, tickerItems.length * 3);
-        track.style.animation = 'ticker-scroll ' + duration + 's linear infinite';
-      } else {
-        track.style.animation = 'none';
-      }
-    }
-
     function botDisplayName(name) {
       return state.bots.find(b => b.name === name)?.displayName || name;
     }
@@ -4902,9 +4767,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         boardEl.innerHTML = '\u2014';
       }
 
-      // --- Live Action Ticker ---
-      renderTicker();
-
       // --- Pixel Poker Canvas ---
       renderPokerCanvas();
 
@@ -5504,9 +5366,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.contextMessage = `Hand #${state.handNumber} starting...`;
             // Reset hand reasoning history
             handReasoningHistory = [];
-            // Clear ticker for new hand
-            tickerItems = [];
-            addTickerItem('Hand #' + state.handNumber, 'starting', 'deal');
             // Trigger card dealing animation on canvas
             const bots = state.bots || [];
             if (bots.length >= 2) {
@@ -5533,7 +5392,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           if (state.activePlayer) {
             state.contextMessage += ` &middot; waiting for <span class="highlight">${esc(botDisplayName(state.activePlayer))}</span>`;
           }
-          addTickerItem(botDisplayName(entry.bot), 'checks', 'check');
           break;
 
         case 'call':
@@ -5544,10 +5402,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             if (isAllIn) {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
-              addTickerItem(botDisplayName(entry.bot), 'calls ' + (entry.amount || '') + ' ALL-IN!', 'allin');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
-              addTickerItem(botDisplayName(entry.bot), 'calls ' + (entry.amount || ''), 'call');
             }
           }
           break;
@@ -5562,10 +5418,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             if (isAllIn) {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
-              addTickerItem(botDisplayName(entry.bot), 'raises to ' + (entry.amount || '') + ' ALL-IN!', 'allin');
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
-              addTickerItem(botDisplayName(entry.bot), 'raises to ' + (entry.amount || ''), 'raise');
             }
           }
           break;
@@ -5574,7 +5428,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.foldedPlayers.add(entry.bot);
           if (state.activePlayer === entry.bot) state.activePlayer = null;
           state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
-          addTickerItem(botDisplayName(entry.bot), 'folds', 'fold');
           break;
 
         case 'deal':
@@ -5595,7 +5448,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             }
             const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
             state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
-            addTickerItem('Dealer', streetLabels[state.street] || state.street, 'deal');
           }
           break;
 
@@ -5626,7 +5478,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
                 showHandResultToast(winnerNames, amount, handName);
               }
             }
-            addTickerItem(resultMatch[1], 'wins ' + amount + ' with ' + handName, 'result');
           }
           break;
 
