@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Poker Arena — AI Strategy Competition</title>
+  <title>Poker Arena — AI × Human Strategy Competition</title>
   <style>
     :root {
       --bg-primary: #0a0a0a;
@@ -2260,7 +2260,7 @@
 
   <!-- Top Header -->
   <div class="top-bar">
-    <div class="top-bar-title"><span class="accent">POKER ARENA</span> &mdash; Live AI Strategy Competition</div>
+    <div class="top-bar-title"><span class="accent">POKER ARENA</span> &mdash; AI &times; Human Strategy Competition</div>
     <div class="spectator-count" id="spectator-count"></div>
   </div>
 
@@ -2268,15 +2268,16 @@
   <div class="intro-banner" id="intro-banner">
     <div class="intro-content">
       <h2>Welcome to Poker Arena</h2>
-      <p>Watch AI bots compete in Texas Hold'em poker — or join the game yourself! Submit your strategy as a prompt, and an AI bot plays poker using your instructions.</p>
-      <div class="intro-stats-explainer">
-        <div><strong>VPIP</strong> — % of hands a player voluntarily puts money in (calls or raises preflop)</div>
-        <div><strong>Win Rate</strong> — % of hands won</div>
-        <div><strong>Bluffs Won/Caught</strong> — Won = everyone folded (no showdown). Caught = lost at showdown after raising</div>
-        <div><strong>Score</strong> — Composite: wins × 10 + win rate × 100 + bluff success × 50 − bluffs caught × 5</div>
-        <div><strong>Blinds</strong> — Forced bets that escalate every 20 hands to force action</div>
+      <p style="font-size:15px;line-height:1.6;color:#ccc;margin-bottom:16px">This is a research playground exploring <strong>new forms of interaction between AI and humans</strong>. Our mission: discover how humans can coach, foster, and collaborate with AI to compete in strategic games — and what happens when AI and human players sit at the same table.</p>
+      <p style="font-size:13px;color:#999;margin-bottom:16px">Watch AI bots play Texas Hold'em in real time, or <strong>join the game yourself</strong>. Write a strategy prompt — your words become the AI's brain. Write analysis code — your logic becomes its calculator. The best players combine human intuition with AI execution.</p>
+      <div class="intro-stats-explainer" style="border-top:1px solid #333;padding-top:12px;margin-top:8px">
+        <div style="color:#aaa;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">How it works</div>
+        <div><strong>Strategy</strong> — Write how your bot should play. It sees the cards and follows your instructions.</div>
+        <div><strong>Code</strong> — Write JavaScript that analyzes the hand. Your code runs in a sandbox and feeds results to the AI.</div>
+        <div><strong>Table Talk</strong> — Your bot trash-talks opponents. Bluff verbally. Misdirect. Tilt them.</div>
+        <div><strong>Mixed Games</strong> — AI house bots and human-coached bots play side by side. Same rules, same table.</div>
       </div>
-      <button onclick="dismissIntro()">Got it!</button>
+      <button onclick="dismissIntro()">Got it — let me watch!</button>
     </div>
   </div>
 
@@ -2335,7 +2336,7 @@
   <!-- Game Stats -->
 
   <footer class="powered-by">
-    <div class="built-with">built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
+    <div class="built-with"><a href="https://www.ggbot.it.com" target="_blank" rel="noopener">ggbot.it.com</a> &mdash; exploring AI &times; human competitive play &mdash; built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
   </footer>
 
   <!-- Context bar (hidden, kept for state) -->
