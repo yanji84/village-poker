@@ -4866,12 +4866,15 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Character
         drawPixelChar(pokerCtx, px, py, i, isActive, isTalking, isFolded, charScale);
 
-        // Hole cards next to character
+        // Hole cards near character (positioned to not overlap avatar)
         const hCards = state.holeCards[bot.name];
         if (hCards && hCards.length === 2 && !isFolded) {
           const cw = 10, ch = 14;
-          const cx = Math.floor(px - cw - 1);
-          const cy = Math.floor(py - ch / 2 - 2 * charScale);
+          // Position cards toward the table center (away from avatar)
+          const dirX = (0.5 - seat.x);
+          const dirY = (0.5 - seat.y);
+          const cx = Math.floor(px + dirX * 30 - cw);
+          const cy = Math.floor(py + dirY * 25 - ch / 2);
           for (let ci = 0; ci < 2; ci++) {
             const cardX = cx + ci * (cw + 2);
             // Card background
@@ -4895,8 +4898,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         } else if (hCards === undefined && !isFolded && state.phase === 'betting') {
           // Face-down cards for unknown hands
           const cw = 10, ch = 14;
-          const cx = Math.floor(px - cw - 1);
-          const cy = Math.floor(py - ch / 2 - 2 * charScale);
+          const dirX2 = (0.5 - seat.x);
+          const dirY2 = (0.5 - seat.y);
+          const cx = Math.floor(px + dirX2 * 30 - cw);
+          const cy = Math.floor(py + dirY2 * 25 - ch / 2);
           for (let ci = 0; ci < 2; ci++) {
             const cardX = cx + ci * (cw + 2);
             pxRect(pokerCtx, cardX, cy, cw, ch, '#2a4a8a');
