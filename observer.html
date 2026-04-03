@@ -4874,21 +4874,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const shortName = displayName.length > 8 ? displayName.slice(0, 7) + '..' : displayName;
         pokerCtx.fillText(shortName, px, py + 12 * charScale + bobOffset);
 
-        // Chip stack near player
+        // Chip count text below name
         const chips = state.chips[bot.name] || 0;
-        const chipOffsetX = seatIdx < 3 ? 16 : -16;
-        const chipOffsetY = (seatIdx === 1 || seatIdx === 4) ? 6 : 0;
-        drawChipStack(pokerCtx, px + chipOffsetX * charScale, py + chipOffsetY, chips);
-
-        // Bet display
         const bet = state.currentBets[bot.name] || 0;
+        pokerCtx.font = 'bold 9px monospace';
+        pokerCtx.textAlign = 'center';
+        pokerCtx.fillStyle = isFolded ? '#555' : '#ccc';
+        const chipText = chips >= 1000 ? (chips / 1000).toFixed(1) + 'k' : String(chips);
+        pokerCtx.fillText(chipText, px, py + 18 * charScale + bobOffset);
+
+        // Bet amount below chip count (if betting)
         if (bet > 0) {
-          const betDirX = (0.5 - seat.x) * 0.3;
-          const betDirY = (0.5 - seat.y) * 0.3;
-          pokerCtx.font = 'bold 8px monospace';
-          pokerCtx.textAlign = 'center';
+          pokerCtx.font = '8px monospace';
           pokerCtx.fillStyle = '#D4A017';
-          pokerCtx.fillText(bet, Math.floor(px + betDirX * w), Math.floor(py + betDirY * h + 4));
+          pokerCtx.fillText('bet ' + bet, px, py + 24 * charScale + bobOffset);
         }
 
         // Thinking dots above active player
