@@ -4971,18 +4971,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           break;
       }
 
-      // Early action panel: show immediately when we detect it's our turn
-      // (don't wait for the your_turn SSE which has tick-loop delay)
-      if (!state._isInitReplay && isHumanPlayer && state.activePlayer) {
+      // Early action panel: show/hide based on active player
+      if (!state._isInitReplay && isHumanPlayer) {
         const myBot = getMyBotCookie();
         if (state.activePlayer === myBot && !humanTurnActive) {
           const chips = state.chips[myBot] || 0;
           const currentBet = state.currentBets[myBot] || 0;
           const maxBet = Math.max(...Object.values(state.currentBets || {}), 0);
           const toCall = Math.max(0, maxBet - currentBet);
-          const minRaise = Math.max(maxBet * 2, 80); // estimate BB as 80
+          const minRaise = Math.max(maxBet * 2, 80);
           showActionPanel({ pot: state.pot || 0, toCall, minRaise, chips, botName: myBot });
           SoundFX.yourTurn();
+        } else if (state.activePlayer !== myBot && humanTurnActive) {
+          // No longer our turn — hide stale panel
+          hideActionPanel();
         }
       }
     }
