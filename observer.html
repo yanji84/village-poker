@@ -2661,9 +2661,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         msgEl.textContent = 'Username is required.';
         return;
       }
-      if (!/^\d{4}$/.test(pin)) {
+      if (pin && !/^\d{4}$/.test(pin)) {
         msgEl.className = 'join-panel-msg error';
         msgEl.textContent = 'PIN must be exactly 4 digits.';
+        return;
+      }
+      if (!pin) {
+        // Anonymous user — just go through the new player flow instead
+        switchAuthTab('new');
+        document.getElementById('join-username').value = username;
+        renderJoinPanel();
+        msgEl.className = 'join-panel-msg';
+        msgEl.textContent = 'No PIN set. Use the New Player tab to rejoin.';
+        btn.disabled = false;
+        btn.textContent = 'Log In';
         return;
       }
 
@@ -2727,9 +2738,13 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (!authUsername) return;
       const btn = document.getElementById('auth-join-btn');
 
-      // Returning user needs PIN to rejoin
-      const pin = prompt('Enter your 4-digit PIN to rejoin:');
-      if (!pin || !/^\d{4}$/.test(pin)) return;
+      // Only ask for PIN if user has one
+      const hasPin = localStorage.getItem('arena_has_pin') === 'true';
+      let pin = null;
+      if (hasPin) {
+        pin = prompt('Enter your 4-digit PIN to rejoin:');
+        if (!pin || !/^\d{4}$/.test(pin)) return;
+      }
 
       // Use last known strategy or a default
       const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
