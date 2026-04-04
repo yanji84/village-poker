@@ -5516,6 +5516,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             const oldLen = state.community.length;
             state.community = cards;
             state.currentBets = {};
+            state.lastActions = {};
             // Trigger card reveal animation for newly dealt cards (not on init replay)
             if (cards.length > oldLen && !state._isInitReplay) {
               cardRevealAnim = {
