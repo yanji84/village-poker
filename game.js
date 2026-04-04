@@ -45,9 +45,8 @@ export function getActivePlayer(state, bot) {
   if (!player || player.folded) return null;
   // All-in players (0 chips) cannot take any action
   if (player.chips === 0) return null;
-  // Prevent double-action in the same tick (bot response with 2 actions
-  // where the first advances the street and the same player is first to act)
-  if (player.lastActedTick === state.clock.tick) return null;
+  // Prevent double-action: if already acted and bet matches current, reject
+  if (player.acted && player.bet >= hand.currentBet) return null;
   return { hand, player };
 }
 
