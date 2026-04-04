@@ -238,10 +238,11 @@
 
     .reasoning-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 10px 16px;
+      gap: 8px;
+      padding: 8px 16px;
       border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
       background: var(--bg-card);
       transition: background 0.3s ease;
     }
@@ -250,8 +251,8 @@
     }
     .reasoning-header .who {
       font-size: 12px;
-      font-weight: 600;
-      color: var(--accent);
+      font-weight: 700;
+      color: var(--text-primary);
     }
     .reasoning-header .tick-num {
       font-family: var(--mono);
@@ -1826,6 +1827,18 @@
     <!-- Players + Reasoning side by side on desktop, stacked on mobile -->
     <div class="players-reasoning-row">
       <div class="left-col">
+        <div class="reasoning-panel" id="reasoning-panel">
+          <div class="reasoning-header">
+            <span style="color:#444;font-size:9px;letter-spacing:0.5px">private thought</span>
+            <span class="who" id="reasoning-who">Waiting for action...</span>
+          </div>
+          <div class="reasoning-body" id="reasoning-body">
+            <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-col">
         <div class="section-header" style="border-top: 1px solid var(--border);">Table Talk</div>
         <div class="chat-feed" id="chat-feed">
           <div class="chat-feed-messages" id="chat-feed-messages"></div>
@@ -1835,19 +1848,6 @@
                  onkeydown="if(event.key==='Enter')sendChat()" />
           <button class="chat-send-btn" onclick="sendChat()">Send</button>
         </div>
-      </div>
-
-      <div class="right-col">
-        <div class="reasoning-panel" id="reasoning-panel">
-          <div class="reasoning-header">
-            <span class="who" id="reasoning-who">Waiting for action...</span>
-            <span style="color:#444;font-size:9px;font-weight:400;letter-spacing:0.5px;margin-left:auto">private thought</span>
-          </div>
-          <div class="reasoning-body" id="reasoning-body">
-            <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
