@@ -6176,7 +6176,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const cards = h.cards || h.holeCards || [];
         const cardsHtml = cards.length > 0 ? cards.map(c => renderCard(c)).join(' ') : '';
         const handName = h.handName || '';
-        const chipDelta = h.chipDelta || h.delta || 0;
+        const chipDelta = h.chipDelta || h.delta || h.profit || 0;
         const deltaStr = chipDelta > 0 ? '+' + chipDelta : (chipDelta < 0 ? '' + chipDelta : '');
 
         let resultLabel = '';
@@ -6192,7 +6192,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (h.actions && h.actions.length > 0) {
           detailHtml += '<div class="detail-section"><div class="detail-section-label">Actions</div><div class="detail-section-content">';
           h.actions.forEach(a => {
-            detailHtml += esc((a.name || a.botName || '') + ' ' + (a.action || '') + (a.amount ? ' ' + a.amount : '')) + '\n';
+            if (typeof a === 'string') {
+              detailHtml += esc(a) + '\n';
+            } else {
+              const line = (a.message) ? a.message : ((a.name || '') + ' ' + (a.action || '') + (a.amount ? ' ' + a.amount : ''));
+              detailHtml += esc(line) + '\n';
+            }
           });
           detailHtml += '</div></div>';
         }
