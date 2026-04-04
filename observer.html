@@ -4336,8 +4336,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     let _lastReasoningBot = null;
     function renderReasoningForBot(botName) {
       const displayName = botDisplayName(botName);
-      const isActive = state.activePlayer === botName;
       const thought = state.lastThought[botName] || '';
+
+      // Don't update if no thought available yet
+      if (!thought) return;
 
       // Flash header when switching to a different bot
       if (botName !== _lastReasoningBot) {
@@ -4349,7 +4351,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         }
       }
 
-      reasoningWhoEl.textContent = isActive ? displayName + ' is thinking...' : displayName;
+      reasoningWhoEl.textContent = displayName;
       if (reasoningTickEl) reasoningTickEl.textContent = 'tick ' + state.tick;
 
       let html = '';
@@ -4369,8 +4371,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (restOfThought) {
           html += `<div class="reasoning-detail">${highlightReasoning(restOfThought)}</div>`;
         }
-      } else {
-        html += `<div class="reasoning-empty">No reasoning available yet.</div>`;
       }
 
       reasoningBodyEl.innerHTML = html;
