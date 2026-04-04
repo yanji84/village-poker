@@ -4361,7 +4361,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             ctx.scale(scaleX, 1);
             ctx.translate(-(cx + cardW / 2), 0);
 
-            ctx.font = 'bold 14px monospace';
+            ctx.font = 'bold ' + f(14) + ' monospace';
             ctx.textAlign = 'center';
             ctx.fillStyle = isRed ? '#922B21' : '#1a1a1a';
             ctx.fillText(rank, cx + cardW / 2, drawY + 17);
@@ -4399,7 +4399,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // --- Speech bubble: pixelated rectangle, no curves ---
     function drawSpeechBubble(ctx, x, y, text) {
-      ctx.font = '15px monospace';
+      ctx.font = f(15) + ' monospace';
       const maxLen = 20;
       const trimmed = text.length > maxLen ? text.slice(0, maxLen - 2) + '..' : text;
       const tw = ctx.measureText(trimmed).width;
@@ -4424,7 +4424,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Pot display ---
     function drawPotDisplay(ctx, w, h, pot) {
       if (!pot) return;
-      ctx.font = 'bold 17px monospace';
+      ctx.font = 'bold ' + f(17) + ' monospace';
       ctx.textAlign = 'center';
       ctx.fillStyle = '#D4A017';
       ctx.fillText('Pot: ' + pot, Math.floor(w / 2), Math.floor(h / 2 + 26));
@@ -4519,7 +4519,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Phase label ---
     function drawPhaseLabel(ctx, w, phase) {
       const labels = { waiting: 'WAITING', betting: 'IN PLAY', showdown: 'SHOWDOWN', finished: 'GAME OVER' };
-      ctx.font = '15px monospace';
+      ctx.font = f(15) + ' monospace';
       ctx.textAlign = 'left';
       ctx.fillStyle = '#665577';
       ctx.fillText(labels[phase] || phase || '', TILE * 2 + 4, TILE * 2 + 12);
@@ -4554,7 +4554,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       // Players
       const bots = state.bots || [];
-      const charScale = 4;
+      const charScale = Math.max(1.5, Math.min(4, w / 280));
+      const fs = Math.max(0.6, Math.min(1, w / 600)); // font scale 0.6-1.0
+      const f = (px) => Math.round(px * fs) + 'px'; // scaled font size
 
       bots.forEach((bot, i) => {
         const seatIdx = i % SEAT_POSITIONS.length;
@@ -4590,7 +4592,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // Hole cards to the side of avatar (never overlapping)
         const hCards = state.holeCards[bot.name];
-        const cw = 18, ch = 26, cardGap = 3;
+        const cw = Math.round(18*fs), ch = Math.round(26*fs), cardGap = Math.round(3*fs);
         const cardsW = cw * 2 + cardGap;
         // Place cards on the side closer to the table center
         const onLeftHalf = seat.x < 0.5;
@@ -4611,7 +4613,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             const rank = card.replace(/[♠♥♦♣]/g, '');
             const suit = card.replace(/[^♠♥♦♣]/g, '');
             const isRed = suit === '♥' || suit === '♦';
-            pokerCtx.font = 'bold 14px monospace';
+            pokerCtx.font = 'bold ' + f(14) + ' monospace';
             pokerCtx.textAlign = 'center';
             pokerCtx.fillStyle = isRed ? '#922B21' : '#222';
             pokerCtx.fillText(rank, cardX + cw / 2, cardBaseY + 15);
@@ -4631,7 +4633,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // Name label
         const bobOffset = Math.floor(Math.sin(pokerAnimFrame * 0.04 + px * 0.1));
-        pokerCtx.font = '15px monospace';
+        pokerCtx.font = f(15) + ' monospace';
         pokerCtx.textAlign = 'center';
         pokerCtx.fillStyle = isWinner ? '#f0d060' : (isFolded ? '#555' : (isActive ? '#8AAFD4' : '#B0A89A'));
         const shortName = displayName.length > 8 ? displayName.slice(0, 7) + '..' : displayName;
@@ -4639,11 +4641,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // SB/BB label
         if (state.blinds[bot.name] === 'small') {
-          pokerCtx.font = 'bold 14px monospace';
+          pokerCtx.font = 'bold ' + f(14) + ' monospace';
           pokerCtx.fillStyle = '#69d';
           pokerCtx.fillText('SB', px + 15 * charScale, py + 12 * charScale + bobOffset);
         } else if (state.blinds[bot.name] === 'big') {
-          pokerCtx.font = 'bold 14px monospace';
+          pokerCtx.font = 'bold ' + f(14) + ' monospace';
           pokerCtx.fillStyle = '#e66';
           pokerCtx.fillText('BB', px + 15 * charScale, py + 12 * charScale + bobOffset);
         }
@@ -4651,7 +4653,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Chip count text below name
         const chips = state.chips[bot.name] || 0;
         const bet = state.currentBets[bot.name] || 0;
-        pokerCtx.font = 'bold 17px monospace';
+        pokerCtx.font = 'bold ' + f(17) + ' monospace';
         pokerCtx.textAlign = 'center';
         pokerCtx.fillStyle = isFolded ? '#555' : '#ccc';
         const chipText = chips >= 1000 ? (chips / 1000).toFixed(1) + 'k' : String(chips);
@@ -4659,14 +4661,14 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // Bet amount below chip count (if betting)
         if (bet > 0) {
-          pokerCtx.font = '15px monospace';
+          pokerCtx.font = f(15) + ' monospace';
           pokerCtx.fillStyle = '#D4A017';
           pokerCtx.fillText('bet ' + bet, px, py + 24 * charScale + bobOffset);
         }
 
         // Folded status label
         if (isFolded) {
-          pokerCtx.font = 'bold 14px monospace';
+          pokerCtx.font = 'bold ' + f(14) + ' monospace';
           pokerCtx.fillStyle = '#a44';
           pokerCtx.fillText('FOLD', px, py + 24 * charScale + bobOffset);
         }
@@ -4681,7 +4683,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const handLabel = state.lastResult.handName;
           const labelY = py - 20 * charScale;
           // Background pill
-          pokerCtx.font = 'bold 14px monospace';
+          pokerCtx.font = 'bold ' + f(14) + ' monospace';
           const textWidth = pokerCtx.measureText(handLabel).width;
           const pillPadX = 4;
           const pillPadY = 3;
