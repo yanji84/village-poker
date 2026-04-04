@@ -2602,6 +2602,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       panel.style.display = 'none';
       humanTurnActive = false;
       clearInterval(humanActionTimer);
+      // Reset raise input so old value doesn't persist to next turn
+      const raiseInput = document.getElementById('raise-amount');
+      if (raiseInput) { raiseInput.value = ''; raiseInput.min = 0; raiseInput.max = 0; }
     }
 
     async function submitHumanAction(action) {
