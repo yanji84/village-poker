@@ -3968,12 +3968,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     ];
 
     const SEAT_POSITIONS = [
-      { x: 0.10, y: 0.18 },
-      { x: 0.50, y: 0.08 },
-      { x: 0.90, y: 0.18 },
-      { x: 0.90, y: 0.82 },
-      { x: 0.50, y: 0.92 },
-      { x: 0.10, y: 0.82 },
+      { x: 0.13, y: 0.20 },
+      { x: 0.50, y: 0.13 },
+      { x: 0.87, y: 0.20 },
+      { x: 0.87, y: 0.76 },
+      { x: 0.50, y: 0.84 },
+      { x: 0.13, y: 0.76 },
     ];
 
     // Tile size for the room floor
@@ -3982,7 +3982,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function resizePokerCanvas() {
       const rect = pokerCanvas.parentElement.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      const cssHeight = window.innerWidth <= 520 ? 320 : window.innerWidth <= 800 ? 380 : 500;
+      const cssHeight = window.innerWidth <= 520 ? 360 : window.innerWidth <= 800 ? 420 : 500;
       pokerCanvas.style.height = cssHeight + 'px';
       pokerCanvas.width = Math.floor(rect.width * dpr);
       pokerCanvas.height = Math.floor(cssHeight * dpr);
@@ -3997,74 +3997,76 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
     }
 
-    // --- Room: tile-based floor with dark wall border ---
+    // --- Room: warm dark floor with subtle planks ---
     function drawRoom(ctx, w, h) {
-      // Dark wall fill (entire background)
-      pxRect(ctx, 0, 0, w, h, '#2a2035');
+      // Dark background
+      pxRect(ctx, 0, 0, w, h, '#1e1a24');
 
-      // Wall border thickness in tiles
-      const wallTiles = 2;
-      const floorX = wallTiles * TILE;
-      const floorY = wallTiles * TILE;
-      const floorW = w - wallTiles * TILE * 2;
-      const floorH = h - wallTiles * TILE * 2;
+      // Warm floor fill (subtle, not distracting)
+      const margin = 8;
+      pxRect(ctx, margin, margin, w - margin * 2, h - margin * 2, '#3a3028');
 
-      // Wall detail: slightly lighter inner wall edge
-      const innerWall = wallTiles - 1;
-      pxRect(ctx, innerWall * TILE, innerWall * TILE,
-        w - innerWall * TILE * 2, h - innerWall * TILE * 2, '#332940');
-
-      // Draw wood floor tiles (checkerboard)
-      const colA = '#8B6B4A';
-      const colB = '#7D6043';
-      for (let ty = floorY; ty < floorY + floorH; ty += TILE) {
-        for (let tx = floorX; tx < floorX + floorW; tx += TILE) {
-          const tileCol = Math.floor(tx / TILE);
-          const tileRow = Math.floor(ty / TILE);
-          const isA = (tileCol + tileRow) % 2 === 0;
-          pxRect(ctx, tx, ty, TILE, TILE, isA ? colA : colB);
-          // Subtle wood grain: 1px darker line near bottom of each tile
-          pxRect(ctx, tx, ty + TILE - 1, TILE, 1, isA ? '#7A5D3F' : '#6E5438');
-        }
+      // Subtle plank lines (horizontal only, very low contrast)
+      ctx.globalAlpha = 0.08;
+      for (let py = margin; py < h - margin; py += TILE) {
+        pxRect(ctx, margin, py, w - margin * 2, 1, '#000');
       }
+      ctx.globalAlpha = 1.0;
 
-      // Floor border (baseboard trim)
-      ctx.strokeStyle = '#4A3728';
+      // Baseboard trim
+      ctx.strokeStyle = '#2a2218';
       ctx.lineWidth = 2;
-      ctx.strokeRect(floorX, floorY, floorW, floorH);
+      ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
     }
 
     // --- Poker table: pixelated rectangle with green felt ---
     function drawPokerTable(ctx, w, h) {
-      const tw = Math.floor(w * 0.55);
-      const th = Math.floor(h * 0.43);
+      const tw = Math.floor(w * 0.50);
+      const th = Math.floor(h * 0.38);
       const tx = Math.floor(w / 2 - tw / 2);
       const ty = Math.floor(h / 2 - th / 2);
 
-      // Table shadow (offset dark rect)
-      pxRect(ctx, tx + 3, ty + 3, tw, th, '#1a1210');
+      // Table shadow (offset dark rect, softer)
+      ctx.globalAlpha = 0.5;
+      pxRect(ctx, tx + 4, ty + 4, tw, th, '#0a0806');
+      ctx.globalAlpha = 1.0;
 
-      // Wood frame (outer)
+      // Wood frame (outer) — thicker, richer
+      const frame = 4;
       pxRect(ctx, tx, ty, tw, th, '#5C3D2E');
-      // Wood frame highlight (top edge)
-      pxRect(ctx, tx, ty, tw, 2, '#7A5440');
-      // Wood frame shadow (bottom edge)
+      // Wood frame highlight (top + left edge)
+      pxRect(ctx, tx, ty, tw, 2, '#8A6040');
+      pxRect(ctx, tx, ty, 2, th, '#7A5440');
+      // Wood frame shadow (bottom + right edge)
       pxRect(ctx, tx, ty + th - 2, tw, 2, '#3E2518');
+      pxRect(ctx, tx + tw - 2, ty, 2, th, '#4A3020');
 
       // Green felt (inner)
-      const felt = 3;
-      pxRect(ctx, tx + felt, ty + felt, tw - felt * 2, th - felt * 2, '#2d6b3f');
+      pxRect(ctx, tx + frame, ty + frame, tw - frame * 2, th - frame * 2, '#2a6639');
 
-      // Felt inner border line
-      pxRect(ctx, tx + felt + 2, ty + felt + 2, tw - felt * 2 - 4, 1, '#3a8a52');
-      pxRect(ctx, tx + felt + 2, ty + th - felt - 3, tw - felt * 2 - 4, 1, '#3a8a52');
-      pxRect(ctx, tx + felt + 2, ty + felt + 2, 1, th - felt * 2 - 4, '#3a8a52');
-      pxRect(ctx, tx + tw - felt - 3, ty + felt + 2, 1, th - felt * 2 - 4, '#3a8a52');
+      // Felt inner border (inset rail line)
+      const inset = frame + 3;
+      ctx.strokeStyle = '#3a8a52';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(tx + inset + 0.5, ty + inset + 0.5, tw - inset * 2, th - inset * 2);
+
+      // Subtle center diamond on the felt
+      const cx = w / 2, cy = h / 2;
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = '#5aaa72';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 14);
+      ctx.lineTo(cx + 18, cy);
+      ctx.lineTo(cx, cy + 14);
+      ctx.lineTo(cx - 18, cy);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.globalAlpha = 1.0;
 
       // Deck of cards on the table (small stacked card backs, left of center)
-      const deckX = Math.floor(w / 2 - tw * 0.18);
+      const deckX = Math.floor(w / 2 - tw * 0.22);
       const deckY = Math.floor(h / 2 - 10);
-      // Stack shadow (3 offset cards to suggest depth)
       for (let d = 2; d >= 0; d--) {
         const dx = deckX - d, dy = deckY - d;
         pxRect(ctx, dx, dy, 10, 14, '#0f2a50');
@@ -4282,7 +4284,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Community cards: pixelated rectangles with reveal animation ---
     function drawCommunityCards(ctx, cards, w, h) {
       if (!cards || cards.length === 0) return;
-      const cardW = 26, cardH = 36, gap = 4;
+      const sc = Math.max(0.8, Math.min(1.3, w / 500));
+      const cardW = Math.round(28 * sc), cardH = Math.round(40 * sc), gap = Math.round(5 * sc);
       const totalW = cards.length * (cardW + gap) - gap;
       const startX = Math.floor(w / 2 - totalW / 2);
       const startY = Math.floor(h / 2 - cardH / 2 - 4);
@@ -4336,12 +4339,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (showBack) {
           // Card back: blue pattern
           pxRect(ctx, cx + offsetX, drawY, scaledW, cardH, '#1a3a6a');
-          // Diamond pattern on back
+          // Diamond pattern on back (scaled)
           if (scaledW > 4) {
-            pxRect(ctx, cx + offsetX + 2, drawY + 4, Math.max(1, scaledW - 4), 1, '#2a5a9a');
-            pxRect(ctx, cx + offsetX + 2, drawY + 8, Math.max(1, scaledW - 4), 1, '#2a5a9a');
-            pxRect(ctx, cx + offsetX + 2, drawY + 12, Math.max(1, scaledW - 4), 1, '#2a5a9a');
-            pxRect(ctx, cx + offsetX + 2, drawY + 16, Math.max(1, scaledW - 4), 1, '#2a5a9a');
+            const stripeGap = Math.max(4, Math.round(cardH / 8));
+            for (let si = 1; si <= 4; si++) {
+              pxRect(ctx, cx + offsetX + 2, drawY + si * stripeGap, Math.max(1, scaledW - 4), 1, '#2a5a9a');
+            }
           }
           // Border accent
           if (scaledW > 2) {
@@ -4364,12 +4367,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             ctx.scale(scaleX, 1);
             ctx.translate(-(cx + cardW / 2), 0);
 
-            ctx.font = 'bold ' + f(14) + ' monospace';
+            ctx.font = 'bold ' + Math.round(15 * sc) + 'px monospace';
             ctx.textAlign = 'center';
-            ctx.fillStyle = isRed ? '#922B21' : '#1a1a1a';
-            ctx.fillText(rank, cx + cardW / 2, drawY + 17);
-            ctx.font = '15px serif';
-            ctx.fillText(suit, cx + cardW / 2, drawY + 31);
+            ctx.fillStyle = isRed ? '#b22222' : '#1a1a1a';
+            ctx.fillText(rank, cx + cardW / 2, drawY + Math.round(cardH * 0.44));
+            ctx.font = Math.round(16 * sc) + 'px serif';
+            ctx.fillText(suit, cx + cardW / 2, drawY + Math.round(cardH * 0.78));
 
             ctx.restore();
           }
@@ -4427,10 +4430,19 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Pot display ---
     function drawPotDisplay(ctx, w, h, pot) {
       if (!pot) return;
-      ctx.font = 'bold ' + f(17) + ' monospace';
+      const potSc = Math.max(0.8, Math.min(1.2, w / 500));
+      const potFontSize = Math.round(16 * potSc);
+      const potText = 'Pot: ' + pot;
+      ctx.font = 'bold ' + potFontSize + 'px monospace';
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#D4A017';
-      ctx.fillText('Pot: ' + pot, Math.floor(w / 2), Math.floor(h / 2 + 26));
+      const ptw = ctx.measureText(potText).width;
+      const potY = Math.floor(h / 2 + 24 * potSc);
+      // Background pill
+      ctx.globalAlpha = 0.65;
+      pxRect(ctx, Math.floor(w / 2 - ptw / 2 - 6), potY - potFontSize + 1, Math.floor(ptw + 12), Math.floor(potFontSize + 6), '#111');
+      ctx.globalAlpha = 1.0;
+      ctx.fillStyle = '#e8c840';
+      ctx.fillText(potText, Math.floor(w / 2), potY);
     }
 
     // --- Card dealing animation: face-down cards fly from center deck to players ---
@@ -4522,10 +4534,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Phase label ---
     function drawPhaseLabel(ctx, w, phase) {
       const labels = { waiting: 'WAITING', betting: 'IN PLAY', showdown: 'SHOWDOWN', finished: 'GAME OVER' };
-      ctx.font = f(15) + ' monospace';
+      const label = labels[phase] || phase || '';
+      const phaseFontSize = Math.round(11 * _fs);
+      ctx.font = phaseFontSize + 'px monospace';
       ctx.textAlign = 'left';
-      ctx.fillStyle = '#665577';
-      ctx.fillText(labels[phase] || phase || '', TILE * 2 + 4, TILE * 2 + 12);
+      ctx.fillStyle = '#7a6a8a';
+      ctx.fillText(label, 14, 20);
     }
 
     // --- Main render ---
@@ -4593,87 +4607,128 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Character
         drawPixelChar(pokerCtx, px, py, i, isActive, isTalking, isFolded, charScale);
 
-        // Hole cards to the side of avatar (never overlapping)
+        // Hole cards to the side of avatar (scaled with charScale)
         const hCards = state.holeCards[bot.name];
-        const cw = Math.round(18*_fs), ch = Math.round(26*_fs), cardGap = Math.round(3*_fs);
+        const cardSc = Math.max(0.8, Math.min(1.2, w / 500));
+        const cw = Math.round(20 * cardSc), ch = Math.round(30 * cardSc), cardGap = Math.round(3 * cardSc);
         const cardsW = cw * 2 + cardGap;
         // Place cards on the side closer to the table center
         const onLeftHalf = seat.x < 0.5;
-        const cardBaseX = onLeftHalf
-          ? Math.floor(px + 16 * charScale)   // right side of avatar
-          : Math.floor(px - 16 * charScale - cardsW); // left side of avatar
-        const cardBaseY = Math.floor(py - ch / 2);
+        const isCenterSeat = seat.x > 0.35 && seat.x < 0.65;
+        let cardBaseX, cardBaseY;
+        if (isCenterSeat) {
+          // Center seats: cards to the right
+          cardBaseX = Math.floor(px + 10 * charScale);
+          cardBaseY = Math.floor(py - ch / 2);
+        } else if (onLeftHalf) {
+          cardBaseX = Math.floor(px + 10 * charScale);
+          cardBaseY = Math.floor(py - ch / 2 - 2 * charScale);
+        } else {
+          cardBaseX = Math.floor(px - 10 * charScale - cardsW);
+          cardBaseY = Math.floor(py - ch / 2 - 2 * charScale);
+        }
 
         if (hCards && hCards.length === 2 && !isFolded) {
           for (let ci = 0; ci < 2; ci++) {
             const cardX = cardBaseX + ci * (cw + cardGap);
+            // Card shadow
+            pxRect(pokerCtx, cardX + 1, cardBaseY + 1, cw, ch, 'rgba(0,0,0,0.3)');
+            // Card face
             pxRect(pokerCtx, cardX, cardBaseY, cw, ch, '#F5F0E0');
-            pxRect(pokerCtx, cardX, cardBaseY, cw, 1, '#333');
-            pxRect(pokerCtx, cardX, cardBaseY + ch - 1, cw, 1, '#333');
-            pxRect(pokerCtx, cardX, cardBaseY, 1, ch, '#333');
-            pxRect(pokerCtx, cardX + cw - 1, cardBaseY, 1, ch, '#333');
+            // Borders
+            pxRect(pokerCtx, cardX, cardBaseY, cw, 1, '#555');
+            pxRect(pokerCtx, cardX, cardBaseY + ch - 1, cw, 1, '#555');
+            pxRect(pokerCtx, cardX, cardBaseY, 1, ch, '#555');
+            pxRect(pokerCtx, cardX + cw - 1, cardBaseY, 1, ch, '#555');
             const card = hCards[ci];
             const rank = card.replace(/[♠♥♦♣]/g, '');
             const suit = card.replace(/[^♠♥♦♣]/g, '');
             const isRed = suit === '♥' || suit === '♦';
-            pokerCtx.font = 'bold ' + f(14) + ' monospace';
+            const cardFontSize = Math.round(15 * cardSc);
+            pokerCtx.font = 'bold ' + cardFontSize + 'px monospace';
             pokerCtx.textAlign = 'center';
-            pokerCtx.fillStyle = isRed ? '#922B21' : '#222';
-            pokerCtx.fillText(rank, cardX + cw / 2, cardBaseY + 15);
-            pokerCtx.font = '14px sans-serif';
-            pokerCtx.fillText(suit, cardX + cw / 2, cardBaseY + 23);
+            pokerCtx.fillStyle = isRed ? '#b22222' : '#1a1a1a';
+            pokerCtx.fillText(rank, cardX + cw / 2, cardBaseY + Math.round(ch * 0.45));
+            pokerCtx.font = Math.round(14 * cardSc) + 'px serif';
+            pokerCtx.fillText(suit, cardX + cw / 2, cardBaseY + Math.round(ch * 0.78));
           }
         } else if (hCards === undefined && !isFolded && state.phase === 'betting') {
           for (let ci = 0; ci < 2; ci++) {
             const cardX = cardBaseX + ci * (cw + cardGap);
-            pxRect(pokerCtx, cardX, cardBaseY, cw, ch, '#2a4a8a');
-            pxRect(pokerCtx, cardX, cardBaseY, cw, 1, '#333');
-            pxRect(pokerCtx, cardX + cw - 1, cardBaseY, 1, ch, '#333');
-            pxRect(pokerCtx, cardX + 3, cardBaseY + 4, 4, 4, '#3a5a9a');
-            pxRect(pokerCtx, cardX + 3, cardBaseY + 9, 4, 4, '#3a5a9a');
+            pxRect(pokerCtx, cardX + 1, cardBaseY + 1, cw, ch, 'rgba(0,0,0,0.3)');
+            pxRect(pokerCtx, cardX, cardBaseY, cw, ch, '#1a3a6a');
+            pxRect(pokerCtx, cardX, cardBaseY, cw, 1, '#2a5a9a');
+            pxRect(pokerCtx, cardX + cw - 1, cardBaseY, 1, ch, '#0f2a50');
+            // Diamond pattern
+            const dm = Math.round(3 * cardSc);
+            pxRect(pokerCtx, cardX + dm, cardBaseY + dm + 2, cw - dm * 2, 1, '#2a5a9a');
+            pxRect(pokerCtx, cardX + dm, cardBaseY + ch - dm - 3, cw - dm * 2, 1, '#2a5a9a');
           }
         }
 
-        // Name label
+        // --- Name plate (dark background pill for readability) ---
         const bobOffset = Math.floor(Math.sin(pokerAnimFrame * 0.04 + px * 0.1));
-        pokerCtx.font = f(15) + ' monospace';
-        pokerCtx.textAlign = 'center';
-        pokerCtx.fillStyle = isWinner ? '#f0d060' : (isFolded ? '#555' : (isActive ? '#8AAFD4' : '#B0A89A'));
         const shortName = displayName.length > 8 ? displayName.slice(0, 7) + '..' : displayName;
-        pokerCtx.fillText(shortName, px, py + 12 * charScale + bobOffset);
-
-        // SB/BB label
-        if (state.blinds[bot.name] === 'small') {
-          pokerCtx.font = 'bold ' + f(14) + ' monospace';
-          pokerCtx.fillStyle = '#69d';
-          pokerCtx.fillText('SB', px + 15 * charScale, py + 12 * charScale + bobOffset);
-        } else if (state.blinds[bot.name] === 'big') {
-          pokerCtx.font = 'bold ' + f(14) + ' monospace';
-          pokerCtx.fillStyle = '#e66';
-          pokerCtx.fillText('BB', px + 15 * charScale, py + 12 * charScale + bobOffset);
-        }
-
-        // Chip count text below name
         const chips = state.chips[bot.name] || 0;
         const bet = state.currentBets[bot.name] || 0;
-        pokerCtx.font = 'bold ' + f(17) + ' monospace';
-        pokerCtx.textAlign = 'center';
-        pokerCtx.fillStyle = isFolded ? '#555' : '#ccc';
         const chipText = chips >= 1000 ? (chips / 1000).toFixed(1) + 'k' : String(chips);
-        pokerCtx.fillText(chipText, px, py + 18 * charScale + bobOffset);
+        const blindTag = state.blinds[bot.name] === 'small' ? ' SB' : state.blinds[bot.name] === 'big' ? ' BB' : '';
 
-        // Bet amount below chip count (if betting)
-        if (bet > 0) {
-          pokerCtx.font = f(15) + ' monospace';
-          pokerCtx.fillStyle = '#D4A017';
-          pokerCtx.fillText('bet ' + bet, px, py + 24 * charScale + bobOffset);
+        // Bottom-row seats put labels ABOVE avatar (toward table)
+        const isBottomRow = seatIdx >= 3;
+
+        // Measure for background
+        const nameFontSize = Math.round(13 * _fs);
+        const chipFontSize = Math.round(14 * _fs);
+        pokerCtx.font = nameFontSize + 'px monospace';
+        const nameW = pokerCtx.measureText(shortName + blindTag).width;
+        pokerCtx.font = 'bold ' + chipFontSize + 'px monospace';
+        const chipW2 = pokerCtx.measureText(chipText).width;
+        const plateW = Math.max(nameW, chipW2) + 14;
+        const lineH = Math.round(14 * _fs);
+        const lines = (bet > 0 && !isFolded) ? 3 : (isFolded ? 3 : 2);
+        const plateH = lineH * lines + Math.round(6 * _fs);
+        const plateX = Math.floor(px - plateW / 2);
+        const plateY = isBottomRow
+          ? Math.floor(py - 12 * charScale - plateH + bobOffset)
+          : Math.floor(py + 10 * charScale + bobOffset);
+
+        // Dark background pill
+        pokerCtx.globalAlpha = 0.75;
+        pxRect(pokerCtx, plateX, plateY, plateW, plateH, '#0e0e0e');
+        pokerCtx.globalAlpha = 1.0;
+
+        // Name + blind tag
+        const nameY = plateY + lineH;
+        pokerCtx.font = nameFontSize + 'px monospace';
+        pokerCtx.textAlign = 'center';
+        pokerCtx.fillStyle = isWinner ? '#f0d060' : (isFolded ? '#666' : (isActive ? '#8AAFD4' : '#c8c0b4'));
+        pokerCtx.fillText(shortName, px - (blindTag ? Math.round(8 * _fs) : 0), nameY);
+        if (blindTag) {
+          pokerCtx.font = 'bold ' + nameFontSize + 'px monospace';
+          pokerCtx.fillStyle = state.blinds[bot.name] === 'small' ? '#69d' : '#e66';
+          pokerCtx.fillText(blindTag.trim(), px + pokerCtx.measureText(shortName).width / 2 + Math.round(4 * _fs), nameY);
+        }
+
+        // Chip count
+        const chipY = nameY + lineH;
+        pokerCtx.font = 'bold ' + chipFontSize + 'px monospace';
+        pokerCtx.fillStyle = isFolded ? '#555' : '#ddd';
+        pokerCtx.fillText(chipText, px, chipY);
+
+        // Bet amount (gold, compact)
+        if (bet > 0 && !isFolded) {
+          const betY = chipY + lineH;
+          pokerCtx.font = Math.round(12 * _fs) + 'px monospace';
+          pokerCtx.fillStyle = '#e8b828';
+          pokerCtx.fillText('\u25C9 ' + bet, px, betY);
         }
 
         // Folded status label
         if (isFolded) {
-          pokerCtx.font = 'bold ' + f(14) + ' monospace';
+          pokerCtx.font = 'bold ' + Math.round(11 * _fs) + 'px monospace';
           pokerCtx.fillStyle = '#a44';
-          pokerCtx.fillText('FOLD', px, py + 24 * charScale + bobOffset);
+          pokerCtx.fillText('FOLD', px, chipY + lineH);
         }
 
         // Thinking dots above active player

@@ -98,20 +98,64 @@ export const phases = {
         return hand.activePlayer;
       }
 
-      // Dispatched twice but didn't act — auto-fold
+      // Dispatched twice but didn't act — auto-fold (respects forced-call rules)
       const p = hand.players[hand.activePlayer];
       if (p && !p.folded) {
         const seat = hand.seats.find(s => s.botName === hand.activePlayer);
-        p.folded = true;
-        p.acted = true;
-        logAction(state, {
-          bot: hand.activePlayer,
-          displayName: seat?.displayName || hand.activePlayer,
-          action: 'fold',
-          message: 'is auto-folded (timed out)',
-          visibility: 'public',
-        });
-        advanceAction(state);
+
+        // Check if this player has a hand worth forcing a call (same logic as poker_fold)
+        let forceCall = false;
+        if (p.cards) {
+          if (hand.street === 'preflop') {
+            const c1 = p.cards[0] || '';
+            const c2 = p.cards[1] || '';
+            const r1 = c1.replace(/[♠♥♦♣]/g, '');
+            const r2 = c2.replace(/[♠♥♦♣]/g, '');
+            const s1 = c1.replace(/[^♠♥♦♣]/g, '');
+            const s2 = c2.replace(/[^♠♥♦♣]/g, '');
+            const rankOrder = '23456789TJQKA';
+            const gap = Math.abs(rankOrder.indexOf(r1) - rankOrder.indexOf(r2));
+            forceCall = r1 === r2 || r1 === 'A' || r2 === 'A' || s1 === s2 || gap <= 2;
+          } else if (hand.community?.length >= 3) {
+            const allCards = [...(p.cards || []), ...(hand.community || [])];
+            const ranks = allCards.map(c => c.replace(/[♠♥♦♣]/g, ''));
+            const rankCounts = {};
+            for (const r of ranks) rankCounts[r] = (rankCounts[r] || 0) + 1;
+            forceCall = Object.values(rankCounts).some(c => c >= 2);
+          }
+        }
+
+        if (forceCall) {
+          // Force check or call instead of folding
+          const toCall = Math.min(hand.currentBet - p.bet, p.chips);
+          if (toCall > 0) {
+            p.chips -= toCall;
+            p.bet += toCall;
+            p.totalBet += toCall;
+            hand.pot += toCall;
+            state.buyIns[hand.activePlayer] = p.chips;
+          }
+          p.acted = true;
+          logAction(state, {
+            bot: hand.activePlayer,
+            displayName: seat?.displayName || hand.activePlayer,
+            action: toCall > 0 ? 'call' : 'check',
+            message: toCall > 0 ? `calls ${toCall} (auto, timed out)` : 'checks (auto, timed out)',
+            visibility: 'public',
+          });
+          advanceAction(state);
+        } else {
+          p.folded = true;
+          p.acted = true;
+          logAction(state, {
+            bot: hand.activePlayer,
+            displayName: seat?.displayName || hand.activePlayer,
+            action: 'fold',
+            message: 'is auto-folded (timed out)',
+            visibility: 'public',
+          });
+          advanceAction(state);
+        }
       }
 
       return hand.activePlayer;
@@ -352,7 +396,68 @@ export const tools = {
   poker_fold(bot, params, state) {
     const active = getActivePlayer(state, bot);
     if (!active) return null;
-    const { player } = active;
+    const { hand, player } = active;
+
+    // Force call with playable hands to ensure action and showdowns
+    if (player.cards) {
+      let forceCall = false;
+
+      if (hand.street === 'preflop') {
+        // Preflop: force call with any pair, ace, suited, or connected cards
+        const c1 = player.cards[0] || '';
+        const c2 = player.cards[1] || '';
+        const r1 = c1.replace(/[♠♥♦♣]/g, '');
+        const r2 = c2.replace(/[♠♥♦♣]/g, '');
+        const s1 = c1.replace(/[^♠♥♦♣]/g, '');
+        const s2 = c2.replace(/[^♠♥♦♣]/g, '');
+        const isPair = r1 === r2;
+        const hasAce = r1 === 'A' || r2 === 'A';
+        const isSuited = s1 === s2;
+        const rankOrder = '23456789TJQKA';
+        const gap = Math.abs(rankOrder.indexOf(r1) - rankOrder.indexOf(r2));
+        const isConnected = gap <= 2; // connected or one-gapper
+        forceCall = isPair || hasAce || isSuited || isConnected;
+      } else if (hand.community?.length >= 3) {
+        // Post-flop: force call with any pair or better
+        const allCards = [...(player.cards || []), ...(hand.community || [])];
+        const ranks = allCards.map(c => c.replace(/[♠♥♦♣]/g, ''));
+        const rankCounts = {};
+        for (const r of ranks) rankCounts[r] = (rankCounts[r] || 0) + 1;
+        forceCall = Object.values(rankCounts).some(c => c >= 2);
+      }
+
+      if (forceCall) {
+        // Convert to call or check
+        const toCall = Math.min(hand.currentBet - player.bet, player.chips);
+        if (toCall > 0) {
+          player.chips -= toCall;
+          player.bet += toCall;
+          player.totalBet += toCall;
+          hand.pot += toCall;
+          state.buyIns[bot.name] = player.chips;
+          player.acted = true;
+          emitSay(bot, params, state);
+          advanceAction(state);
+          return {
+            action: 'call',
+            amount: toCall,
+            message: `calls ${toCall} (forced showdown)`,
+            visibility: 'public',
+            ...(params?.thought ? { thought: params.thought } : {}),
+          };
+        } else {
+          player.acted = true;
+          emitSay(bot, params, state);
+          advanceAction(state);
+          return {
+            action: 'check',
+            message: 'checks (forced showdown)',
+            visibility: 'public',
+            ...(params?.thought ? { thought: params.thought } : {}),
+          };
+        }
+      }
+    }
 
     player.folded = true;
     player.acted = true;
