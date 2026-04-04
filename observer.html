@@ -816,27 +816,16 @@
       border-color: #443d22;
     }
     .action-btn.raise:hover { background: #3a3520; border-color: #665d33; }
+    .action-btn.allin {
+      background: #2a1530;
+      color: #c6c;
+      border-color: #442244;
+    }
+    .action-btn.allin:hover { background: #3a2040; border-color: #664466; }
     .action-btn:disabled {
       opacity: 0.3;
       cursor: not-allowed;
     }
-    .action-say-row {
-      display: flex;
-      gap: 8px;
-    }
-    .action-say-row input {
-      flex: 1;
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-primary);
-      padding: 10px 12px;
-      font-size: 14px;
-      font-family: var(--mono);
-      min-height: 44px;
-    }
-
-
     /* --- Join two-button layout --- */
 
     /* --- Prompt Example --- */
@@ -2022,9 +2011,7 @@
         <input type="number" id="raise-amount" min="0" />
         <button class="action-btn raise" onclick="submitHumanAction('raise')">Raise</button>
       </div>
-    </div>
-    <div class="action-say-row">
-      <input type="text" id="human-say" placeholder="Table talk (optional)" maxlength="200" />
+      <button class="action-btn allin" onclick="submitHumanAction('allin')" id="btn-allin">All In</button>
     </div>
   </div>
 
@@ -2719,7 +2706,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       panel.style.display = '';
       humanTurnActive = true;
-      document.getElementById('human-say').value = '';
 
       // Scroll to top so canvas + fixed panel are both visible
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2772,8 +2758,14 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     async function submitHumanAction(action) {
+      // All-in: raise with all chips
+      if (action === 'allin') {
+        action = 'raise';
+        const raiseInput = document.getElementById('raise-amount');
+        raiseInput.value = raiseInput.max;
+      }
       const amount = action === 'raise' ? parseInt(document.getElementById('raise-amount').value) : undefined;
-      const say = document.getElementById('human-say')?.value?.trim() || undefined;
+      const say = undefined;
 
       // Validate raise amount
       if (action === 'raise') {
@@ -4474,18 +4466,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     function renderReasoningPanel() {
-      // In human mode, hide other players' reasoning (no cheating!)
-      if (isHumanPlayer) {
-        const myBot = getMyBotCookie();
-        if (myBot && state.lastThought[myBot]) {
-          renderReasoningForBot(myBot);
-        } else {
-          reasoningWhoEl.textContent = 'Your reasoning';
-          if (reasoningTickEl) reasoningTickEl.textContent = '';
-          reasoningBodyEl.innerHTML = '<div class="reasoning-empty">Your thoughts will appear here after you act.</div>';
-        }
-        return;
-      }
+      // In human mode, hide reasoning panel entirely
+      const reasoningPanel = document.getElementById('reasoning-panel');
+      if (reasoningPanel) reasoningPanel.style.display = isHumanPlayer ? 'none' : '';
+      if (isHumanPlayer) return;
 
       // Spectator mode: show the last acted bot's reasoning
       let targetBot = null;

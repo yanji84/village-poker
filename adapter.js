@@ -7,7 +7,7 @@
 
 import { waitingScene, bettingScene, showdownScene, finishedScene } from './scene.js';
 import {
-  BUY_IN, dealNewHand, advanceAction, getActivePlayer, getBlinds,
+  BUY_IN, dealNewHand, advanceAction, getActivePlayer, getBlinds, resolveHand,
 } from './game.js';
 import { logAction } from 'agent-village-hub/helpers';
 
@@ -65,6 +65,29 @@ export const phases = {
     getActiveBot(state) {
       const hand = state.hand;
       if (!hand?.activePlayer) return null;
+
+      // --- Stuck hand recovery ---
+      // If same player has been active for 5+ ticks, force auto-fold and move on
+      if (!hand._stuckCheckTick) hand._stuckCheckTick = state.clock.tick;
+      if (!hand._stuckCheckPlayer) hand._stuckCheckPlayer = hand.activePlayer;
+      if (hand._stuckCheckPlayer !== hand.activePlayer) {
+        hand._stuckCheckTick = state.clock.tick;
+        hand._stuckCheckPlayer = hand.activePlayer;
+      }
+      if (state.clock.tick - hand._stuckCheckTick >= 5) {
+        const stuckP = hand.players[hand.activePlayer];
+        if (stuckP && !stuckP.folded) {
+          // Auto-check if possible, otherwise fold
+          if (stuckP.bet >= hand.currentBet) {
+            stuckP.acted = true;
+          } else {
+            stuckP.folded = true;
+          }
+          hand._stuckCheckTick = state.clock.tick;
+          advanceAction(state);
+          return hand.activePlayer;
+        }
+      }
 
       // All-in players can't act — skip them immediately
       const activeP = hand.players[hand.activePlayer];
@@ -176,6 +199,30 @@ export const phases = {
     },
     transitions: [
       { to: 'showdown', when: (state) => state.hand?.result != null },
+      {
+        // Emergency timeout: if a hand has been in betting for 20+ ticks (~10min at 30s),
+        // force-fold everyone except the player with most chips invested and resolve
+        to: 'showdown',
+        when: (state) => {
+          if (!state.hand || !state.hand._bettingStartTick) {
+            if (state.hand) state.hand._bettingStartTick = state.clock.tick;
+            return false;
+          }
+          if (state.clock.tick - state.hand._bettingStartTick < 20) return false;
+          // Force resolve: fold all but the player with highest bet
+          const players = state.hand.players;
+          let maxBet = -1, maxBot = null;
+          for (const [bot, p] of Object.entries(players)) {
+            if (!p.folded && p.bet > maxBet) { maxBet = p.bet; maxBot = bot; }
+          }
+          for (const [bot, p] of Object.entries(players)) {
+            if (bot !== maxBot && !p.folded) p.folded = true;
+          }
+          const activePlayers = Object.entries(players).filter(([, p]) => !p.folded);
+          resolveHand(state, activePlayers);
+          return true;
+        },
+      },
     ],
   },
 
