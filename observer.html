@@ -790,14 +790,19 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: var(--bg-elevated);
-      border-top: 2px solid #444;
-      padding: 12px 16px;
+      background: linear-gradient(180deg, #1a2a1a 0%, #0e1a0e 100%);
+      border-top: 3px solid var(--green);
+      padding: 14px 16px 20px;
       z-index: 9000;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 -6px 30px rgba(0,0,0,0.7);
+      animation: action-panel-slide 0.3s ease-out;
+    }
+    @keyframes action-panel-slide {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
     .action-top-row {
       display: flex;
@@ -824,16 +829,21 @@
       align-items: center;
     }
     .action-btn {
-      padding: 10px 20px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      padding: 14px 24px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
       cursor: pointer;
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
       text-transform: uppercase;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      flex: 1;
+      min-height: 48px;
+      min-width: 70px;
+      text-align: center;
     }
+    .action-btn:active { transform: scale(0.95); }
     .action-btn.fold {
       background: #2a1515;
       color: var(--red);
@@ -860,13 +870,14 @@
     .raise-controls input {
       width: 80px;
       background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 4px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
       color: var(--text-primary);
-      padding: 8px;
+      padding: 12px 8px;
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 15px;
       text-align: center;
+      min-height: 48px;
     }
     .action-btn.raise {
       background: #2a2515;
@@ -886,11 +897,12 @@
       flex: 1;
       background: var(--bg-primary);
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 6px;
       color: var(--text-primary);
-      padding: 6px 10px;
-      font-size: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
       font-family: var(--mono);
+      min-height: 44px;
     }
 
     @media (max-width: 700px) {
@@ -2347,7 +2359,10 @@ Min raise: <b>40</b></pre>
   <!-- Human Action Panel -->
   <div class="human-action-panel" id="human-action-panel" style="display:none">
     <div class="action-top-row">
-      <div class="action-timer" id="action-timer">60s</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-weight:700;font-size:15px;color:var(--green);font-family:var(--mono);letter-spacing:1px">YOUR TURN</div>
+        <div class="action-timer" id="action-timer">60s</div>
+      </div>
       <div class="action-info" id="action-info"></div>
     </div>
     <div class="action-buttons">
@@ -3254,6 +3269,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Human Action Panel ---
     let humanActionTimer = null;
     let humanActionCountdown = 60;
+    let humanTurnActive = false;
 
     function showActionPanel(data) {
       const panel = document.getElementById('human-action-panel');
@@ -3284,7 +3300,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       infoEl.textContent = 'Pot: ' + (data.pot || 0) + ' | Chips: ' + chips + (toCall > 0 ? ' | To call: ' + toCall : '');
 
       panel.style.display = '';
+      humanTurnActive = true;
       document.getElementById('human-say').value = '';
+
+      // Scroll to top so canvas + fixed panel are both visible
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Start countdown
       humanActionCountdown = 60;
@@ -3307,6 +3327,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function hideActionPanel() {
       const panel = document.getElementById('human-action-panel');
       panel.style.display = 'none';
+      humanTurnActive = false;
       clearInterval(humanActionTimer);
     }
 
@@ -4834,6 +4855,29 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           drawEliminationEffect(pokerCtx, px, py, charScale, elimAnim.startTime);
         }
       });
+
+      // --- YOUR TURN banner on canvas ---
+      if (humanTurnActive) {
+        const bannerText = 'YOUR TURN';
+        const bannerFontSize = Math.round(20 * _fs);
+        pokerCtx.font = 'bold ' + bannerFontSize + 'px monospace';
+        const btw = pokerCtx.measureText(bannerText).width;
+        const bannerW = btw + 24;
+        const bannerH = bannerFontSize + 12;
+        const bannerX = Math.floor(w / 2 - bannerW / 2);
+        const bannerY = 4;
+        const pulse = 0.8 + 0.2 * Math.sin(pokerAnimFrame * 0.1);
+        pokerCtx.globalAlpha = pulse;
+        pokerCtx.fillStyle = '#1a5a1a';
+        pokerCtx.fillRect(bannerX, bannerY, bannerW, bannerH);
+        pokerCtx.strokeStyle = '#4ae44a';
+        pokerCtx.lineWidth = 2;
+        pokerCtx.strokeRect(bannerX, bannerY, bannerW, bannerH);
+        pokerCtx.fillStyle = '#4ae44a';
+        pokerCtx.textAlign = 'center';
+        pokerCtx.fillText(bannerText, w / 2, bannerY + bannerFontSize + 2);
+        pokerCtx.globalAlpha = 1.0;
+      }
 
       // --- Winner celebration ---
       // Trigger celebration when a new result arrives during showdown
