@@ -2547,7 +2547,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       raiseInput.min = minRaise;
       raiseInput.value = minRaise;
       raiseInput.max = chips;
-      raiseInput.dataset.playerBet = data.currentBet || 0;
 
       infoEl.textContent = 'Pot: ' + (data.pot || 0) + ' | Chips: ' + chips + (toCall > 0 ? ' | To call: ' + toCall : '');
 
@@ -2608,19 +2607,17 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     async function submitHumanAction(action) {
-      // All-in: raise to total chips + current bet in hand
+      let isAllIn = false;
       if (action === 'allin') {
         action = 'raise';
-        const raiseInput = document.getElementById('raise-amount');
-        const playerBet = parseInt(raiseInput.dataset.playerBet || '0');
-        raiseInput.value = parseInt(raiseInput.max) + playerBet;
+        isAllIn = true;
       }
-      const amount = action === 'raise' ? parseInt(document.getElementById('raise-amount').value) : undefined;
+      const raiseInput = document.getElementById('raise-amount');
+      const amount = action === 'raise' ? (isAllIn ? 999999999 : parseInt(raiseInput.value)) : undefined;
       const say = undefined;
 
-      // Validate raise amount
-      if (action === 'raise') {
-        const raiseInput = document.getElementById('raise-amount');
+      // Validate raise amount (skip for all-in — server caps it)
+      if (action === 'raise' && !isAllIn) {
         const min = parseInt(raiseInput.min) || 0;
         const max = parseInt(raiseInput.max) || 0;
         if (!amount || amount < min) {
