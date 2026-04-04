@@ -5074,15 +5074,21 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (data.type === 'phase_change') {
         state.phase = data.to;
         hideActionPanel();
+        // Clear stale bet display on every phase change
+        state.currentBets = {};
+        state.lastActions = {};
         if (data.to === 'waiting') {
           state.contextMessage = 'Waiting for next hand...';
+          state.pot = 0;
+          state.lastResult = null;
         } else if (data.to === 'showdown') {
           state.contextMessage = 'Showdown!';
-          state.currentBets = {};
           state.pot = 0;
-          // Refresh stats after each hand
           fetchSeats();
           fetchLeaderboard();
+        } else if (data.to === 'betting') {
+          state.pot = 0;
+          state.lastResult = null;
         }
         render();
         return;
