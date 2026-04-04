@@ -4984,11 +4984,16 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     function renderReasoningPanel() {
-      // Always show the latest bot that acted
-      const targetBot = state.activePlayer || state.lastActed;
+      // Prefer the bot that just acted (has fresh reasoning), then active player
+      let targetBot = null;
+      if (state.lastActed && state.lastThought[state.lastActed]) {
+        targetBot = state.lastActed;
+      } else if (state.activePlayer && state.lastThought[state.activePlayer]) {
+        targetBot = state.activePlayer;
+      }
 
-      if (!targetBot || !state.lastThought[targetBot]) {
-        // Check if any bot has thoughts
+      if (!targetBot) {
+        // Fallback: any bot with thoughts
         const anyThought = Object.keys(state.lastThought).find(k => state.lastThought[k]);
         if (anyThought) {
           renderReasoningForBot(anyThought);
