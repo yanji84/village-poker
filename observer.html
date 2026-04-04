@@ -927,21 +927,13 @@
       .join-panel { width: 100%; }
     }
 
-    /* --- PIN input --- */
-    #join-pin {
-      width: 140px;
-      letter-spacing: 8px;
-      text-align: center;
-      font-size: 18px;
-      font-family: var(--mono);
-      padding: 8px 12px;
-    }
-    .pin-hint {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: -8px;
-      margin-bottom: 12px;
-    }
+    /* --- Join two-button layout --- */
+    .join-btns-row { display: flex; gap: 8px; margin-top: 8px; }
+    .join-btns-row button { flex: 1; }
+    .random-name-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: var(--mono); }
+    .random-name-btn:hover { color: var(--text-primary); border-color: #444; }
+    .username-row { display: flex; gap: 6px; align-items: stretch; margin-bottom: 12px; }
+    .username-row input { flex: 1; margin-bottom: 0; }
 
     /* --- Prompt Example --- */
     .prompt-example { margin-bottom: 10px; }
@@ -986,46 +978,20 @@
     .prompt-example-code b { color: #bbb; font-weight: 600; }
     .prompt-hl { color: var(--accent); font-weight: 600; }
 
-    /* --- Player Stats Box --- */
-    .player-stats-box {
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 10px 12px;
-      margin: 10px 0;
-    }
-    .player-stats-box h4 {
-      color: var(--text-secondary);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin: 0 0 8px;
-    }
-    .player-stats-box .stat-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 3px 0;
-      font-size: 11px;
-      font-family: var(--mono);
-      color: var(--text-secondary);
-    }
-    .player-stats-box .stat-value {
-      color: #ddd;
-      font-weight: 600;
-    }
+    /* (player-stats-box CSS removed) */
 
-    /* --- Auth status section --- */
-    .auth-status-section {
+    /* --- Join status display --- */
+    .join-status-display {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
     }
-    .auth-status-section .auth-greeting {
+    .join-status-display .status-greeting {
       color: var(--text-primary);
       font-size: 12px;
       font-weight: 600;
       margin-bottom: 2px;
     }
-    .auth-status-section .auth-detail {
+    .join-status-display .status-detail {
       color: var(--text-secondary);
       font-size: 11px;
     }
@@ -2234,48 +2200,22 @@
       <span id="table-occupancy"></span>
     </div>
 
-    <div class="auth-status-section" id="auth-status-section" style="display:none">
-      <div class="auth-greeting" id="auth-greeting"></div>
-      <div class="auth-detail" id="auth-detail"></div>
+    <div class="join-status-display" id="join-status-display" style="display:none">
+      <div class="status-greeting" id="status-greeting"></div>
+      <div class="status-detail" id="status-detail"></div>
     </div>
-
-    <div id="player-stats-container" style="display:none; padding: 0 16px;"></div>
 
     <div class="join-panel-section" id="join-form-section">
       <div class="join-panel-msg" id="join-msg"></div>
       <label for="join-username">Username</label>
-      <input type="text" id="join-username" maxlength="20" placeholder="Your name" />
-      <label for="join-pin">PIN (optional)</label>
-      <input type="password" id="join-pin" maxlength="4" inputmode="numeric" pattern="\d{4}"
-             placeholder="****" autocomplete="off">
-      <div class="pin-hint">Set a PIN to save progress, or leave blank to play anonymously. Returning players: enter your PIN to log back in.</div>
-      <div class="play-mode-toggle">
-        <label class="play-mode-option">
-          <input type="radio" name="playMode" value="bot" checked onchange="togglePlayMode()"> AI Bot plays for me
-        </label>
-        <label class="play-mode-option">
-          <input type="radio" name="playMode" value="human" onchange="togglePlayMode()"> I play myself
-        </label>
+      <div class="username-row">
+        <input type="text" id="join-username" maxlength="20" placeholder="Pick a name" />
+        <button class="random-name-btn" onclick="document.getElementById('join-username').value = generateRandomName()" title="Random name">random</button>
       </div>
-      <div id="strategy-section">
-        <button class="join-panel-btn secondary" style="margin:0 0 8px;padding:6px 14px;font-size:12px" onclick="openJoinStrategyEditor()">Edit Strategy</button>
+      <div class="join-btns-row">
+        <button class="join-panel-btn" onclick="joinGame('human')">Join as Human</button>
+        <button class="join-panel-btn" onclick="joinGame('bot')">Join as Bot</button>
       </div>
-      <button class="join-panel-btn" id="join-btn" onclick="submitWaitlist()">Join Waitlist</button>
-    </div>
-
-    <div class="join-panel-section" id="auth-idle-actions" style="display:none">
-      <div class="play-mode-toggle" style="margin-bottom:8px">
-        <label class="play-mode-option">
-          <input type="radio" name="authPlayMode" value="bot" checked onchange="toggleAuthPlayMode()"> AI Bot plays for me
-        </label>
-        <label class="play-mode-option">
-          <input type="radio" name="authPlayMode" value="human" onchange="toggleAuthPlayMode()"> I play myself
-        </label>
-      </div>
-      <div id="auth-strategy-section">
-        <button class="join-panel-btn secondary" style="margin:0 0 8px;padding:6px 14px;font-size:12px" onclick="openAuthStrategyEditor()">Edit Strategy</button>
-      </div>
-      <button class="join-panel-btn" id="auth-join-btn" onclick="submitWaitlistAuthenticated()">Join Game</button>
     </div>
 
     <!-- Session Countdown (shown for seated players) -->
@@ -2538,7 +2478,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // --- Auth state ---
     let authUsername = localStorage.getItem('arena_username') || null;
-    let playerStats = null;
+    // (playerStats variable removed)
 
     function getArenaTokenCookie() {
       const c = document.cookie.split(';').find(c => c.trim().startsWith('arena_token='));
@@ -2549,98 +2489,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       return !!getArenaTokenCookie();
     }
 
-    async function fetchPlayerStats(username) {
-      if (!username) return;
-      try {
-        const res = await fetch(apiBase + '/player-stats?username=' + encodeURIComponent(username), { credentials: 'include' });
-        if (!res.ok) { playerStats = null; return; }
-        const data = await res.json();
-        playerStats = data.stats || data;
-        renderPlayerStats();
-      } catch (e) {
-        playerStats = null;
-      }
-    }
+    // (fetchPlayerStats and renderPlayerStats removed — PIN-based stats no longer used)
 
-    function renderPlayerStats() {
-      const container = document.getElementById('player-stats-container');
-      if (!playerStats || !authUsername) {
-        container.style.display = 'none';
-        container.innerHTML = '';
-        return;
-      }
-      const s = playerStats;
-      const hands = s.handsPlayed || 0;
-      const wins = s.handsWon || 0;
-      const winRate = hands > 0 ? ((wins / hands) * 100).toFixed(1) + '%' : '-';
-      const folds = s.folds || 0;
-      const calls = s.calls || 0;
-      const raises = s.raises || 0;
-      const vpip = hands > 0 ? (((calls + raises) / hands) * 100).toFixed(0) + '%' : '-';
-      const bestStreak = s.streakBest || 0;
-      container.style.display = '';
-      container.innerHTML = `
-        <div class="player-stats-box">
-          <h4>Your Stats</h4>
-          <div class="stat-row"><span>Hands</span><span class="stat-value">${hands}</span></div>
-          <div class="stat-row"><span>Wins</span><span class="stat-value">${wins}</span></div>
-          <div class="stat-row"><span>Win Rate</span><span class="stat-value">${winRate}</span></div>
-          <div class="stat-row"><span>VPIP</span><span class="stat-value">${vpip}</span></div>
-          <div class="stat-row"><span>Folds</span><span class="stat-value">${folds}</span></div>
-          <div class="stat-row"><span>Calls</span><span class="stat-value">${calls}</span></div>
-          <div class="stat-row"><span>Raises</span><span class="stat-value">${raises}</span></div>
-          <div class="stat-row"><span>Best Streak</span><span class="stat-value">${bestStreak}</span></div>
-        </div>
-      `;
-    }
-
-    async function submitWaitlistAuthenticated() {
-      if (!authUsername) return;
-      const btn = document.getElementById('auth-join-btn');
-
-      // User is already authenticated via arena_token cookie — no PIN needed.
-
-      const authPlayMode = document.querySelector('input[name="authPlayMode"]:checked')?.value || 'bot';
-      const storedStrategy = localStorage.getItem('arena_strategy_' + (authUsername || ''));
-      const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
-      const strategy = authPlayMode === 'human' ? 'Human player' : (storedStrategy || lastStrategy || 'Play smart and adapt to opponents.');
-
-      btn.disabled = true;
-      btn.textContent = 'Joining...';
-      try {
-        const res = await fetch(apiBase + '/waitlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ username: authUsername, strategy, playMode: authPlayMode, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          alert(data.error || data.message || 'Failed to join waitlist.');
-          btn.disabled = false;
-          btn.textContent = 'Join Waitlist';
-          return;
-        }
-        const respData = await res.clone().json().catch(() => ({}));
-        if (respData.botName) {
-          // Immediately assigned to a seat
-          document.cookie = 'arena_bot=' + encodeURIComponent(respData.botName) + ';path=/;max-age=604800;SameSite=Strict';
-          setWaitlistState(null);
-        } else {
-          setWaitlistState({ username: authUsername, strategy: '' });
-        }
-        btn.disabled = false;
-        btn.textContent = 'Join Waitlist';
-        fetchPlayerStats(authUsername);
-        fetchSeats();
-        await fetchWaitlist();
-        renderJoinPanel();
-      } catch (e) {
-        alert('Network error. Please try again.');
-        btn.disabled = false;
-        btn.textContent = 'Join Waitlist';
-      }
-    }
+    // (submitWaitlistAuthenticated removed — replaced by joinGame/doJoin flow)
 
     async function checkReturningUser() {
       if (!hasArenaToken()) return;
@@ -2649,31 +2500,22 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (!res.ok) return;
         const data = await res.json();
         const seatsObj = data.seats || data;
-        let found = false;
         for (const [botName, s] of Object.entries(seatsObj)) {
           if (authUsername && (s.claimedBy || s.username || '').toLowerCase() === authUsername.toLowerCase()) {
             seatData[botName] = seatData[botName] || {};
             seatData[botName].username = authUsername;
-            fetchPlayerStats(authUsername);
-            found = true;
             break;
           }
         }
-        if (!found && authUsername) {
-          fetchPlayerStats(authUsername);
-          // Validate waitlist state against server
-          const wlState = getWaitlistState();
-          if (wlState) {
-            const wlRes = await fetch(apiBase + '/waitlist', { credentials: 'include' }).catch(() => null);
-            if (wlRes?.ok) {
-              const wlData = await wlRes.json().catch(() => ({}));
-              const wl = wlData.waitlist || wlData || [];
-              const inServer = wl.some(w => (w.username || '').toLowerCase() === authUsername.toLowerCase());
-              if (!inServer) {
-                // Server doesn't have us in waitlist — clear stale local state
-                setWaitlistState(null);
-              }
-            }
+        // Validate waitlist state against server
+        const wlState = getWaitlistState();
+        if (wlState) {
+          const wlRes = await fetch(apiBase + '/waitlist', { credentials: 'include' }).catch(() => null);
+          if (wlRes?.ok) {
+            const wlData = await wlRes.json().catch(() => ({}));
+            const wl = wlData.waitlist || wlData || [];
+            const inServer = wl.some(w => (w.username || '').toLowerCase() === (authUsername || '').toLowerCase());
+            if (!inServer) setWaitlistState(null);
           }
         }
         renderJoinPanel();
@@ -2921,10 +2763,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const myBot = getMyBotCookie();
       const wlState = getWaitlistState();
       viewerWaitlist = wlState;
-      const hasToken = hasArenaToken();
-      const hasPin = localStorage.getItem('arena_has_pin') === 'true';
-      // Only treat as authenticated if we have a valid token, or username without PIN (anonymous)
-      const isAuthenticated = hasToken || (!!authUsername && !hasPin);
       const isSeated = !!myBot;
       let isQueued = !!wlState;
 
@@ -2942,69 +2780,38 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         occupancyEl.textContent = 'Table: ' + pc + '/' + mp + ' players';
       }
 
-      // Update join button text based on occupancy
-      const tableFull = state.bots.length >= (state.maxPlayers || 6);
-      const joinBtnText = tableFull ? 'Join Waitlist (' + waitlistData.length + ' ahead)' : 'Join Game';
-      const joinBtn = document.getElementById('join-btn');
-      const authJoinBtn = document.getElementById('auth-join-btn');
-      if (joinBtn && !joinBtn.disabled) joinBtn.textContent = joinBtnText;
-      if (authJoinBtn && !authJoinBtn.disabled) authJoinBtn.textContent = joinBtnText;
-
-      const authStatusSection = document.getElementById('auth-status-section');
+      const statusDisplay = document.getElementById('join-status-display');
       const formSection = document.getElementById('join-form-section');
-      const authIdleActions = document.getElementById('auth-idle-actions');
-      const statsContainer = document.getElementById('player-stats-container');
 
       let myChips = null;
       if (isSeated && myBot) {
         myChips = state.chips[myBot];
       }
 
-      if (isAuthenticated && (isSeated || isQueued)) {
-        authStatusSection.style.display = '';
+      if (isSeated || isQueued) {
+        statusDisplay.style.display = '';
         formSection.style.display = 'none';
-        authIdleActions.style.display = 'none';
 
-        const greetingEl = document.getElementById('auth-greeting');
-        const detailEl = document.getElementById('auth-detail');
+        const greetingEl = document.getElementById('status-greeting');
+        const detailEl = document.getElementById('status-detail');
 
         if (isSeated) {
           greetingEl.textContent = 'Playing as ' + (authUsername || 'you');
           detailEl.textContent = myChips != null ? 'Chips: ' + myChips : '';
         } else {
           const pos = waitlistData.findIndex(w => (w.username || w) === (authUsername || wlState?.username));
-          const posText = pos >= 0 ? ', position #' + (pos + 1) : '';
+          const posText = pos >= 0 ? '#' + (pos + 1) : '';
           greetingEl.textContent = 'In waitlist as ' + (authUsername || wlState?.username || 'you');
-          detailEl.textContent = posText ? 'Position' + posText.replace(', position', '') : 'Waiting for a seat...';
+          detailEl.textContent = posText ? 'Position ' + posText : 'Waiting for a seat...';
         }
-
-        renderPlayerStats();
-      } else if (isAuthenticated && !isSeated && !isQueued) {
-        authStatusSection.style.display = '';
-        formSection.style.display = 'none';
-        authIdleActions.style.display = '';
-
-        const greetingEl = document.getElementById('auth-greeting');
-        const detailEl = document.getElementById('auth-detail');
-        greetingEl.textContent = 'Welcome back, ' + (authUsername || 'player');
-        detailEl.textContent = tableFull ? 'Table is full. Join the waitlist to play.' : 'Join the game to play.';
-
-        renderPlayerStats();
       } else {
-        authStatusSection.style.display = 'none';
-        authIdleActions.style.display = 'none';
-        statsContainer.style.display = 'none';
+        statusDisplay.style.display = 'none';
         formSection.style.display = '';
 
-        // Pre-fill username if returning with stale token
-        if (authUsername && hasPin && !hasToken) {
+        // Pre-fill username if we have one saved
+        if (authUsername) {
           const usernameInput = document.getElementById('join-username');
           if (usernameInput && !usernameInput.value) usernameInput.value = authUsername;
-        }
-
-        if (!editingStrategy) {
-          const msgEl = document.getElementById('join-msg');
-          if (msgEl) msgEl.textContent = '';
         }
       }
 
@@ -3018,177 +2825,80 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
     }
 
-    async function submitWaitlist() {
+    function generateRandomName() {
+      const adjectives = ['cosmic', 'shadow', 'neon', 'wild', 'lucky', 'swift', 'dark', 'bright', 'mad', 'chill', 'bold', 'sly'];
+      const nouns = ['bluffer', 'raiser', 'shark', 'fox', 'wolf', 'ace', 'dealer', 'gambit', 'maverick', 'phantom', 'rider', 'hawk'];
+      const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const noun = nouns[Math.floor(Math.random() * nouns.length)];
+      return adj + '-' + noun;
+    }
+
+    async function joinGame(mode) {
       const username = document.getElementById('join-username').value.trim();
-      const pin = document.getElementById('join-pin').value.trim();
-      const strategy = localStorage.getItem('arena_strategy_' + username.toLowerCase()) || '';
-      const playMode = document.querySelector('input[name="playMode"]:checked')?.value || 'bot';
       const msgEl = document.getElementById('join-msg');
       msgEl.className = 'join-panel-msg';
       msgEl.textContent = '';
 
       if (!username || username.length < 1 || username.length > 20) {
         msgEl.className = 'join-panel-msg error';
-        msgEl.textContent = 'Username is required (1-20 characters).';
+        msgEl.textContent = 'Pick a name (1-20 characters).';
         return;
       }
 
-      if (pin && !/^\d{4}$/.test(pin)) {
-        msgEl.className = 'join-panel-msg error';
-        msgEl.textContent = 'PIN must be exactly 4 digits (or leave blank for anonymous).';
+      if (mode === 'bot') {
+        // Open strategy editor, join on save
+        openJoinStrategyEditor(username);
         return;
       }
 
-      if (playMode !== 'human' && !strategy) {
-        msgEl.className = 'join-panel-msg error';
-        msgEl.textContent = 'Strategy required — tap "Edit Strategy" to write how your bot should play.';
-        return;
-      }
+      // Human mode — join immediately
+      await doJoin(username, 'human', 'Human player');
+    }
 
-      const btn = document.getElementById('join-btn');
-      btn.disabled = true;
-      btn.textContent = 'Joining...';
+    async function doJoin(username, playMode, strategy) {
+      const msgEl = document.getElementById('join-msg');
+      const customCode = localStorage.getItem('arena_customCode_' + username) || null;
 
       try {
-        // If PIN is provided, try to authenticate first (returning player flow)
-        if (pin) {
-          try {
-            const loginRes = await fetch(apiBase + '/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ username, pin }),
-            });
-
-            if (loginRes.ok) {
-              const loginData = await loginRes.json().catch(() => ({}));
-              authUsername = username;
-              localStorage.setItem('arena_username', username);
-              localStorage.setItem('arena_has_pin', 'true');
-
-              if (loginData.seated) {
-                // Already seated — update state and show message
-                if (loginData.botName) {
-                  seatData[loginData.botName] = seatData[loginData.botName] || {};
-                  seatData[loginData.botName].username = username;
-                }
-                msgEl.className = 'join-panel-msg success';
-                msgEl.textContent = 'Welcome back! You\'re already at the table.';
-                document.getElementById('join-username').value = '';
-                document.getElementById('join-pin').value = '';
-                btn.disabled = false;
-                btn.textContent = 'Join Game';
-                fetchPlayerStats(username);
-                fetchSeats();
-                await fetchWaitlist();
-                renderJoinPanel();
-                return;
-              } else if (loginData.queued) {
-                // Already in waitlist
-                setWaitlistState({ username, strategy: loginData.strategy || '' });
-                const pos = loginData.position ? ' #' + loginData.position : '';
-                msgEl.className = 'join-panel-msg success';
-                msgEl.textContent = 'Welcome back! You\'re' + pos + ' in the waitlist.';
-                document.getElementById('join-username').value = '';
-                document.getElementById('join-pin').value = '';
-                btn.disabled = false;
-                btn.textContent = 'Join Game';
-                fetchPlayerStats(username);
-                fetchSeats();
-                await fetchWaitlist();
-                renderJoinPanel();
-                return;
-              }
-              // Login succeeded but user is idle — fall through to waitlist POST below
-            } else {
-              const loginErr = await loginRes.json().catch(() => ({}));
-              // If login fails with auth error (wrong PIN), show error and stop
-              if (loginRes.status === 401 || loginRes.status === 403) {
-                msgEl.className = 'join-panel-msg error';
-                msgEl.textContent = loginErr.error || loginErr.message || 'Wrong PIN. Try again or leave blank for a new account.';
-                btn.disabled = false;
-                btn.textContent = 'Join Game';
-                return;
-              }
-              // For other errors (e.g. 404 user not found), treat as new user — fall through
-            }
-          } catch (loginNetErr) {
-            // Login network error — fall through to waitlist as new user
-          }
-        }
-
-        // Post to waitlist (new user, or returning user who is idle)
         const res = await fetch(apiBase + '/waitlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ username, pin, strategy: strategy || 'Human player', playMode, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
+          body: JSON.stringify({ username, strategy: strategy || 'Human player', playMode, customCode }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           msgEl.className = 'join-panel-msg error';
-          msgEl.textContent = data.error || data.message || 'Failed to join waitlist.';
-          btn.disabled = false;
-          btn.textContent = 'Join Game';
+          msgEl.textContent = data.error || 'Failed to join.';
           return;
         }
         authUsername = username;
         localStorage.setItem('arena_username', username);
-        localStorage.setItem('arena_has_pin', pin ? 'true' : 'false');
-        const joinCode = document.getElementById('full-editor-code')?.value?.trim();
-        if (joinCode) localStorage.setItem('arena_customCode_' + username, joinCode);
-        const respData = await res.clone().json().catch(() => ({}));
+        const respData = await res.json().catch(() => ({}));
         if (respData.botName) {
-          // Immediately assigned to a seat
           document.cookie = 'arena_bot=' + encodeURIComponent(respData.botName) + ';path=/;max-age=604800;SameSite=Strict';
           setWaitlistState(null);
+          if (playMode === 'human') isHumanPlayer = true;
           msgEl.className = 'join-panel-msg success';
-          msgEl.textContent = 'You are seated! Your strategy takes effect next hand.';
+          msgEl.textContent = 'You are seated!';
         } else {
           setWaitlistState({ username, strategy });
           msgEl.className = 'join-panel-msg success';
           msgEl.textContent = 'You are on the waitlist!';
         }
-        // Clear form after successful join
         document.getElementById('join-username').value = '';
-        document.getElementById('join-pin').value = '';
-        btn.disabled = false;
-        btn.textContent = 'Join Game';
-        fetchPlayerStats(username);
         fetchSeats();
         await fetchWaitlist();
         renderJoinPanel();
       } catch (e) {
         msgEl.className = 'join-panel-msg error';
-        if (e.message && e.message.includes('Failed to fetch')) {
-          msgEl.textContent = 'Waitlist endpoint not available yet. Try again later.';
-        } else {
-          msgEl.textContent = 'Network error. Please try again.';
-        }
-        btn.disabled = false;
-        btn.textContent = 'Join Game';
+        msgEl.textContent = 'Network error. Please try again.';
       }
     }
 
-    // --- Play Mode Toggle ---
-    function togglePlayMode() {
-      const playMode = document.querySelector('input[name="playMode"]:checked')?.value || 'bot';
-      const strategySection = document.getElementById('strategy-section');
-      if (strategySection) {
-        strategySection.style.display = playMode === 'human' ? 'none' : '';
-      }
-    }
+    // (togglePlayMode, toggleAuthPlayMode removed — replaced by two-button flow)
 
-    function toggleAuthPlayMode() {
-      const playMode = document.querySelector('input[name="authPlayMode"]:checked')?.value || 'bot';
-      const authStrategySection = document.getElementById('auth-strategy-section');
-      if (authStrategySection) {
-        authStrategySection.style.display = playMode === 'human' ? 'none' : '';
-      }
-    }
-
-    function openJoinStrategyEditor() {
-      const username = document.getElementById('join-username').value.trim();
+    function openJoinStrategyEditor(username) {
       const key = username ? username.toLowerCase() : '_draft';
       const stored = localStorage.getItem('arena_strategy_' + key);
       const currentStrategy = stored || '';
@@ -3210,46 +2920,16 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const saveBtn = document.querySelector('.full-editor-save');
       saveBtn.onclick = function() {
         const strategy = modalTextarea.value.trim();
+        if (!strategy) { showToast('Write a strategy first.', 'error'); return; }
         const customCode = document.getElementById('full-editor-code')?.value?.trim() || null;
-        const saveKey = document.getElementById('join-username').value.trim().toLowerCase() || '_draft';
-        localStorage.setItem('arena_strategy_' + saveKey, strategy);
-        if (customCode && username) localStorage.setItem('arena_customCode_' + username, customCode);
+        localStorage.setItem('arena_strategy_' + username.toLowerCase(), strategy);
+        if (customCode) localStorage.setItem('arena_customCode_' + username, customCode);
         document.getElementById('full-editor-overlay').classList.remove('open');
-        showToast('Strategy saved.');
+        doJoin(username, 'bot', strategy);
       };
     }
 
-    function openAuthStrategyEditor() {
-      const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
-      const stored = localStorage.getItem('arena_strategy_' + (authUsername || ''));
-      const currentStrategy = stored || lastStrategy || '';
-
-      const modalTextarea = document.getElementById('full-editor-textarea');
-      modalTextarea.value = currentStrategy;
-      updateFullEditorCharCounter();
-
-      const codeTextarea = document.getElementById('full-editor-code');
-      if (codeTextarea) {
-        const storedCode = authUsername ? localStorage.getItem('arena_customCode_' + authUsername) : null;
-        codeTextarea.value = storedCode || '';
-      }
-
-      switchEditorTab('strategy');
-      document.getElementById('full-editor-overlay').classList.add('open');
-      setTimeout(() => modalTextarea.focus(), 100);
-
-      const saveBtn = document.querySelector('.full-editor-save');
-      saveBtn.onclick = function() {
-        const strategy = modalTextarea.value.trim();
-        const customCode = document.getElementById('full-editor-code')?.value?.trim() || null;
-        if (authUsername) {
-          localStorage.setItem('arena_strategy_' + authUsername, strategy);
-          if (customCode) localStorage.setItem('arena_customCode_' + authUsername, customCode);
-        }
-        document.getElementById('full-editor-overlay').classList.remove('open');
-        showToast('Strategy saved.');
-      };
-    }
+    // (openAuthStrategyEditor removed — replaced by openJoinStrategyEditor)
 
     // --- Panel Player Stats ---
     let panelStatsData = null;
@@ -5775,7 +5455,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.currentBets = {};
           state.pot = 0;
           // Refresh stats after each hand
-          if (authUsername) fetchPlayerStats(authUsername);
           fetchSeats();
           fetchLeaderboard();
         }
