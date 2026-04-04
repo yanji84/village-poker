@@ -5041,7 +5041,15 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         state.playerCount = data.playerCount || state.playerCount;
         state.maxPlayers = data.maxPlayers || state.maxPlayers;
         broadcastNotable('🟢 <b>' + escapeHtml(data.displayName || data.botName || 'Unknown') + '</b> joins the table');
+        // If this is us being promoted from waitlist, set the cookie and clear waitlist state
+        if (authUsername && data.username && data.username.toLowerCase() === authUsername.toLowerCase()) {
+          if (data.botName) {
+            document.cookie = 'arena_bot=' + encodeURIComponent(data.botName) + ';path=/;max-age=2592000;SameSite=Strict';
+          }
+          setWaitlistState(null);
+        }
         fetchSeats();
+        renderJoinPanel();
         render();
         return;
       }
@@ -5066,6 +5074,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (data.type === 'waitlist_updated') {
         fetchWaitlist();
+        renderJoinPanel();
         return;
       }
 
