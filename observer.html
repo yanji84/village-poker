@@ -3902,7 +3902,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const myBot = getMyBotCookie();
         const isMyCards = myBot && bot.name === myBot;
         const rawCards = state.holeCards[bot.name];
-        const hCards = (isHumanPlayer && !isMyCards && !isWinner) ? (rawCards ? true : undefined) : rawCards;
+        const isShowdown = state.phase === 'showdown' || state.phase === 'finished';
+        const hCards = (isHumanPlayer && !isMyCards && !isWinner && !isShowdown) ? (rawCards ? true : undefined) : rawCards;
         // hCards = true means "has cards but hidden" (show face-down)
         const cardSc = Math.max(0.8, Math.min(1.2, w / 500));
         const cw = Math.round(20 * cardSc), ch = Math.round(30 * cardSc), cardGap = Math.round(3 * cardSc);
@@ -4740,6 +4741,15 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         case 'deal_hole':
           state.holeCards[entry.bot] = entry.cards || [];
+          break;
+
+        case 'showdown_reveal':
+          // Reveal all players' cards at showdown
+          if (entry.cards) {
+            for (const [botName, cards] of Object.entries(entry.cards)) {
+              state.holeCards[botName] = cards;
+            }
+          }
           break;
 
         case 'blind':
