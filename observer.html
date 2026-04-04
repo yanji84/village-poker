@@ -759,24 +759,6 @@
     }
     .seated-list .seat-status { margin-right: 4px; }
     .seated-list .seat-owner { color: var(--text-muted); }
-    .seated-list .kick-btn, .waitlist-list .kick-btn {
-      float: right;
-      background: none;
-      border: 1px solid #533;
-      color: #a66;
-      font-size: 9px;
-      padding: 1px 6px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-family: var(--mono);
-      opacity: 0.6;
-      transition: opacity 0.2s;
-    }
-    .seated-list .kick-btn:hover, .waitlist-list .kick-btn:hover {
-      opacity: 1;
-      background: rgba(160,60,60,0.15);
-    }
-
     .join-panel-actions { padding: 14px 16px; }
 
     .panel-hand-history { padding: 0 16px 8px; }
@@ -2405,8 +2387,10 @@ Min raise: <b>40</b></pre>
         </label>
       </div>
       <div id="auth-strategy-section">
-        <label for="auth-strategy" style="display:block;margin-bottom:4px;color:var(--text-muted);font-size:11px;font-family:var(--mono)">Strategy <span style="color:var(--text-muted);font-weight:400">— tell your AI how to play</span></label>
-        <textarea id="auth-strategy" rows="5" maxlength="2000" placeholder="Play tight-aggressive. Bluff occasionally on the river." style="width:100%;box-sizing:border-box;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;font-family:var(--mono);resize:vertical"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="color:var(--text-muted);font-size:11px;font-family:var(--mono)" id="auth-strategy-preview">No strategy set</span>
+          <button class="join-panel-btn secondary" style="margin:0;padding:4px 12px;font-size:11px" onclick="openAuthStrategyEditor()">Edit Strategy</button>
+        </div>
       </div>
       <button class="join-panel-btn" id="auth-join-btn" onclick="submitWaitlistAuthenticated()">Join Game</button>
     </div>
@@ -2439,14 +2423,6 @@ Min raise: <b>40</b></pre>
       <div id="panel-hh-content"></div>
     </div>
 
-    <div class="join-panel-section">
-      <h4 id="waitlist-header">Waitlist</h4>
-      <div id="waitlist-content"><span class="waitlist-empty">No one in the waitlist yet.</span></div>
-    </div>
-    <div class="join-panel-section">
-      <h4>Seated Players</h4>
-      <ul class="seated-list" id="seated-list"></ul>
-    </div>
     <div class="join-panel-actions" id="join-actions" style="display:none">
       <button class="join-panel-btn danger" id="leave-btn" onclick="leaveOrRelease()">Leave Queue</button>
       <button class="join-panel-btn secondary" id="edit-strategy-btn" onclick="showEditStrategy()">Edit Strategy</button>
@@ -2844,10 +2820,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
 
       const authPlayMode = document.querySelector('input[name="authPlayMode"]:checked')?.value || 'bot';
-      const authStrategyEl = document.getElementById('auth-strategy');
-      const typedStrategy = authStrategyEl ? authStrategyEl.value.trim() : '';
+      const storedStrategy = localStorage.getItem('arena_strategy_' + (authUsername || ''));
       const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
-      const strategy = authPlayMode === 'human' ? 'Human player' : (typedStrategy || lastStrategy || 'Play smart and adapt to opponents.');
+      const strategy = authPlayMode === 'human' ? 'Human player' : (storedStrategy || lastStrategy || 'Play smart and adapt to opponents.');
 
       btn.disabled = true;
       btn.textContent = 'Joining...';
@@ -3275,44 +3250,19 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         }
       }
 
-      const waitlistHeader = document.getElementById('waitlist-header');
-      const waitlistContent = document.getElementById('waitlist-content');
-      // If local state says user is queued but server data is empty, inject them
-      const displayWaitlist = waitlistData.length > 0 ? waitlistData :
-        (isQueued ? [{ username: authUsername || wlState?.username || 'you' }] : []);
-      waitlistHeader.textContent = 'Waitlist' + (displayWaitlist.length > 0 ? ' (' + displayWaitlist.length + ')' : '');
-      if (displayWaitlist.length > 0) {
-        const items = displayWaitlist.map((w, i) => {
-          const wName = w.username || w;
-          const kickBtn = '<button class="kick-btn" onclick="kickWaitlist(\'' + escapeHtml(wName) + '\')">remove</button>';
-          return '<li><span class="waitlist-num">' + (i + 1) + '.</span>' + escapeHtml(wName) + kickBtn + '</li>';
-        }).join('');
-        waitlistContent.innerHTML = '<ul class="waitlist-list">' + items + '</ul>';
-      } else {
-        waitlistContent.innerHTML = '<span class="waitlist-empty">No one in the waitlist yet.</span>';
-      }
-
-      const seatedList = document.getElementById('seated-list');
-      const bots = state.bots || [];
-      if (bots.length > 0) {
-        seatedList.innerHTML = bots.map(b => {
-          const displayName = b.displayName || b.name;
-          const chips = state.chips[b.name];
-          const chipsText = chips != null ? ' &mdash; ' + chips + ' chips' : '';
-          const kickBtn = '<button class="kick-btn" onclick="kickSeated(\'' + escapeHtml(b.name) + '\')">remove</button>';
-          return '<li>&#x1F7E2; ' + escapeHtml(displayName) + chipsText + kickBtn + '</li>';
-        }).join('');
-      } else {
-        seatedList.innerHTML = '<li class="waitlist-empty">No players at the table.</li>';
-      }
-
-      // Populate returning user strategy
+      // Populate returning user strategy preview
       if (isAuthenticated && !isSeated && !isQueued) {
-        const authStrategyEl = document.getElementById('auth-strategy');
-        if (authStrategyEl && !authStrategyEl.dataset.userEdited) {
+        const previewEl = document.getElementById('auth-strategy-preview');
+        if (previewEl) {
           const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
-          if (lastStrategy) authStrategyEl.value = lastStrategy;
-          authStrategyEl.addEventListener('input', () => { authStrategyEl.dataset.userEdited = 'true'; }, { once: true });
+          const stored = localStorage.getItem('arena_strategy_' + (authUsername || ''));
+          const strat = stored || lastStrategy;
+          if (strat) {
+            previewEl.textContent = strat.length > 60 ? strat.slice(0, 60) + '...' : strat;
+            previewEl.style.color = 'var(--text-secondary)';
+          } else {
+            previewEl.textContent = 'No strategy set';
+          }
         }
       }
 
@@ -3431,44 +3381,42 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
     }
 
-    // --- Kick / Remove ---
-    async function kickSeated(botName) {
-      if (!confirm('Remove this player from the table?')) return;
-      try {
-        const res = await fetch(apiBase + '/kick', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ botName }),
-        });
-        if (res.ok) {
-          showToast('Player removed.');
-          fetchSeats();
-          await fetchWaitlist();
-        } else {
-          const data = await res.json().catch(() => ({}));
-          showToast(data.error || 'Failed to remove player.', 'error');
-        }
-      } catch (e) { showToast('Network error.', 'error'); }
-    }
+    function openAuthStrategyEditor() {
+      const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
+      const stored = localStorage.getItem('arena_strategy_' + (authUsername || ''));
+      const currentStrategy = stored || lastStrategy || '';
 
-    async function kickWaitlist(username) {
-      if (!confirm('Remove ' + username + ' from the waitlist?')) return;
-      try {
-        const res = await fetch(apiBase + '/kick-waitlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ username }),
-        });
-        if (res.ok) {
-          showToast('Removed from waitlist.');
-          await fetchWaitlist();
-        } else {
-          const data = await res.json().catch(() => ({}));
-          showToast(data.error || 'Failed to remove.', 'error');
+      const modalTextarea = document.getElementById('full-editor-textarea');
+      modalTextarea.value = currentStrategy;
+      updateFullEditorCharCounter();
+
+      const codeTextarea = document.getElementById('full-editor-code');
+      if (codeTextarea) {
+        const storedCode = authUsername ? localStorage.getItem('arena_customCode_' + authUsername) : null;
+        codeTextarea.value = storedCode || '';
+      }
+
+      switchEditorTab('strategy');
+      document.getElementById('full-editor-overlay').classList.add('open');
+      setTimeout(() => modalTextarea.focus(), 100);
+
+      const saveBtn = document.querySelector('.full-editor-save');
+      saveBtn.onclick = function() {
+        const strategy = modalTextarea.value.trim();
+        const customCode = document.getElementById('full-editor-code')?.value?.trim() || null;
+        if (authUsername) {
+          localStorage.setItem('arena_strategy_' + authUsername, strategy);
+          if (customCode) localStorage.setItem('arena_customCode_' + authUsername, customCode);
         }
-      } catch (e) { showToast('Network error.', 'error'); }
+        document.getElementById('full-editor-overlay').classList.remove('open');
+        // Update preview
+        const previewEl = document.getElementById('auth-strategy-preview');
+        if (previewEl) {
+          previewEl.textContent = strategy ? (strategy.length > 60 ? strategy.slice(0, 60) + '...' : strategy) : 'No strategy set';
+          previewEl.style.color = strategy ? 'var(--text-secondary)' : 'var(--text-muted)';
+        }
+        showToast('Strategy saved.');
+      };
     }
 
     // --- Panel Hand History & Stats ---
@@ -6250,7 +6198,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const content = document.getElementById('my-hands-content');
       content.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:11px;padding:8px;">Loading...</div>';
       try {
-        const res = await fetch(apiBase + '/my-records', { credentials: 'include' });
+        const userParam = authUsername ? '?username=' + encodeURIComponent(authUsername) : '';
+        const res = await fetch(apiBase + '/my-records' + userParam, { credentials: 'include' });
         if (!res.ok) {
           content.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">Hand records not available yet.</div>';
           return;
