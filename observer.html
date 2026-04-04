@@ -230,187 +230,6 @@
       background: var(--bg-card);
     }
 
-    /* --- Player Grid --- */
-    .player-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1px;
-      background: var(--border);
-    }
-
-    .player-card {
-      background: var(--bg-card);
-      padding: 12px 14px;
-      border-left: 3px solid transparent;
-      transition: opacity 0.3s, border-color 0.3s, background 0.2s;
-      min-height: 80px;
-    }
-    .player-card.active {
-      border-left-color: var(--accent);
-      background: #0d1117;
-    }
-    .player-card.folded {
-      opacity: 0.35;
-    }
-    .player-card.winner {
-      border-left-color: #f0d060;
-      background: #111108;
-      animation: winner-glow 1.5s ease-in-out 3;
-    }
-
-    @keyframes winner-glow {
-      0%, 100% { background: #111108; box-shadow: inset 0 0 0 rgba(240,208,96,0); }
-      50% { background: #1a1808; box-shadow: inset 0 0 20px rgba(240,208,96,0.1); }
-    }
-
-    @keyframes pulse-border {
-      0%, 100% { border-left-color: var(--accent); }
-      50% { border-left-color: #29e; }
-    }
-    .player-card.active {
-      animation: pulse-border 2s ease-in-out infinite;
-    }
-
-    .player-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .player-card-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: #eee;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .player-card-name .type-badge {
-      font-size: 11px;
-      margin-left: 4px;
-      opacity: 0.7;
-    }
-    .player-card-name .winner-badge {
-      color: #f0d060;
-      margin-left: 4px;
-    }
-
-    .player-card-role {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .player-card.active .player-card-role { color: var(--accent); }
-    .player-card-role.blind-sb { color: #69d; }
-    .player-card-role.blind-bb { color: #e66; }
-    .thinking-dots-text span {
-      animation: dotPulse 1.4s infinite;
-      font-size: 16px;
-      font-weight: 700;
-    }
-    .thinking-dots-text span:nth-child(2) { animation-delay: 0.2s; }
-    .thinking-dots-text span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes dotPulse {
-      0%, 80%, 100% { opacity: 0.2; }
-      40% { opacity: 1; }
-    }
-
-    .player-card-personality {
-      font-family: var(--mono);
-      font-size: 9px;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-      letter-spacing: 0.3px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .player-card-personality .archetype-name {
-      color: var(--accent);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .player-card-personality .archetype-tagline {
-      color: var(--text-muted);
-      font-style: italic;
-    }
-    .player-card.folded .player-card-personality { opacity: 0.5; }
-    .player-card.eliminated .player-card-personality { opacity: 0.3; }
-
-    .player-card-cards {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 6px;
-    }
-    .player-card-cards .card {
-      font-size: 14px;
-      padding: 3px 6px;
-    }
-
-    .player-card-strategy {
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.4;
-      margin-bottom: 6px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      font-style: italic;
-    }
-
-    .player-card-chips {
-      font-family: var(--mono);
-      font-size: 12px;
-      font-weight: 600;
-      color: #ddd;
-      margin-bottom: 4px;
-    }
-    .player-card-chips .chip-label {
-      font-size: 10px;
-      color: var(--text-muted);
-      font-weight: 400;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .player-card-bet-inline {
-      color: var(--accent);
-      font-weight: 400;
-      font-size: 11px;
-    }
-
-    .player-card-bet {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: #f0d060;
-      margin-bottom: 4px;
-    }
-
-    .player-card-stats {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-    .player-card-stats .stat-bar {
-      width: 50px;
-      height: 4px;
-      background: #1a1a1a;
-      border-radius: 2px;
-      overflow: hidden;
-      display: inline-block;
-      vertical-align: middle;
-    }
-    .player-card-stats .stat-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-    }
-    .player-card-stats .stat-val { color: var(--text-secondary); }
 
     /* --- Stats Dashboard (below player grid) --- */
     /* --- Reasoning Panel (right col, hero section) --- */
@@ -1417,10 +1236,6 @@
       0% { background: rgba(68,170,255,0.08); }
       100% { background: var(--bg-card); }
     }
-    .player-card.strategy-updated {
-      animation: strategy-flash 1.5s ease-out;
-    }
-
     /* --- Keyboard Shortcuts Overlay --- */
     .shortcuts-overlay {
       display: none;
@@ -1491,15 +1306,6 @@
     }
 
     /* --- Dramatic Moment: All-In --- */
-    .player-card.all-in {
-      border-left-color: #e44 !important;
-    }
-    .player-card-role.role-allin {
-      color: #e44 !important;
-      font-weight: 700;
-      text-shadow: 0 0 6px rgba(228,68,68,0.5);
-    }
-
     @keyframes allin-flash {
       0% { background: var(--bg-elevated); }
       15% { background: #2a1010; box-shadow: inset 0 0 30px rgba(228,68,68,0.3); }
@@ -1553,9 +1359,6 @@
       }
       .reasoning-body {
         max-height: 50vh;
-      }
-      .player-grid {
-        grid-template-columns: 1fr 1fr;
       }
     }
 
@@ -1692,13 +1495,6 @@
       0%, 100% { opacity: 0.85; }
       50% { opacity: 1; }
     }
-    .player-card-streak {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 3px;
-      text-align: center;
-    }
 
     /* --- Score Badge --- */
     .score-badge {
@@ -1792,26 +1588,6 @@
       to { opacity: 0; }
     }
 
-    /* --- Player card bluff line --- */
-    .player-card-bluffs {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    /* --- Player card session line --- */
-    .player-card-session {
-      margin-top: 4px;
-    }
-    .player-card-session .session-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-    }
 
     /* --- Leaderboard score column --- */
     .leaderboard-table .score-col {
@@ -1947,22 +1723,6 @@
       60% { opacity: 1; transform: scale(1.05); }
       100% { opacity: 1; transform: scale(1); }
     }
-
-    /* --- Player Elimination Announcement --- */
-    .player-card.eliminated {
-      border-left-color: #a00 !important;
-      background: #1a0808 !important;
-      opacity: 1 !important;
-      animation: elimination-pulse 0.6s ease-in-out 3 !important;
-      position: relative;
-      overflow: hidden;
-    }
-    @keyframes elimination-pulse {
-      0%, 100% { background: #1a0808; box-shadow: inset 0 0 0 rgba(170,0,0,0); }
-      50% { background: #2a0a0a; box-shadow: inset 0 0 30px rgba(170,0,0,0.2); }
-    }
-    .player-card.eliminated .player-card-name { color: #666; text-decoration: line-through; }
-    .player-card.eliminated .player-card-chips { color: #a00; }
 
     .elimination-stamp {
       position: absolute;
@@ -2167,36 +1927,6 @@
         border-bottom: 1px solid var(--border);
       }
 
-      /* Player grid: single column on very small screens */
-      .player-grid {
-        grid-template-columns: 1fr;
-      }
-
-      /* Player cards: tighter */
-      .player-card {
-        padding: 10px 12px;
-        min-height: 90px;
-      }
-      .player-card-name {
-        font-size: 11px;
-      }
-      .player-card-personality {
-        font-size: 8px;
-      }
-      .player-card-strategy {
-        font-size: 10px;
-        -webkit-line-clamp: 1;
-      }
-      .player-card-chips {
-        font-size: 11px;
-      }
-      .player-card-stats {
-        font-size: 9px;
-      }
-      .player-card-stats .stat-bar {
-        width: 35px;
-      }
-
       /* Section headers */
       .section-header {
         padding: 8px 12px 5px;
@@ -2378,12 +2108,6 @@
       }
     }
 
-    /* Player grid: 2 cols between 375 and 520 */
-    @media (min-width: 375px) and (max-width: 520px) {
-      .player-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
   </style>
 </head>
 <body>
@@ -2441,8 +2165,6 @@
     <!-- Players + Reasoning side by side on desktop, stacked on mobile -->
     <div class="players-reasoning-row">
       <div class="left-col">
-        <div class="section-header">Players</div>
-        <div class="player-grid" id="player-grid"></div>
         <div class="section-header" style="border-top: 1px solid var(--border);">Table Talk</div>
         <div class="chat-feed" id="chat-feed">
           <div class="chat-feed-messages" id="chat-feed-messages"></div>
@@ -2785,7 +2507,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     const leaderboardEl = document.getElementById('leaderboard');
 
     // New dashboard elements
-    const playerGridEl = document.getElementById('player-grid');
     const reasoningBodyEl = document.getElementById('reasoning-body');
     const reasoningWhoEl = document.getElementById('reasoning-who');
     const reasoningTickEl = document.getElementById('reasoning-tick'); // may be null if removed
@@ -4916,6 +4637,17 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const shortName = displayName.length > 8 ? displayName.slice(0, 7) + '..' : displayName;
         pokerCtx.fillText(shortName, px, py + 12 * charScale + bobOffset);
 
+        // SB/BB label
+        if (state.blinds[bot.name] === 'small') {
+          pokerCtx.font = 'bold 7px monospace';
+          pokerCtx.fillStyle = '#69d';
+          pokerCtx.fillText('SB', px + 15 * charScale, py + 12 * charScale + bobOffset);
+        } else if (state.blinds[bot.name] === 'big') {
+          pokerCtx.font = 'bold 7px monospace';
+          pokerCtx.fillStyle = '#e66';
+          pokerCtx.fillText('BB', px + 15 * charScale, py + 12 * charScale + bobOffset);
+        }
+
         // Chip count text below name
         const chips = state.chips[bot.name] || 0;
         const bet = state.currentBets[bot.name] || 0;
@@ -4930,6 +4662,13 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           pokerCtx.font = '8px monospace';
           pokerCtx.fillStyle = '#D4A017';
           pokerCtx.fillText('bet ' + bet, px, py + 24 * charScale + bobOffset);
+        }
+
+        // Folded status label
+        if (isFolded) {
+          pokerCtx.font = 'bold 7px monospace';
+          pokerCtx.fillStyle = '#a44';
+          pokerCtx.fillText('FOLD', px, py + 24 * charScale + bobOffset);
         }
 
         // Thinking dots above active player
@@ -5085,9 +4824,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       // --- Pixel Poker Canvas ---
       renderPokerCanvas();
 
-      // --- Player Grid ---
-      renderPlayerGrid();
-
       // --- Chat Feed ---
       renderChatFeed();
 
@@ -5109,101 +4845,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         renderJoinPanel();
         renderSessionPanel();
       }
-    }
-
-    function renderPlayerGrid() {
-      let html = '';
-      const bots = state.bots;
-
-      if (bots.length === 0) {
-        playerGridEl.innerHTML = '<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--text-muted);font-style:italic;">Waiting for players to join...</div>';
-        return;
-      }
-
-      for (let i = 0; i < bots.length; i++) {
-        const bot = bots[i];
-        const chips = state.chips[bot.name] ?? '?';
-        const isFolded = state.foldedPlayers.has(bot.name);
-        const isActive = state.activePlayer === bot.name;
-        const isWinner = state.lastResult?.winners?.includes(bot.name) && state.phase === 'showdown';
-        const bet = state.currentBets[bot.name] || 0;
-        const isHuman = !!seatData[bot.name]?.username;
-        const displayName = isHuman ? seatData[bot.name].username : (bot.displayName || bot.name);
-        const typeBadge = isHuman ? '\uD83D\uDC64' : '\uD83E\uDD16';
-        const strategy = seatData[bot.name]?.strategy || '';
-        const stats = seatData[bot.name]?.stats || state.leaderboard[bot.name]?.stats || {};
-
-        const isAllIn = !isFolded && typeof chips === 'number' && chips === 0 && state.phase === 'betting';
-        const isEliminated = eliminatedPlayers.has(bot.name);
-
-        let cardClasses = 'player-card';
-        if (isActive) cardClasses += ' active';
-        if (isFolded) cardClasses += ' folded';
-        if (isWinner) cardClasses += ' winner';
-        if (isAllIn) cardClasses += ' all-in';
-        if (isEliminated) cardClasses += ' eliminated';
-
-        // Hole cards
-        const cards = state.holeCards[bot.name];
-        let cardsHtml = '';
-        if (cards && cards.length === 2) {
-          cardsHtml = `<div class="player-card-cards">${renderCard(cards[0])} ${renderCard(cards[1])}</div>`;
-        } else if (state.phase === 'betting' && !isFolded) {
-          cardsHtml = `<div class="player-card-cards">${renderFaceDownCard()} ${renderFaceDownCard()}</div>`;
-        }
-
-        // Role / blind info
-        let roleText = '';
-        let roleClass = 'player-card-role';
-        if (isEliminated) {
-          roleText = 'BUSTED';
-          roleClass += ' role-allin';
-        } else if (isFolded) {
-          roleText = 'FOLDED';
-        } else if (isAllIn) {
-          roleText = 'ALL-IN';
-          roleClass += ' role-allin';
-        } else if (isActive) {
-          roleText = '<span class="thinking-dots-text"><span>.</span><span>.</span><span>.</span></span>';
-        } else if (state.blinds[bot.name] === 'small') {
-          roleText = 'SB';
-          roleClass += ' blind-sb';
-        } else if (state.blinds[bot.name] === 'big') {
-          roleText = 'BB';
-          roleClass += ' blind-bb';
-        }
-
-        // Streak indicators
-        const winStreak = stats.streakCurrent || 0;
-        const lossStreak = stats.lossStreakCurrent || 0;
-        let streakBadge = '';
-        if (winStreak >= 3) {
-          streakBadge = `<span class="streak-indicator hot" title="${winStreak} wins in a row">\uD83D\uDD25${winStreak}</span>`;
-        } else if (lossStreak >= 3) {
-          streakBadge = `<span class="streak-indicator cold" title="${lossStreak} losses in a row">\u2744\uFE0F${lossStreak}</span>`;
-        }
-
-        // Personality archetype
-        const personality = getPlayerPersonality(bot.name, displayName, isHuman, stats);
-        const personalityHtml = personality
-          ? `<div class="player-card-personality"><span class="archetype-name">${escapeHtml(personality.archetype)}</span><span class="archetype-tagline">${escapeHtml(personality.tagline)}</span></div>`
-          : '';
-
-        html += `
-          <div class="${cardClasses}" data-bot="${bot.name}">
-            ${isEliminated ? '<div class="elimination-stamp">ELIMINATED</div>' : ''}
-            <div class="player-card-header">
-              <span class="player-card-name">${escapeHtml(displayName)}<span class="type-badge">${typeBadge}</span>${isWinner ? '<span class="winner-badge">W</span>' : ''}${streakBadge}</span>
-              <span class="${roleClass}">${roleText}</span>
-            </div>
-            ${cardsHtml}
-            ${isWinner && state.lastResult?.handName ? `<div class="hand-strength-label">${escapeHtml(state.lastResult.handName)}</div>` : ''}
-            <div class="player-card-chips"><span class="chip-label">chips </span>${typeof chips === 'number' ? chips.toLocaleString() : chips}${bet > 0 ? ` <span class="player-card-bet-inline">(bet ${bet})</span>` : ''}</div>
-          </div>
-        `;
-      }
-
-      playerGridEl.innerHTML = html;
     }
 
     function renderChatFeed() {
@@ -5957,14 +5598,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         return;
       }
       if (data.type === 'strategy_updated') {
-        // Brief flash on the player card
-        const cards = playerGridEl.querySelectorAll('.player-card');
-        cards.forEach(el => {
-          if (el.dataset.bot === data.botName) {
-            el.classList.add('strategy-updated');
-            setTimeout(() => el.classList.remove('strategy-updated'), 1500);
-          }
-        });
+        // Player grid removed — no-op
         return;
       }
 
