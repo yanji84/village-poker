@@ -45,6 +45,9 @@ export function getActivePlayer(state, bot) {
   if (!player || player.folded) return null;
   // All-in players (0 chips) cannot take any action
   if (player.chips === 0) return null;
+  // Prevent double-action in the same tick (bot response with 2 actions
+  // where the first advances the street and the same player is first to act)
+  if (player.lastActedTick === state.clock.tick) return null;
   return { hand, player };
 }
 
@@ -162,6 +165,14 @@ function postBlind(state, botName, amount, type) {
 export function advanceAction(state) {
   const hand = state.hand;
   const seats = hand.seats;
+
+  // Mark the current active player's tick to prevent double-action
+  // (when a bot's response has 2 actions and the first advances the street
+  // back to the same player as first-to-act on the new street)
+  if (hand.activePlayer && hand.players[hand.activePlayer]) {
+    hand.players[hand.activePlayer].lastActedTick = state.clock.tick;
+  }
+
   const activePlayers = seats.filter(s => !hand.players[s.botName].folded);
 
   // One player left — they win
