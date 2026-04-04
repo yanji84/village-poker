@@ -2301,7 +2301,6 @@
     </div>
 
     <div class="join-panel-actions" id="join-actions" style="display:none">
-      <button class="join-panel-btn danger" id="leave-btn" onclick="leaveOrRelease()">Leave Queue</button>
       <button class="join-panel-btn secondary" id="edit-strategy-btn" onclick="showEditStrategy()">Edit Strategy</button>
     </div>
   </div>
@@ -3010,11 +3009,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
 
       const actionsDiv = document.getElementById('join-actions');
-      const leaveBtn = document.getElementById('leave-btn');
       const editBtn = document.getElementById('edit-strategy-btn');
-      if (isQueued || isSeated) {
+      if (isSeated && !isHumanPlayer) {
         actionsDiv.style.display = '';
-        leaveBtn.textContent = isSeated ? 'Release Seat' : 'Leave Queue';
         editBtn.style.display = '';
       } else {
         actionsDiv.style.display = 'none';
@@ -6064,8 +6061,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       const isAuthenticated = hasArenaToken() || !!authUsername;
 
-      // Show/hide my hands section
-      if (isAuthenticated && myHandsSection) {
+      // Show/hide my hands section — hide when actively playing or queued
+      const isQueued = !!getWaitlistState();
+      if (isAuthenticated && !myBot && !isQueued && myHandsSection) {
         myHandsSection.style.display = '';
       } else if (myHandsSection) {
         myHandsSection.style.display = 'none';
