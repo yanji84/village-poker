@@ -3285,6 +3285,36 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     let pokerAnimFrame = 0;
     let _canvasW = 600;
     let _fs = 1;
+
+    // Chip toss animations
+    const chipAnims = [];
+    let _prevBets = {};
+    function triggerChipAnim(botName, amount) {
+      const bot = (state.bots || []).find(b => b.name === botName);
+      if (!bot) return;
+      const SEAT_POSITIONS = [{x:0.13,y:0.20},{x:0.50,y:0.13},{x:0.87,y:0.20},{x:0.87,y:0.76},{x:0.50,y:0.84},{x:0.13,y:0.76}];
+      const idx = state.bots.indexOf(bot) % SEAT_POSITIONS.length;
+      const seat = SEAT_POSITIONS[idx];
+      chipAnims.push({ fromX: seat.x, fromY: seat.y, toX: 0.5, toY: 0.48, frame: 0, amount });
+    }
+    function drawChipAnims(ctx, w, h) {
+      for (let i = chipAnims.length - 1; i >= 0; i--) {
+        const a = chipAnims[i];
+        const t = Math.min(a.frame / 15, 1); // 15 frames duration
+        const ease = t * (2 - t); // ease-out
+        const x = a.fromX * w + (a.toX * w - a.fromX * w) * ease;
+        const y = a.fromY * h + (a.toY * h - a.fromY * h) * ease - 10 * Math.sin(t * Math.PI);
+        const alpha = t < 0.8 ? 1 : 1 - (t - 0.8) / 0.2;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#e8b828';
+        ctx.beginPath();
+        ctx.arc(x, y, 4 * _fs, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        a.frame++;
+        if (a.frame > 15) chipAnims.splice(i, 1);
+      }
+    }
     const f = (px) => Math.round(px * _fs) + 'px';
 
     // Muted character palettes matching pixel-agents aesthetic
@@ -4228,6 +4258,15 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       // Draw active celebration particles
       updateAndDrawCelebration(pokerCtx, w, h);
+
+      // Chip toss animations
+      for (const bot of bots) {
+        const newBet = state.currentBets[bot.name] || 0;
+        const oldBet = _prevBets[bot.name] || 0;
+        if (newBet > oldBet) triggerChipAnim(bot.name, newBet - oldBet);
+        _prevBets[bot.name] = newBet;
+      }
+      drawChipAnims(pokerCtx, w, h);
 
       pokerAnimFrame++;
     }
