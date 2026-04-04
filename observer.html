@@ -1831,18 +1831,6 @@
     <!-- Players + Reasoning side by side on desktop, stacked on mobile -->
     <div class="players-reasoning-row">
       <div class="left-col">
-        <div class="reasoning-panel" id="reasoning-panel">
-          <div class="reasoning-header">
-            <span style="color:#555;font-weight:700">private thought</span>
-            <span class="who" id="reasoning-who">Waiting for action...</span>
-          </div>
-          <div class="reasoning-body" id="reasoning-body">
-            <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="right-col">
         <div class="section-header">Table Talk</div>
         <div class="chat-feed" id="chat-feed">
           <div class="chat-feed-messages" id="chat-feed-messages"></div>
@@ -1851,6 +1839,18 @@
           <input type="text" id="chat-input" placeholder="Say something..." maxlength="200"
                  onkeydown="if(event.key==='Enter')sendChat()" />
           <button class="chat-send-btn" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="reasoning-panel" id="reasoning-panel">
+          <div class="reasoning-header">
+            <span style="color:#555;font-weight:700">private thought</span>
+            <span class="who" id="reasoning-who">Waiting for action...</span>
+          </div>
+          <div class="reasoning-body" id="reasoning-body">
+            <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
+          </div>
         </div>
       </div>
     </div>
