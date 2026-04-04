@@ -4947,6 +4947,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.community = cards;
             state.currentBets = {};
             state.lastActions = {};
+            state.blinds = {};
+            _prevBets = {};
             // Trigger card reveal animation for newly dealt cards (not on init replay)
             if (cards.length > oldLen && !state._isInitReplay) {
               cardRevealAnim = {
@@ -5116,6 +5118,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Clear stale bet display on every phase change
         state.currentBets = {};
         state.lastActions = {};
+        state.blinds = {};
+        _prevBets = {};
         if (data.to === 'waiting') {
           state.contextMessage = 'Waiting for next hand...';
           state.pot = 0;
