@@ -4279,13 +4279,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       // Draw active celebration particles
       updateAndDrawCelebration(pokerCtx, w, h);
 
-      // Chip toss animations
-      for (const bot of bots) {
-        const newBet = state.currentBets[bot.name] || 0;
-        const oldBet = _prevBets[bot.name] || 0;
-        if (newBet > oldBet) triggerChipAnim(bot.name, newBet - oldBet);
-        _prevBets[bot.name] = newBet;
-      }
+      // Chip toss animations (only draw, triggering is done from result event)
       drawChipAnims(pokerCtx, w, h);
 
       pokerAnimFrame++;
@@ -5022,6 +5016,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               if (!state._isInitReplay) {
                 showHandResultToast(winnerNames, amount, handName);
                 SoundFX.win();
+                // Chip toss: all non-folded players send chips to pot
+                for (const bot of (state.bots || [])) {
+                  if (!state.foldedPlayers.has(bot.name)) {
+                    triggerChipAnim(bot.name);
+                  }
+                }
               }
             }
           }
