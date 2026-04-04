@@ -361,6 +361,7 @@ export const tools = {
       hand.pot += toCall;
       state.buyIns[bot.name] = player.chips;
       player.acted = true;
+    player.lastActedTick = state.clock.tick;
       emitSay(bot, params, state);
       advanceAction(state);
       return {
@@ -373,6 +374,7 @@ export const tools = {
     }
 
     player.acted = true;
+    player.lastActedTick = state.clock.tick;
     emitSay(bot, params, state);
     advanceAction(state);
 
@@ -398,6 +400,7 @@ export const tools = {
     hand.pot += toCall;
     state.buyIns[bot.name] = player.chips;
     player.acted = true;
+    player.lastActedTick = state.clock.tick;
     emitSay(bot, params, state);
 
     advanceAction(state);
@@ -437,6 +440,7 @@ export const tools = {
     hand.currentBet = amount;
     state.buyIns[bot.name] = player.chips;
     player.acted = true;
+    player.lastActedTick = state.clock.tick;
     emitSay(bot, params, state);
 
     // Reset acted for everyone else (they need to respond to the raise)
@@ -473,6 +477,7 @@ export const tools = {
     // Can't fold when there's nothing to call — convert to check
     if (player.bet >= hand.currentBet) {
       player.acted = true;
+    player.lastActedTick = state.clock.tick;
       emitSay(bot, params, state);
       advanceAction(state);
       return {
@@ -535,6 +540,7 @@ export const tools = {
           hand.pot += toCall;
           state.buyIns[bot.name] = player.chips;
           player.acted = true;
+    player.lastActedTick = state.clock.tick;
           emitSay(bot, params, state);
           advanceAction(state);
           return {
@@ -546,6 +552,7 @@ export const tools = {
           };
         } else {
           player.acted = true;
+    player.lastActedTick = state.clock.tick;
           emitSay(bot, params, state);
           advanceAction(state);
           return {
@@ -560,6 +567,7 @@ export const tools = {
 
     player.folded = true;
     player.acted = true;
+    player.lastActedTick = state.clock.tick;
     emitSay(bot, params, state);
 
     advanceAction(state);
