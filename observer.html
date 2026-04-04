@@ -2847,6 +2847,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         }
         if (!found && authUsername) {
           fetchPlayerStats(authUsername);
+          // Validate waitlist state against server
+          const wlState = getWaitlistState();
+          if (wlState) {
+            const wlRes = await fetch(apiBase + '/waitlist', { credentials: 'include' }).catch(() => null);
+            if (wlRes?.ok) {
+              const wlData = await wlRes.json().catch(() => ({}));
+              const wl = wlData.waitlist || wlData || [];
+              const inServer = wl.some(w => (w.username || '').toLowerCase() === authUsername.toLowerCase());
+              if (!inServer) {
+                // Server doesn't have us in waitlist — clear stale local state
+                setWaitlistState(null);
+              }
+            }
+          }
         }
         renderJoinPanel();
       } catch (e) {
@@ -3304,8 +3318,13 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           msgEl.className = 'join-panel-msg success';
           msgEl.textContent = 'You are on the waitlist!';
         }
+        // Clear form after successful join
+        document.getElementById('join-username').value = '';
+        document.getElementById('join-pin').value = '';
+        const stratEl = document.getElementById('join-strategy');
+        if (stratEl) stratEl.value = '';
         btn.disabled = false;
-        btn.textContent = 'Join Waitlist';
+        btn.textContent = 'Join Game';
         fetchPlayerStats(username);
         fetchSeats();
         await fetchWaitlist();
@@ -3396,13 +3415,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (!msg) return;
       input.value = '';
       try {
-        await fetch(apiBase + '/chat', {
+        const res = await fetch(apiBase + '/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ message: msg }),
         });
-      } catch {}
+        if (!res.ok) {
+          input.value = msg; // Restore message so user can retry
+          showToast('Message not sent');
+        }
+      } catch {
+        input.value = msg;
+        showToast('Message not sent — network error');
+      }
     }
 
     function hideActionPanel() {
@@ -3416,19 +3442,42 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const amount = action === 'raise' ? parseInt(document.getElementById('raise-amount').value) : undefined;
       const say = document.getElementById('human-say')?.value?.trim() || undefined;
 
+      // Validate raise amount
+      if (action === 'raise') {
+        const raiseInput = document.getElementById('raise-amount');
+        const min = parseInt(raiseInput.min) || 0;
+        const max = parseInt(raiseInput.max) || 0;
+        if (!amount || amount < min) {
+          showToast('Raise must be at least ' + min);
+          return;
+        }
+        if (amount > max) {
+          showToast('Raise cannot exceed your chips (' + max + ')');
+          return;
+        }
+      }
+
       // Disable buttons to prevent double-submit
       const buttons = document.querySelectorAll('.human-action-panel .action-btn');
       buttons.forEach(b => b.disabled = true);
 
       try {
-        await fetch(apiBase + '/action', {
+        const res = await fetch(apiBase + '/action', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ action, amount, say, thought: 'Human decision' }),
         });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.error || 'Action failed — you may be auto-folded');
+          buttons.forEach(b => b.disabled = false);
+          return; // Keep panel open so user can retry
+        }
       } catch (e) {
-        console.error('Failed to submit action:', e);
+        showToast('Network error — action not sent. Try again.');
+        buttons.forEach(b => b.disabled = false);
+        return; // Keep panel open so user can retry
       }
 
       hideActionPanel();
@@ -3473,6 +3522,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             }
             document.cookie = 'arena_bot=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
             document.cookie = 'arena_token=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+            isHumanPlayer = false;
+            hideActionPanel();
+            showToast('You left the table. Chips saved for your return.');
           } else {
             const data = await res.json().catch(() => ({}));
             alert(data.error || 'Failed to release seat.');
