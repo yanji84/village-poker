@@ -630,10 +630,16 @@
     }
 
     /* --- About FAB --- */
-    .about-fab {
+    .fab-group {
       position: fixed;
       bottom: 16px;
       right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 999;
+    }
+    .fab-circle {
       width: 28px;
       height: 28px;
       display: flex;
@@ -646,10 +652,27 @@
       font-family: var(--mono);
       font-size: 12px;
       cursor: pointer;
-      z-index: 999;
       transition: all 0.15s;
     }
-    .about-fab:hover { color: var(--text-primary); border-color: #444; }
+    .fab-circle:hover { color: var(--text-primary); border-color: #444; }
+    .leaderboard-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 2000;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    .leaderboard-overlay.open { display: flex; }
+    .leaderboard-overlay .leaderboard {
+      max-width: 700px;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
 
 
     .panel-quick-stats { padding: 0 16px 8px; }
@@ -1974,8 +1997,10 @@
     </div>
   </div>
 
-  <!-- Leaderboard -->
-  <div class="leaderboard" id="leaderboard"></div>
+  <!-- Leaderboard Overlay -->
+  <div class="leaderboard-overlay" id="leaderboard-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="leaderboard" id="leaderboard"></div>
+  </div>
 
   <!-- Game Stats -->
 
@@ -2167,6 +2192,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     function showAbout() {
       document.getElementById('intro-banner').style.display = '';
+    }
+
+    function toggleLeaderboard() {
+      const overlay = document.getElementById('leaderboard-overlay');
+      overlay.classList.toggle('open');
+      if (overlay.classList.contains('open')) fetchLeaderboard();
     }
 
     // --- Base path for API calls (works behind /poker/ reverse proxy) ---
@@ -5490,6 +5521,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // (countdown timer removed — adaptive ticks make fixed countdown meaningless)
   </script>
 
-  <div class="about-fab" onclick="showAbout()">?</div>
+  <div class="fab-group">
+    <div class="fab-circle" onclick="toggleLeaderboard()" title="Leaderboard">&#9776;</div>
+    <div class="fab-circle" onclick="showAbout()" title="About">?</div>
+  </div>
 </body>
 </html>
