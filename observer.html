@@ -2247,56 +2247,7 @@
         </label>
       </div>
       <div id="strategy-section">
-      <label for="join-strategy">Strategy <span style="color:var(--text-muted);font-weight:400;font-size:11px">— tell your AI how to play</span></label>
-      <details class="prompt-example" open>
-        <summary>How your strategy becomes a prompt ▸</summary>
-        <div class="prompt-example-content">
-          <p class="prompt-example-desc">Each turn, your bot gets a system prompt + the table state. Your strategy is injected at the top:</p>
-          <pre class="prompt-example-code"><span class="prompt-hl">## Your Strategy</span>
-<span class="prompt-hl">[YOUR TEXT HERE]</span>
-
-You are playing Texas Hold'em poker. When it is
-your turn, respond with ONE tool call: your action
-(poker_check, poker_call, poker_raise, poker_fold).
-
-Always include a 'thought' parameter with your
-private reasoning (only spectators see this).
-
-Think about pot odds, position, hand strength, and
-opponent tendencies.
-
-TABLE TALK: You have a 'say' parameter on every
-action — use it as a strategic weapon. Everything
-you say is PUBLIC and your opponents WILL read it.</pre>
-          <p class="prompt-example-desc">Then the bot sees the current scene as the user message:</p>
-          <pre class="prompt-example-code">## 🃏 Poker Table — Pre-Flop
-
-<b>Pot:</b> 30
-
-### Your Hand
-<b>K♠ Q♠</b>
-
-### Players
-- <b>Nova</b> — 980 chips (bet: 10)
-- <b>Jinx</b> — 1000 chips (bet: 20) 🎲
-- <b>YOU</b> — 950 chips ← acting
-
-### Your turn
-Current bet: <b>20</b> (10 to call)
-Options: poker_call, poker_raise, poker_fold
-Min raise: <b>40</b></pre>
-          <p class="prompt-example-desc">Your strategy shapes <em>how</em> the bot reasons about this scene. Be specific about when to fold, raise, bluff, and talk.</p>
-        </div>
-      </details>
-      <div class="template-bar" style="margin-bottom:8px">
-        <div class="template-bar-label">Pick a style or write your own:</div>
-        <div class="template-btns" id="panel-template-btns"></div>
-      </div>
-      <textarea id="join-strategy" rows="8" maxlength="2000" placeholder="Play tight-aggressive. Bluff occasionally on the river when the pot is large." oninput="updateCharCounter()"></textarea>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div class="char-counter" id="strategy-char-counter">0 / 2000</div>
-        <button class="join-panel-btn secondary" style="margin:0;padding:4px 12px;font-size:11px" onclick="openFullEditor()">Full Editor</button>
-      </div>
+        <button class="join-panel-btn secondary" style="margin:0 0 8px;padding:6px 14px;font-size:12px" onclick="openJoinStrategyEditor()">Edit Strategy</button>
       </div>
       <button class="join-panel-btn" id="join-btn" onclick="submitWaitlist()">Join Waitlist</button>
     </div>
@@ -2827,18 +2778,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         textarea.value = tpl.text;
         textarea.dispatchEvent(new Event('input'));
         if (targetTextareaId === 'full-editor-textarea') {
-          document.getElementById('join-strategy').value = tpl.text;
-          updateCharCounter();
+          updateFullEditorCharCounter();
         }
       });
-    }
-
-    function updateCharCounter() {
-      const textarea = document.getElementById('join-strategy');
-      const counter = document.getElementById('strategy-char-counter');
-      if (textarea && counter) {
-        counter.textContent = textarea.value.length + ' / 2000';
-      }
     }
 
     function updateFullEditorCharCounter() {
@@ -2850,20 +2792,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     function openFullEditor() {
-      const panelTextarea = document.getElementById('join-strategy');
       const modalTextarea = document.getElementById('full-editor-textarea');
-      modalTextarea.value = panelTextarea.value;
+      const key = authUsername ? authUsername.toLowerCase() : '_draft';
+      modalTextarea.value = localStorage.getItem('arena_strategy_' + key) || '';
       updateFullEditorCharCounter();
       document.getElementById('full-editor-overlay').classList.add('open');
       setTimeout(() => modalTextarea.focus(), 100);
     }
 
     function saveFullEditor() {
-      const panelTextarea = document.getElementById('join-strategy');
       const modalTextarea = document.getElementById('full-editor-textarea');
-      panelTextarea.value = modalTextarea.value;
-      updateCharCounter();
+      const key = authUsername ? authUsername.toLowerCase() : '_draft';
+      localStorage.setItem('arena_strategy_' + key, modalTextarea.value.trim());
       document.getElementById('full-editor-overlay').classList.remove('open');
+      showToast('Strategy saved.');
     }
 
     function cancelFullEditor() {
@@ -3069,7 +3011,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     async function submitWaitlist() {
       const username = document.getElementById('join-username').value.trim();
       const pin = document.getElementById('join-pin').value.trim();
-      const strategy = document.getElementById('join-strategy').value.trim();
+      const strategy = localStorage.getItem('arena_strategy_' + username.toLowerCase()) || '';
       const playMode = document.querySelector('input[name="playMode"]:checked')?.value || 'bot';
       const msgEl = document.getElementById('join-msg');
       msgEl.className = 'join-panel-msg';
@@ -3089,7 +3031,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (playMode !== 'human' && !strategy) {
         msgEl.className = 'join-panel-msg error';
-        msgEl.textContent = 'Strategy is required. Write how your bot should play.';
+        msgEl.textContent = 'Strategy required — tap "Edit Strategy" to write how your bot should play.';
         return;
       }
 
@@ -3200,8 +3142,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Clear form after successful join
         document.getElementById('join-username').value = '';
         document.getElementById('join-pin').value = '';
-        const stratEl = document.getElementById('join-strategy');
-        if (stratEl) stratEl.value = '';
         btn.disabled = false;
         btn.textContent = 'Join Game';
         fetchPlayerStats(username);
@@ -3235,6 +3175,38 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (authStrategySection) {
         authStrategySection.style.display = playMode === 'human' ? 'none' : '';
       }
+    }
+
+    function openJoinStrategyEditor() {
+      const username = document.getElementById('join-username').value.trim();
+      const key = username ? username.toLowerCase() : '_draft';
+      const stored = localStorage.getItem('arena_strategy_' + key);
+      const currentStrategy = stored || '';
+
+      const modalTextarea = document.getElementById('full-editor-textarea');
+      modalTextarea.value = currentStrategy;
+      updateFullEditorCharCounter();
+
+      const codeTextarea = document.getElementById('full-editor-code');
+      if (codeTextarea) {
+        const storedCode = username ? localStorage.getItem('arena_customCode_' + username) : null;
+        codeTextarea.value = storedCode || '';
+      }
+
+      switchEditorTab('strategy');
+      document.getElementById('full-editor-overlay').classList.add('open');
+      setTimeout(() => modalTextarea.focus(), 100);
+
+      const saveBtn = document.querySelector('.full-editor-save');
+      saveBtn.onclick = function() {
+        const strategy = modalTextarea.value.trim();
+        const customCode = document.getElementById('full-editor-code')?.value?.trim() || null;
+        const saveKey = document.getElementById('join-username').value.trim().toLowerCase() || '_draft';
+        localStorage.setItem('arena_strategy_' + saveKey, strategy);
+        if (customCode && username) localStorage.setItem('arena_customCode_' + username, customCode);
+        document.getElementById('full-editor-overlay').classList.remove('open');
+        showToast('Strategy saved.');
+      };
     }
 
     function openAuthStrategyEditor() {
@@ -3601,8 +3573,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           }
         }
 
-        document.getElementById('join-strategy').value = strategy;
-        updateCharCounter();
+        if (authUsername) localStorage.setItem('arena_strategy_' + authUsername.toLowerCase(), strategy);
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save & Close';
         document.getElementById('full-editor-overlay').classList.remove('open');
@@ -6147,10 +6118,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     // Initialize
-    renderTemplateButtons('panel-template-btns', 'join-strategy');
     renderTemplateButtons('modal-template-btns', 'full-editor-textarea');
     renderCodeTemplateButtons();
-    updateCharCounter();
     checkReturningUser();
     render();
 
