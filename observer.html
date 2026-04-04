@@ -4899,8 +4899,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const botLossStreak = botStats.lossStreakCurrent || 0;
         if (botWinStreak >= 3 && !(isActive && !isTalking && state.phase === 'betting')) {
           drawStreakFlame(pokerCtx, px, py, charScale, botWinStreak);
-        } else if (botLossStreak >= 3) {
-          drawStreakIce(pokerCtx, px, py, charScale, botLossStreak);
         }
 
         // Elimination effect (red X + "OUT" label for busted players)
