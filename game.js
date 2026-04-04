@@ -144,6 +144,7 @@ export function dealNewHand(state) {
 function postBlind(state, botName, amount, type) {
   const p = state.hand.players[botName];
   const actual = Math.min(amount, p.chips);
+  const isAllIn = actual < amount && p.chips === actual;
   p.chips -= actual;
   p.bet += actual;
   p.totalBet += actual;
@@ -157,9 +158,14 @@ function postBlind(state, botName, amount, type) {
     action: 'blind',
     blindType: type,
     amount: actual,
-    message: `posts ${type} blind (${actual})`,
+    message: isAllIn ? `posts ${type} blind (${actual}) — all-in` : `posts ${type} blind (${actual})`,
     visibility: 'public',
   });
+
+  // Mark as acted if all-in — they can't do anything more
+  if (p.chips === 0) {
+    p.acted = true;
+  }
 }
 
 export function advanceAction(state) {
