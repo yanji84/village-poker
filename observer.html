@@ -576,6 +576,7 @@
       gap: 0;
       min-height: 32px;
     }
+    .join-bar-label { color: #444; margin-right: 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 1px; user-select: none; }
     .join-bar-prompt { color: var(--green); margin-right: 6px; white-space: nowrap; user-select: none; }
     .join-bar-input {
       background: transparent;
@@ -1912,14 +1913,15 @@
   <!-- Join Bar -->
   <div class="join-bar" id="join-bar">
     <div id="join-bar-form">
+      <span class="join-bar-label">join</span>
       <span class="join-bar-prompt">&gt;</span>
-      <input type="text" id="join-username" maxlength="20" placeholder="name" class="join-bar-input" />
+      <input type="text" id="join-username" maxlength="20" placeholder="your name" class="join-bar-input" />
       <span class="join-bar-sep">|</span>
       <span class="join-bar-cmd" onclick="document.getElementById('join-username').value = generateRandomName()">~random</span>
       <span class="join-bar-sep">|</span>
-      <span class="join-bar-cmd human" onclick="joinGame('human')">/human</span>
+      <span class="join-bar-cmd human" onclick="joinGame('human')" title="Play the cards yourself">/human</span>
       <span class="join-bar-sep">|</span>
-      <span class="join-bar-cmd bot" onclick="joinGame('bot')">/bot</span>
+      <span class="join-bar-cmd bot" onclick="joinGame('bot')" title="Write a strategy for your AI bot">/bot</span>
     </div>
     <div id="join-bar-status" style="display:none">
       <span class="join-bar-prompt">&gt;</span>
