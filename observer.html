@@ -3953,6 +3953,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     const pokerCanvas = document.getElementById('poker-canvas');
     const pokerCtx = pokerCanvas.getContext('2d');
     let pokerAnimFrame = 0;
+    let _canvasW = 600;
+    let _fs = 1;
+    const f = (px) => Math.round(px * _fs) + 'px';
 
     // Muted character palettes matching pixel-agents aesthetic
     const CHAR_PALETTES = [
@@ -4555,8 +4558,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       // Players
       const bots = state.bots || [];
       const charScale = Math.max(1.5, Math.min(4, w / 280));
-      const fs = Math.max(0.6, Math.min(1, w / 600)); // font scale 0.6-1.0
-      const f = (px) => Math.round(px * fs) + 'px'; // scaled font size
+      _fs = Math.max(0.6, Math.min(1, w / 600));
+      _canvasW = w;
 
       bots.forEach((bot, i) => {
         const seatIdx = i % SEAT_POSITIONS.length;
@@ -4592,7 +4595,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // Hole cards to the side of avatar (never overlapping)
         const hCards = state.holeCards[bot.name];
-        const cw = Math.round(18*fs), ch = Math.round(26*fs), cardGap = Math.round(3*fs);
+        const cw = Math.round(18*_fs), ch = Math.round(26*_fs), cardGap = Math.round(3*_fs);
         const cardsW = cw * 2 + cardGap;
         // Place cards on the side closer to the table center
         const onLeftHalf = seat.x < 0.5;
