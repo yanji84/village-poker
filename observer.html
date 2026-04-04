@@ -3791,18 +3791,38 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function drawPotDisplay(ctx, w, h, pot) {
       if (!pot) return;
       const potSc = Math.max(0.8, Math.min(1.2, w / 500));
-      const potFontSize = Math.round(16 * potSc);
-      const potText = 'Pot: ' + pot;
+      const cx = Math.floor(w * 0.5);
+      const cy = Math.floor(h * 0.48);
+
+      // Draw chip stack at pot center
+      const chipR = Math.round(5 * potSc);
+      const stackHeight = Math.min(6, Math.max(2, Math.floor(pot / 200))); // 2-6 chips based on pot size
+      for (let i = 0; i < stackHeight; i++) {
+        const y = cy - i * Math.round(3 * potSc);
+        // Chip edge (dark gold)
+        ctx.fillStyle = '#a08020';
+        ctx.beginPath();
+        ctx.ellipse(cx, y + Math.round(2 * potSc), chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Chip face (bright gold)
+        ctx.fillStyle = '#e8c840';
+        ctx.beginPath();
+        ctx.ellipse(cx, y, chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Pot text below chips
+      const potFontSize = Math.round(14 * potSc);
+      const potText = '' + pot;
       ctx.font = 'bold ' + potFontSize + 'px monospace';
       ctx.textAlign = 'center';
       const ptw = ctx.measureText(potText).width;
-      const potY = Math.floor(h / 2 + 24 * potSc);
-      // Background pill
+      const potY = cy + Math.round(16 * potSc);
       ctx.globalAlpha = 0.65;
-      pxRect(ctx, Math.floor(w / 2 - ptw / 2 - 6), potY - potFontSize + 1, Math.floor(ptw + 12), Math.floor(potFontSize + 6), '#111');
+      pxRect(ctx, Math.floor(cx - ptw / 2 - 4), potY - potFontSize + 1, Math.floor(ptw + 8), Math.floor(potFontSize + 4), '#111');
       ctx.globalAlpha = 1.0;
       ctx.fillStyle = '#e8c840';
-      ctx.fillText(potText, Math.floor(w / 2), potY);
+      ctx.fillText(potText, cx, potY);
     }
 
     // --- Card dealing animation: face-down cards fly from center deck to players ---
