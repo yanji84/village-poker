@@ -310,7 +310,7 @@ export function resolveHand(state, activePlayers) {
       })),
     };
   } else {
-    // Showdown — evaluate hands
+    // Showdown — evaluate hands with side pot support
     const contenders = activePlayers.map(s => ({
       botName: s.botName,
       cards: hand.players[s.botName].cards,
@@ -319,16 +319,62 @@ export function resolveHand(state, activePlayers) {
     const result = determineWinners(contenders, hand.community);
     hand.result = result;
 
-    // Distribute pot
-    const share = Math.floor(hand.pot / result.winners.length);
-    const remainder = hand.pot - share * result.winners.length;
-    for (const winner of result.winners) {
-      hand.players[winner].chips += share;
-      state.buyIns[winner] = hand.players[winner].chips;
+    // Build side pots: each all-in amount creates a pot that only players
+    // who matched that amount can win
+    const allBets = Object.entries(hand.players).map(([name, p]) => ({ name, totalBet: p.totalBet || 0 }));
+    const uniqueBets = [...new Set(allBets.map(b => b.totalBet))].sort((a, b) => a - b);
+
+    let distributed = 0;
+    let prevLevel = 0;
+    for (const level of uniqueBets) {
+      if (level === 0) continue;
+      const increment = level - prevLevel;
+      // Each player contributes min(their totalBet, level) - prevLevel to this pot
+      let potPortion = 0;
+      const eligible = [];
+      for (const { name, totalBet } of allBets) {
+        const contribution = Math.min(totalBet, level) - Math.min(totalBet, prevLevel);
+        potPortion += contribution;
+        // Only non-folded players who bet at least this level can win
+        if (!hand.players[name].folded && totalBet >= level) {
+          eligible.push(name);
+        }
+      }
+      if (potPortion > 0 && eligible.length > 0) {
+        // Find best hand among eligible
+        const eligibleContenders = eligible.filter(n => contenders.some(c => c.botName === n));
+        let potWinners;
+        if (eligibleContenders.length === 1) {
+          potWinners = eligibleContenders;
+        } else if (eligibleContenders.length > 1) {
+          const subResult = determineWinners(
+            contenders.filter(c => eligibleContenders.includes(c.botName)),
+            hand.community
+          );
+          potWinners = subResult.winners;
+        } else {
+          // No eligible contenders (all folded) — give to overall winner
+          potWinners = result.winners;
+        }
+        const share = Math.floor(potPortion / potWinners.length);
+        const rem = potPortion - share * potWinners.length;
+        for (const w of potWinners) {
+          hand.players[w].chips += share;
+          state.buyIns[w] = hand.players[w].chips;
+        }
+        if (rem > 0) {
+          hand.players[potWinners[0]].chips += rem;
+          state.buyIns[potWinners[0]] = hand.players[potWinners[0]].chips;
+        }
+        distributed += potPortion;
+      }
+      prevLevel = level;
     }
-    // Give remainder to first winner
-    if (remainder > 0) {
-      hand.players[result.winners[0]].chips += remainder;
+
+    // Safety: if any pot wasn't distributed (shouldn't happen), give to winner
+    const undistributed = hand.pot - distributed;
+    if (undistributed > 0) {
+      hand.players[result.winners[0]].chips += undistributed;
       state.buyIns[result.winners[0]] = hand.players[result.winners[0]].chips;
     }
   }
