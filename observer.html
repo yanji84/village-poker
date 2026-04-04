@@ -5020,6 +5020,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.lastResult = { winners: winnerBots, handName, amount };
             state.pot = 0;
             state.currentBets = {};
+            state.lastActions = {};
+            state.blinds = {};
             state.contextMessage = `<span class="highlight">${esc(resultMatch[1])}</span> wins ${amount} with ${esc(handName)}`;
             // Broadcast all results
             if (!state._isInitReplay) {
