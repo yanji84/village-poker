@@ -759,8 +759,41 @@
     }
     .seated-list .seat-status { margin-right: 4px; }
     .seated-list .seat-owner { color: var(--text-muted); }
+    .seated-list .kick-btn, .waitlist-list .kick-btn {
+      float: right;
+      background: none;
+      border: 1px solid #533;
+      color: #a66;
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: var(--mono);
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .seated-list .kick-btn:hover, .waitlist-list .kick-btn:hover {
+      opacity: 1;
+      background: rgba(160,60,60,0.15);
+    }
 
     .join-panel-actions { padding: 14px 16px; }
+
+    .panel-hand-history { padding: 0 16px 8px; }
+    .panel-hand-history h4 { color: var(--text-muted); font-size: 11px; margin: 8px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .hh-entry { font-size: 11px; font-family: var(--mono); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center; }
+    .hh-entry .hh-num { color: var(--text-muted); }
+    .hh-entry .hh-winner { color: var(--green); }
+    .hh-entry .hh-pot { color: var(--text-secondary); }
+    .hh-entry .hh-players { color: var(--text-muted); font-size: 10px; }
+    .hh-more { font-size: 11px; color: var(--accent); cursor: pointer; margin-top: 4px; font-family: var(--mono); }
+    .hh-more:hover { text-decoration: underline; }
+
+    .panel-quick-stats { padding: 0 16px 8px; }
+    .panel-quick-stats h4 { color: var(--text-muted); font-size: 11px; margin: 8px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .pqs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 11px; font-family: var(--mono); }
+    .pqs-label { color: var(--text-muted); }
+    .pqs-value { color: var(--text-secondary); font-weight: 600; }
 
     /* --- Play Mode Toggle --- */
     .play-mode-toggle {
@@ -2365,11 +2398,15 @@ Min raise: <b>40</b></pre>
     <div class="join-panel-section" id="auth-idle-actions" style="display:none">
       <div class="play-mode-toggle" style="margin-bottom:8px">
         <label class="play-mode-option">
-          <input type="radio" name="authPlayMode" value="bot" checked> AI Bot plays for me
+          <input type="radio" name="authPlayMode" value="bot" checked onchange="toggleAuthPlayMode()"> AI Bot plays for me
         </label>
         <label class="play-mode-option">
-          <input type="radio" name="authPlayMode" value="human"> I play myself
+          <input type="radio" name="authPlayMode" value="human" onchange="toggleAuthPlayMode()"> I play myself
         </label>
+      </div>
+      <div id="auth-strategy-section">
+        <label for="auth-strategy" style="display:block;margin-bottom:4px;color:var(--text-muted);font-size:11px;font-family:var(--mono)">Strategy <span style="color:var(--text-muted);font-weight:400">— tell your AI how to play</span></label>
+        <textarea id="auth-strategy" rows="5" maxlength="2000" placeholder="Play tight-aggressive. Bluff occasionally on the river." style="width:100%;box-sizing:border-box;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;font-family:var(--mono);resize:vertical"></textarea>
       </div>
       <button class="join-panel-btn" id="auth-join-btn" onclick="submitWaitlistAuthenticated()">Join Game</button>
     </div>
@@ -2388,6 +2425,18 @@ Min raise: <b>40</b></pre>
       <div id="my-hands-content">
         <button class="join-panel-btn secondary" onclick="fetchMyHands()" style="margin:0">Load My Hands</button>
       </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="panel-quick-stats" id="panel-quick-stats" style="display:none">
+      <h4>Game Stats</h4>
+      <div class="pqs-grid" id="pqs-grid"></div>
+    </div>
+
+    <!-- Recent Hands -->
+    <div class="panel-hand-history" id="panel-hand-history" style="display:none">
+      <h4>Recent Hands</h4>
+      <div id="panel-hh-content"></div>
     </div>
 
     <div class="join-panel-section">
@@ -2794,10 +2843,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (!pin || !/^\d{4}$/.test(pin)) return;
       }
 
-      // Use last known strategy or a default
-      const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
       const authPlayMode = document.querySelector('input[name="authPlayMode"]:checked')?.value || 'bot';
-      const strategy = authPlayMode === 'human' ? 'Human player' : (lastStrategy || 'Play smart and adapt to opponents.');
+      const authStrategyEl = document.getElementById('auth-strategy');
+      const typedStrategy = authStrategyEl ? authStrategyEl.value.trim() : '';
+      const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
+      const strategy = authPlayMode === 'human' ? 'Human player' : (typedStrategy || lastStrategy || 'Play smart and adapt to opponents.');
 
       btn.disabled = true;
       btn.textContent = 'Joining...';
@@ -3085,6 +3135,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         panel.classList.add('open');
         tab.classList.add('hidden');
         fetchWaitlist();
+        fetchPanelHandHistory();
+        fetchPanelStats();
       } else {
         panel.classList.remove('open');
         tab.classList.remove('hidden');
@@ -3230,9 +3282,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         (isQueued ? [{ username: authUsername || wlState?.username || 'you' }] : []);
       waitlistHeader.textContent = 'Waitlist' + (displayWaitlist.length > 0 ? ' (' + displayWaitlist.length + ')' : '');
       if (displayWaitlist.length > 0) {
-        const items = displayWaitlist.map((w, i) =>
-          '<li><span class="waitlist-num">' + (i + 1) + '.</span>' + escapeHtml(w.username || w) + '</li>'
-        ).join('');
+        const items = displayWaitlist.map((w, i) => {
+          const wName = w.username || w;
+          const kickBtn = '<button class="kick-btn" onclick="kickWaitlist(\'' + escapeHtml(wName) + '\')">remove</button>';
+          return '<li><span class="waitlist-num">' + (i + 1) + '.</span>' + escapeHtml(wName) + kickBtn + '</li>';
+        }).join('');
         waitlistContent.innerHTML = '<ul class="waitlist-list">' + items + '</ul>';
       } else {
         waitlistContent.innerHTML = '<span class="waitlist-empty">No one in the waitlist yet.</span>';
@@ -3245,10 +3299,21 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const displayName = b.displayName || b.name;
           const chips = state.chips[b.name];
           const chipsText = chips != null ? ' &mdash; ' + chips + ' chips' : '';
-          return '<li>&#x1F7E2; ' + escapeHtml(displayName) + chipsText + '</li>';
+          const kickBtn = '<button class="kick-btn" onclick="kickSeated(\'' + escapeHtml(b.name) + '\')">remove</button>';
+          return '<li>&#x1F7E2; ' + escapeHtml(displayName) + chipsText + kickBtn + '</li>';
         }).join('');
       } else {
         seatedList.innerHTML = '<li class="waitlist-empty">No players at the table.</li>';
+      }
+
+      // Populate returning user strategy
+      if (isAuthenticated && !isSeated && !isQueued) {
+        const authStrategyEl = document.getElementById('auth-strategy');
+        if (authStrategyEl && !authStrategyEl.dataset.userEdited) {
+          const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
+          if (lastStrategy) authStrategyEl.value = lastStrategy;
+          authStrategyEl.addEventListener('input', () => { authStrategyEl.dataset.userEdited = 'true'; }, { once: true });
+        }
       }
 
       const actionsDiv = document.getElementById('join-actions');
@@ -3356,6 +3421,127 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (strategySection) {
         strategySection.style.display = playMode === 'human' ? 'none' : '';
       }
+    }
+
+    function toggleAuthPlayMode() {
+      const playMode = document.querySelector('input[name="authPlayMode"]:checked')?.value || 'bot';
+      const authStrategySection = document.getElementById('auth-strategy-section');
+      if (authStrategySection) {
+        authStrategySection.style.display = playMode === 'human' ? 'none' : '';
+      }
+    }
+
+    // --- Kick / Remove ---
+    async function kickSeated(botName) {
+      if (!confirm('Remove this player from the table?')) return;
+      try {
+        const res = await fetch(apiBase + '/kick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ botName }),
+        });
+        if (res.ok) {
+          showToast('Player removed.');
+          fetchSeats();
+          await fetchWaitlist();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.error || 'Failed to remove player.', 'error');
+        }
+      } catch (e) { showToast('Network error.', 'error'); }
+    }
+
+    async function kickWaitlist(username) {
+      if (!confirm('Remove ' + username + ' from the waitlist?')) return;
+      try {
+        const res = await fetch(apiBase + '/kick-waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username }),
+        });
+        if (res.ok) {
+          showToast('Removed from waitlist.');
+          await fetchWaitlist();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.error || 'Failed to remove.', 'error');
+        }
+      } catch (e) { showToast('Network error.', 'error'); }
+    }
+
+    // --- Panel Hand History & Stats ---
+    let panelHandHistory = null;
+    let panelStatsData = null;
+
+    async function fetchPanelHandHistory() {
+      try {
+        const res = await fetch(apiBase + '/hand-history?limit=10', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        panelHandHistory = data.hands || [];
+        renderPanelHandHistory();
+      } catch (e) {}
+    }
+
+    function renderPanelHandHistory() {
+      const container = document.getElementById('panel-hand-history');
+      const content = document.getElementById('panel-hh-content');
+      if (!panelHandHistory || panelHandHistory.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+      container.style.display = '';
+      content.innerHTML = panelHandHistory.slice(0, 5).map(h => {
+        const num = h.handNumber || h.id || '?';
+        const winner = h.winner || h.winners?.[0] || '?';
+        const pot = h.pot || 0;
+        const players = h.playerCount || h.players?.length || '';
+        return '<div class="hh-entry"><span><span class="hh-num">#' + num + '</span> <span class="hh-winner">' + escapeHtml(winner) + '</span></span><span class="hh-pot">' + pot + ' chips</span></div>';
+      }).join('');
+      if (panelHandHistory.length > 5) {
+        content.innerHTML += '<div class="hh-more" onclick="showFullHandHistory()">View all ' + panelHandHistory.length + '+ hands...</div>';
+      }
+    }
+
+    function showFullHandHistory() {
+      // Scroll to leaderboard section which has game stats
+      const el = document.getElementById('leaderboard');
+      if (el) { toggleJoinPanel(); el.scrollIntoView({ behavior: 'smooth' }); }
+    }
+
+    async function fetchPanelStats() {
+      try {
+        const res = await fetch(apiBase + '/leaderboard', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        panelStatsData = data;
+        renderPanelStats();
+      } catch (e) {}
+    }
+
+    function renderPanelStats() {
+      const container = document.getElementById('panel-quick-stats');
+      const grid = document.getElementById('pqs-grid');
+      if (!panelStatsData) { container.style.display = 'none'; return; }
+      container.style.display = '';
+      const gs = panelStatsData.gameStats || {};
+      const handsPlayed = panelStatsData.handsPlayed || 0;
+      const showdown = gs.showdownRate != null ? Math.round(gs.showdownRate) + '%' : (gs.showdowns != null && handsPlayed > 0 ? Math.round(gs.showdowns / handsPlayed * 100) + '%' : '--');
+      const evo = panelStatsData.evolution;
+      const gen = evo ? 'Gen ' + (evo.generation || 0) : '--';
+
+      const lb = panelStatsData.leaderboard || [];
+      const topPlayer = lb.length > 0 ? lb[0] : null;
+      const topName = topPlayer ? (topPlayer.displayName || topPlayer.name || '?') : '--';
+      const topElo = topPlayer?.elo ? Math.round(topPlayer.elo) : '';
+
+      grid.innerHTML =
+        '<div class="pqs-label">Hands</div><div class="pqs-value">' + handsPlayed + '</div>' +
+        '<div class="pqs-label">Showdown</div><div class="pqs-value">' + showdown + '</div>' +
+        '<div class="pqs-label">Evolution</div><div class="pqs-value">' + gen + '</div>' +
+        '<div class="pqs-label">#1 Player</div><div class="pqs-value">' + escapeHtml(topName) + (topElo ? ' (' + topElo + ')' : '') + '</div>';
     }
 
     // --- Human Action Panel ---
