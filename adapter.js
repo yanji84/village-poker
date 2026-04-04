@@ -242,6 +242,10 @@ export const phases = {
       {
         to: 'betting',
         when: (state) => {
+          // Wait 2 ticks (~60s) so observers can see the showdown result
+          if (!state._showdownEnteredTick) state._showdownEnteredTick = state.clock.tick;
+          if (state.clock.tick - state._showdownEnteredTick < 2) return false;
+          state._showdownEnteredTick = null;
           const playersWithChips = state.bots.filter(b => (state.buyIns[b] || 0) > 0);
           return playersWithChips.length >= 2;
         },

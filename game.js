@@ -383,9 +383,16 @@ export function resolveHand(state, activePlayers) {
 
   // Reveal all non-folded players' hole cards for showdown
   const revealedCards = {};
+  const handNames = {};
   for (const [botName, p] of Object.entries(hand.players)) {
     if (!p.folded && p.cards) {
       revealedCards[botName] = p.cards;
+    }
+  }
+  // Include per-player hand evaluations
+  if (hand.result?.evaluations) {
+    for (const ev of hand.result.evaluations) {
+      handNames[ev.botName] = ev.hand;
     }
   }
   if (Object.keys(revealedCards).length > 1) {
@@ -394,6 +401,7 @@ export function resolveHand(state, activePlayers) {
       displayName: 'Dealer',
       action: 'showdown_reveal',
       cards: revealedCards,
+      handNames,
       message: 'reveals cards at showdown',
       visibility: 'public',
     });

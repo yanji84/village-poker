@@ -2846,6 +2846,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       currentBets: {},
       lastResult: null,
       holeCards: {},
+      showdownHands: {},
       handNumber: 0,
       nextTickAt: 0,
       tickIntervalMs: 30000,
@@ -4171,9 +4172,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           drawThinkingDots(pokerCtx, px, py, charScale);
         }
 
-        // Hand strength label above winner during showdown (suppressed when talking to avoid overlap)
-        if (isWinner && !isTalking && state.lastResult?.handName && state.lastResult.handName !== 'Last player standing') {
-          const handLabel = state.lastResult.handName;
+        // Hand strength label above all non-folded players during showdown
+        const showdownHandName = state.showdownHands?.[bot.name];
+        const showHandLabel = !isFolded && (state.phase === 'showdown' || state.phase === 'finished')
+          && showdownHandName && state.lastResult?.handName !== 'Last player standing';
+        if (showHandLabel) {
+          const handLabel = (isWinner ? '★ ' : '') + showdownHandName;
           const labelY = py - 20 * charScale;
           // Background pill
           pokerCtx.font = 'bold ' + f(14) + ' monospace';
@@ -4823,11 +4827,14 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           break;
 
         case 'showdown_reveal':
-          // Reveal all players' cards at showdown
+          // Reveal all players' cards and hand names at showdown
           if (entry.cards) {
             for (const [botName, cards] of Object.entries(entry.cards)) {
               state.holeCards[botName] = cards;
             }
+          }
+          if (entry.handNames) {
+            state.showdownHands = entry.handNames;
           }
           break;
 
@@ -4849,6 +4856,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.blinds = {};
             state.blinds[entry.bot] = 'small';
             state.lastThought = {};
+            state.showdownHands = {};
             state.lastSay = {};
             state.lastActions = {};
             chatFeedMessages = [];
