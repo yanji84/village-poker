@@ -3295,7 +3295,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const SEAT_POSITIONS = [{x:0.13,y:0.20},{x:0.50,y:0.13},{x:0.87,y:0.20},{x:0.87,y:0.76},{x:0.50,y:0.84},{x:0.13,y:0.76}];
       const idx = state.bots.indexOf(bot) % SEAT_POSITIONS.length;
       const seat = SEAT_POSITIONS[idx];
-      chipAnims.push({ fromX: seat.x, fromY: seat.y, toX: 0.5, toY: 0.48, frame: 0, amount });
+      chipAnims.push({ fromX: seat.x, fromY: seat.y, toX: 0.78, toY: 0.5, frame: 0, amount });
     }
     function drawChipAnims(ctx, w, h) {
       for (let i = chipAnims.length - 1; i >= 0; i--) {
@@ -3791,38 +3791,32 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function drawPotDisplay(ctx, w, h, pot) {
       if (!pot) return;
       const potSc = Math.max(0.8, Math.min(1.2, w / 500));
-      const cx = Math.floor(w * 0.5);
-      const cy = Math.floor(h * 0.48);
+      // Position: below community cards, right of center to avoid overlap
+      const cardH = Math.round(40 * potSc);
+      const cx = Math.floor(w * 0.78);
+      const cy = Math.floor(h / 2 + 2);
 
-      // Draw chip stack at pot center
-      const chipR = Math.round(5 * potSc);
-      const stackHeight = Math.min(6, Math.max(2, Math.floor(pot / 200))); // 2-6 chips based on pot size
-      for (let i = 0; i < stackHeight; i++) {
-        const y = cy - i * Math.round(3 * potSc);
-        // Chip edge (dark gold)
+      // Small chip stack (2-4 chips)
+      const chipR = Math.round(4 * potSc);
+      const stackN = Math.min(4, Math.max(2, Math.floor(pot / 500)));
+      for (let i = 0; i < stackN; i++) {
+        const y = cy - i * Math.round(2.5 * potSc);
         ctx.fillStyle = '#a08020';
         ctx.beginPath();
-        ctx.ellipse(cx, y + Math.round(2 * potSc), chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, y + Math.round(1.5 * potSc), chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
         ctx.fill();
-        // Chip face (bright gold)
         ctx.fillStyle = '#e8c840';
         ctx.beginPath();
         ctx.ellipse(cx, y, chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Pot text below chips
-      const potFontSize = Math.round(14 * potSc);
-      const potText = '' + pot;
+      // Pot number next to chips
+      const potFontSize = Math.round(11 * potSc);
       ctx.font = 'bold ' + potFontSize + 'px monospace';
-      ctx.textAlign = 'center';
-      const ptw = ctx.measureText(potText).width;
-      const potY = cy + Math.round(16 * potSc);
-      ctx.globalAlpha = 0.65;
-      pxRect(ctx, Math.floor(cx - ptw / 2 - 4), potY - potFontSize + 1, Math.floor(ptw + 8), Math.floor(potFontSize + 4), '#111');
-      ctx.globalAlpha = 1.0;
+      ctx.textAlign = 'left';
       ctx.fillStyle = '#e8c840';
-      ctx.fillText(potText, cx, potY);
+      ctx.fillText(pot, cx + Math.round(8 * potSc), cy + Math.round(4 * potSc));
     }
 
     // --- Card dealing animation: face-down cards fly from center deck to players ---
