@@ -3092,10 +3092,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     let lastToastResult = null;
     let toastTimeout = null;
 
-    // Elimination tracking
-    let eliminatedPlayers = new Set();       // players currently at 0 chips (busted)
-    let eliminationAnimations = {};          // { botName: { startTime, ... } } for canvas effects
-    let eliminationToastTimeout = null;
 
     // Community card reveal animation state
     let prevCommunityLength = 0;        // track how many cards were shown last frame
@@ -3146,41 +3142,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // --- Player Elimination ---
 
-    function checkForEliminations() {
-      const bots = state.bots || [];
-      const newlyEliminated = [];
-
-      for (const bot of bots) {
-        const chips = state.chips[bot.name];
-        // Player has 0 chips and wasn't already tracked as eliminated
-        if (typeof chips === 'number' && chips === 0 && !eliminatedPlayers.has(bot.name)) {
-          // Only trigger during showdown (after a result), not during betting (all-in is different)
-          if (state.phase === 'showdown') {
-            eliminatedPlayers.add(bot.name);
-            eliminationAnimations[bot.name] = { startTime: Date.now() };
-            newlyEliminated.push(bot);
-          }
-        }
-      }
-
-      // Clear eliminated status if a player gets chips again (shouldn't happen, but safety)
-      for (const name of eliminatedPlayers) {
-        const chips = state.chips[name];
-        if (typeof chips === 'number' && chips > 0) {
-          eliminatedPlayers.delete(name);
-          delete eliminationAnimations[name];
-        }
-      }
-
-      // Show elimination toast for newly eliminated players
-      for (const bot of newlyEliminated) {
-        const displayName = bot.displayName || bot.name;
-        const stats = seatData[bot.name]?.stats || state.leaderboard[bot.name]?.stats || {};
-        const handsPlayed = stats.handsPlayed || 0;
-        const handsWon = stats.handsWon || 0;
-        showEliminationToast(displayName, handsPlayed, handsWon);
-      }
-    }
+    function checkForEliminations() {} // removed — server handles rotation
 
     function showEliminationToast(playerName, handsPlayed, handsWon) {
       const toastEl = document.getElementById('elimination-toast');
@@ -4256,11 +4218,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           drawStreakFlame(pokerCtx, px, py, charScale, botWinStreak);
         }
 
-        // Elimination effect (red X + "OUT" label for busted players)
-        const elimAnim = eliminationAnimations[bot.name];
-        if (elimAnim) {
-          drawEliminationEffect(pokerCtx, px, py, charScale, elimAnim.startTime);
-        }
       });
 
       // --- YOUR TURN banner on canvas ---
@@ -4856,8 +4813,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         case 'leave':
           state.bots = state.bots.filter(b => b.name !== entry.bot);
           delete state.chips[entry.bot];
-          eliminatedPlayers.delete(entry.bot);
-          delete eliminationAnimations[entry.bot];
           state.contextMessage = `${esc(entry.displayName || entry.bot)} left the table`;
           break;
 
@@ -5026,14 +4981,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             // Broadcast all results
             if (!state._isInitReplay) {
               broadcastNotable('🏆 <b>' + escapeHtml(resultMatch[1]) + '</b> wins ' + amount.toLocaleString() + (handName !== 'Last player standing' ? ' with ' + escapeHtml(handName) : '') + '!');
-            }
-            // Check for eliminations
-            if (!state._isInitReplay && state.chips) {
-              for (const bot of (state.bots || [])) {
-                if (state.chips[bot.name] === 0) {
-                  broadcastNotable('💀 <b>' + escapeHtml(botDisplayName(bot.name)) + '</b> eliminated!');
-                }
-              }
             }
             // Live-update game stats
             if (state.gameStats) {
