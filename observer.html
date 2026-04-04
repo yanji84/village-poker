@@ -581,37 +581,44 @@
     }
     .join-panel.open { transform: translateX(0); }
 
-    .join-tab {
+    .fab-row {
       position: fixed;
       right: 16px;
       bottom: 24px;
-      background: linear-gradient(135deg, #1a5a2a 0%, #0e3a1a 100%);
-      color: #4ae44a;
-      padding: 14px 28px;
-      cursor: pointer;
-      border-radius: 12px;
-      border: 2px solid #3a8a3a;
-      font-family: var(--mono);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      display: flex;
+      gap: 8px;
       z-index: 999;
-      transition: all 0.2s;
+    }
+    .fab-btn {
+      background: var(--bg-elevated);
+      color: var(--accent);
+      padding: 10px 18px;
+      cursor: pointer;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
       user-select: none;
-      box-shadow: 0 4px 20px rgba(40, 160, 40, 0.3);
-      animation: join-pulse 3s ease-in-out infinite;
     }
-    .join-tab:hover {
-      background: linear-gradient(135deg, #2a7a3a 0%, #1a5a2a 100%);
-      box-shadow: 0 4px 30px rgba(40, 160, 40, 0.5);
-      transform: scale(1.05);
+    .fab-btn:hover {
+      background: #1a1a1a;
+      border-color: #444;
+      color: #fff;
     }
-    .join-tab.hidden { display: none; }
-    @keyframes join-pulse {
-      0%, 100% { box-shadow: 0 4px 20px rgba(40, 160, 40, 0.3); }
-      50% { box-shadow: 0 4px 30px rgba(40, 160, 40, 0.5); }
+    .fab-btn.primary {
+      background: var(--bg-primary);
+      color: var(--green);
+      border-color: #2a5a2a;
     }
+    .fab-btn.primary:hover {
+      background: #0e1e0e;
+      border-color: #3a7a3a;
+      color: #5f5;
+    }
+    .fab-row.hidden { display: none; }
 
     .join-panel-header {
       display: flex;
@@ -2052,9 +2059,9 @@
       .join-panel {
         width: 100%;
       }
-      .join-tab {
-        padding: 10px 6px;
-        font-size: 10px;
+      .fab-btn {
+        padding: 8px 14px;
+        font-size: 11px;
       }
       .join-panel-section {
         padding: 12px 14px;
@@ -2175,7 +2182,7 @@
   </div>
 
   <!-- Intro Banner (first-time visitors) -->
-  <div class="intro-banner" id="intro-banner">
+  <div class="intro-banner" id="intro-banner" style="display:none">
     <div class="intro-content">
       <h2>Welcome to Poker Arena</h2>
       <p style="font-size:15px;line-height:1.6;color:#ccc;margin-bottom:16px">This is a research playground exploring <strong>new forms of interaction between AI and humans</strong>. Our mission: discover how humans can coach, foster, and collaborate with AI to compete in strategic games — and what happens when AI and human players sit at the same table.</p>
@@ -2190,6 +2197,7 @@
       <button onclick="dismissIntro()">Got it — let me watch!</button>
     </div>
   </div>
+  <script>if(!localStorage.getItem('arena_intro_seen'))document.getElementById('intro-banner').style.display='';</script>
 
   <!-- Status Bar -->
   <div class="status" id="status">Connecting...</div>
@@ -2258,8 +2266,11 @@
   <div id="thoughts" style="display:none"></div>
   <div id="table-container" style="display:none"></div>
 
-  <!-- Join Game Tab -->
-  <div class="join-tab" id="join-tab" onclick="toggleJoinPanel()">&#9654; Play</div>
+  <!-- Floating Action Buttons -->
+  <div class="fab-row" id="fab-row">
+    <div class="fab-btn" onclick="showAbout()">?</div>
+    <div class="fab-btn primary" onclick="toggleJoinPanel()">&#9654; play</div>
+  </div>
 
   <!-- Join Game Side Panel -->
   <div class="join-panel" id="join-panel">
@@ -2559,6 +2570,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Intro banner for first-time visitors ---
     function dismissIntro() {
       document.getElementById('intro-banner').style.display = 'none';
+      localStorage.setItem('arena_intro_seen', 'true');
+    }
+
+    function showAbout() {
+      document.getElementById('intro-banner').style.display = '';
     }
 
     // --- Base path for API calls (works behind /poker/ reverse proxy) ---
@@ -3086,15 +3102,15 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function toggleJoinPanel() {
       joinPanelOpen = !joinPanelOpen;
       const panel = document.getElementById('join-panel');
-      const tab = document.getElementById('join-tab');
+      const fabRow = document.getElementById('fab-row');
       if (joinPanelOpen) {
         panel.classList.add('open');
-        tab.classList.add('hidden');
+        fabRow.classList.add('hidden');
         fetchWaitlist();
         fetchPanelStats();
       } else {
         panel.classList.remove('open');
-        tab.classList.remove('hidden');
+        fabRow.classList.remove('hidden');
         editingStrategy = false;
       }
       renderJoinPanel();
