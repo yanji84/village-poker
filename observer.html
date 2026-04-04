@@ -1096,74 +1096,6 @@
       100% { background: var(--bg-card); }
     }
     /* --- Keyboard Shortcuts Overlay --- */
-    .shortcuts-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      z-index: 3000;
-      align-items: center;
-      justify-content: center;
-    }
-    .shortcuts-overlay.open { display: flex; }
-    .shortcuts-modal {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px 32px;
-      max-width: 380px;
-      width: 90vw;
-    }
-    .shortcuts-modal h3 {
-      font-size: 14px;
-      font-weight: 700;
-      color: #eee;
-      margin-bottom: 16px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .shortcuts-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .shortcuts-list li {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-    .shortcuts-list kbd {
-      display: inline-block;
-      background: var(--bg-elevated);
-      border: 1px solid #333;
-      border-radius: 4px;
-      padding: 2px 8px;
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-primary);
-      min-width: 28px;
-      text-align: center;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    }
-    .shortcuts-hint {
-      position: fixed;
-      bottom: 12px;
-      right: 12px;
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      z-index: 100;
-      pointer-events: none;
-      opacity: 0.6;
-    }
-    @media (max-width: 520px) {
-      .shortcuts-hint { display: none; }
-      .shortcuts-modal { padding: 16px 20px; }
-    }
-
     /* --- Dramatic Moment: All-In --- */
     @keyframes allin-flash {
       0% { background: var(--bg-elevated); }
@@ -2066,7 +1998,7 @@
   <!-- Game Stats -->
 
   <footer class="powered-by">
-    <div class="built-with"><a href="https://www.ggbot.it.com" target="_blank" rel="noopener">ggbot.it.com</a> &mdash; exploring AI &times; human competitive play &mdash; built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
+    <div class="built-with">Built on <a href="https://github.com/yanji84/agent-village-hub" target="_blank" rel="noopener">Agent Village Hub</a></div>
   </footer>
 
   <!-- Context bar (hidden, kept for state) -->
@@ -2208,21 +2140,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       </div>
     </div>
   </div>
-
-  <!-- Keyboard Shortcuts Overlay -->
-  <div class="shortcuts-overlay" id="shortcuts-overlay" onclick="if(event.target===this)this.classList.remove('open')">
-    <div class="shortcuts-modal">
-      <h3>Keyboard Shortcuts</h3>
-      <ul class="shortcuts-list">
-        <li><span>Toggle join panel</span> <kbd>j</kbd></li>
-        <li><span>Close open panel</span> <kbd>Esc</kbd></li>
-        <li><span>Show this help</span> <kbd>?</kbd></li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- Keyboard shortcut hint -->
-  <div class="shortcuts-hint">Press <strong>?</strong> for shortcuts</div>
 
   <script>
     // --- Intro banner for first-time visitors ---
@@ -2493,43 +2410,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     document.addEventListener('keydown', (e) => {
-      // Don't trigger shortcuts when typing in inputs/textareas
-      const tag = document.activeElement && document.activeElement.tagName;
-      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-
       if (e.key === 'Escape') {
-        // Escape always works — close overlays in priority order
-        const shortcutsOverlay = document.getElementById('shortcuts-overlay');
-        if (shortcutsOverlay.classList.contains('open')) {
-          shortcutsOverlay.classList.remove('open');
-          return;
-        }
         const editorOverlay = document.getElementById('full-editor-overlay');
-        if (editorOverlay.classList.contains('open')) {
+        if (editorOverlay && editorOverlay.classList.contains('open')) {
           cancelFullEditor();
           return;
         }
-        if (joinPanelOpen) {
-          toggleJoinPanel();
-          return;
-        }
-        return;
-      }
-
-      // All other shortcuts are suppressed when typing
-      if (isTyping) return;
-
-      if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
-        e.preventDefault();
-        const overlay = document.getElementById('shortcuts-overlay');
-        overlay.classList.toggle('open');
-        return;
-      }
-
-      if (e.key === 'j' || e.key === 'J') {
-        e.preventDefault();
-        toggleJoinPanel();
-        return;
       }
 
     });
