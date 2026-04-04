@@ -2467,7 +2467,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         } else {
           setWaitlistState({ username, strategy });
           msgEl.className = 'join-bar-msg success';
-          msgEl.textContent = 'You are on the waitlist!';
+          msgEl.textContent = '';
         }
         document.getElementById('join-username').value = '';
         await fetchSeats();
