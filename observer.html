@@ -761,16 +761,6 @@
     .seated-list .seat-owner { color: var(--text-muted); }
     .join-panel-actions { padding: 14px 16px; }
 
-    .panel-hand-history { padding: 0 16px 8px; }
-    .panel-hand-history h4 { color: var(--text-muted); font-size: 11px; margin: 8px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
-    .hh-entry { font-size: 11px; font-family: var(--mono); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center; }
-    .hh-entry .hh-num { color: var(--text-muted); }
-    .hh-entry .hh-winner { color: var(--green); }
-    .hh-entry .hh-pot { color: var(--text-secondary); }
-    .hh-entry .hh-players { color: var(--text-muted); font-size: 10px; }
-    .hh-more { font-size: 11px; color: var(--accent); cursor: pointer; margin-top: 4px; font-family: var(--mono); }
-    .hh-more:hover { text-decoration: underline; }
-
     .panel-quick-stats { padding: 0 16px 8px; }
     .panel-quick-stats h4 { color: var(--text-muted); font-size: 11px; margin: 8px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
     .pqs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 11px; font-family: var(--mono); }
@@ -2387,10 +2377,7 @@ Min raise: <b>40</b></pre>
         </label>
       </div>
       <div id="auth-strategy-section">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span style="color:var(--text-muted);font-size:11px;font-family:var(--mono)" id="auth-strategy-preview">No strategy set</span>
-          <button class="join-panel-btn secondary" style="margin:0;padding:4px 12px;font-size:11px" onclick="openAuthStrategyEditor()">Edit Strategy</button>
-        </div>
+        <button class="join-panel-btn secondary" style="margin:0 0 8px;padding:6px 14px;font-size:12px" onclick="openAuthStrategyEditor()">Edit Strategy</button>
       </div>
       <button class="join-panel-btn" id="auth-join-btn" onclick="submitWaitlistAuthenticated()">Join Game</button>
     </div>
@@ -2411,16 +2398,10 @@ Min raise: <b>40</b></pre>
       </div>
     </div>
 
-    <!-- Quick Stats -->
+    <!-- Player Stats (shown for logged-in users) -->
     <div class="panel-quick-stats" id="panel-quick-stats" style="display:none">
-      <h4>Game Stats</h4>
+      <h4>My Stats</h4>
       <div class="pqs-grid" id="pqs-grid"></div>
-    </div>
-
-    <!-- Recent Hands -->
-    <div class="panel-hand-history" id="panel-hand-history" style="display:none">
-      <h4>Recent Hands</h4>
-      <div id="panel-hh-content"></div>
     </div>
 
     <div class="join-panel-actions" id="join-actions" style="display:none">
@@ -3110,7 +3091,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         panel.classList.add('open');
         tab.classList.add('hidden');
         fetchWaitlist();
-        fetchPanelHandHistory();
         fetchPanelStats();
       } else {
         panel.classList.remove('open');
@@ -3247,22 +3227,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (!editingStrategy) {
           const msgEl = document.getElementById('join-msg');
           if (msgEl && formSection.style.display !== 'none') msgEl.textContent = '';
-        }
-      }
-
-      // Populate returning user strategy preview
-      if (isAuthenticated && !isSeated && !isQueued) {
-        const previewEl = document.getElementById('auth-strategy-preview');
-        if (previewEl) {
-          const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
-          const stored = localStorage.getItem('arena_strategy_' + (authUsername || ''));
-          const strat = stored || lastStrategy;
-          if (strat) {
-            previewEl.textContent = strat.length > 60 ? strat.slice(0, 60) + '...' : strat;
-            previewEl.style.color = 'var(--text-secondary)';
-          } else {
-            previewEl.textContent = 'No strategy set';
-          }
         }
       }
 
@@ -3409,62 +3373,19 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           if (customCode) localStorage.setItem('arena_customCode_' + authUsername, customCode);
         }
         document.getElementById('full-editor-overlay').classList.remove('open');
-        // Update preview
-        const previewEl = document.getElementById('auth-strategy-preview');
-        if (previewEl) {
-          previewEl.textContent = strategy ? (strategy.length > 60 ? strategy.slice(0, 60) + '...' : strategy) : 'No strategy set';
-          previewEl.style.color = strategy ? 'var(--text-secondary)' : 'var(--text-muted)';
-        }
         showToast('Strategy saved.');
       };
     }
 
-    // --- Panel Hand History & Stats ---
-    let panelHandHistory = null;
+    // --- Panel Player Stats ---
     let panelStatsData = null;
 
-    async function fetchPanelHandHistory() {
-      try {
-        const res = await fetch(apiBase + '/hand-history?limit=10', { credentials: 'include' });
-        if (!res.ok) return;
-        const data = await res.json();
-        panelHandHistory = data.hands || [];
-        renderPanelHandHistory();
-      } catch (e) {}
-    }
-
-    function renderPanelHandHistory() {
-      const container = document.getElementById('panel-hand-history');
-      const content = document.getElementById('panel-hh-content');
-      if (!panelHandHistory || panelHandHistory.length === 0) {
-        container.style.display = 'none';
-        return;
-      }
-      container.style.display = '';
-      content.innerHTML = panelHandHistory.slice(0, 5).map(h => {
-        const num = h.handNumber || h.id || '?';
-        const winner = h.winner || h.winners?.[0] || '?';
-        const pot = h.pot || 0;
-        const players = h.playerCount || h.players?.length || '';
-        return '<div class="hh-entry"><span><span class="hh-num">#' + num + '</span> <span class="hh-winner">' + escapeHtml(winner) + '</span></span><span class="hh-pot">' + pot + ' chips</span></div>';
-      }).join('');
-      if (panelHandHistory.length > 5) {
-        content.innerHTML += '<div class="hh-more" onclick="showFullHandHistory()">View all ' + panelHandHistory.length + '+ hands...</div>';
-      }
-    }
-
-    function showFullHandHistory() {
-      // Scroll to leaderboard section which has game stats
-      const el = document.getElementById('leaderboard');
-      if (el) { toggleJoinPanel(); el.scrollIntoView({ behavior: 'smooth' }); }
-    }
-
     async function fetchPanelStats() {
+      if (!authUsername) return;
       try {
-        const res = await fetch(apiBase + '/leaderboard', { credentials: 'include' });
+        const res = await fetch(apiBase + '/player-stats?username=' + encodeURIComponent(authUsername), { credentials: 'include' });
         if (!res.ok) return;
-        const data = await res.json();
-        panelStatsData = data;
+        panelStatsData = await res.json();
         renderPanelStats();
       } catch (e) {}
     }
@@ -3472,24 +3393,22 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function renderPanelStats() {
       const container = document.getElementById('panel-quick-stats');
       const grid = document.getElementById('pqs-grid');
-      if (!panelStatsData) { container.style.display = 'none'; return; }
+      if (!authUsername || !panelStatsData) { container.style.display = 'none'; return; }
+      const s = panelStatsData.stats || panelStatsData;
+      const hands = s.handsPlayed || s.hands || 0;
+      if (hands === 0) { container.style.display = 'none'; return; }
       container.style.display = '';
-      const gs = panelStatsData.gameStats || {};
-      const handsPlayed = panelStatsData.handsPlayed || 0;
-      const showdown = gs.showdownRate != null ? Math.round(gs.showdownRate) + '%' : (gs.showdowns != null && handsPlayed > 0 ? Math.round(gs.showdowns / handsPlayed * 100) + '%' : '--');
-      const evo = panelStatsData.evolution;
-      const gen = evo ? 'Gen ' + (evo.generation || 0) : '--';
-
-      const lb = panelStatsData.leaderboard || [];
-      const topPlayer = lb.length > 0 ? lb[0] : null;
-      const topName = topPlayer ? (topPlayer.displayName || topPlayer.name || '?') : '--';
-      const topElo = topPlayer?.elo ? Math.round(topPlayer.elo) : '';
+      const wins = s.wins || s.handsWon || 0;
+      const winRate = hands > 0 ? Math.round(wins / hands * 100) + '%' : '--';
+      const elo = s.elo ? Math.round(s.elo) : '--';
+      const profit = s.chipProfit != null ? s.chipProfit : ((s.totalChipsWon || 0) - (s.totalChipsLost || 0));
+      const chips = profit !== 0 ? (profit >= 0 ? '+' + profit : '' + profit) : '0';
 
       grid.innerHTML =
-        '<div class="pqs-label">Hands</div><div class="pqs-value">' + handsPlayed + '</div>' +
-        '<div class="pqs-label">Showdown</div><div class="pqs-value">' + showdown + '</div>' +
-        '<div class="pqs-label">Evolution</div><div class="pqs-value">' + gen + '</div>' +
-        '<div class="pqs-label">#1 Player</div><div class="pqs-value">' + escapeHtml(topName) + (topElo ? ' (' + topElo + ')' : '') + '</div>';
+        '<div class="pqs-label">Hands</div><div class="pqs-value">' + hands + '</div>' +
+        '<div class="pqs-label">Win Rate</div><div class="pqs-value">' + winRate + '</div>' +
+        '<div class="pqs-label">Elo</div><div class="pqs-value">' + elo + '</div>' +
+        '<div class="pqs-label">Chips</div><div class="pqs-value">' + chips + '</div>';
     }
 
     // --- Human Action Panel ---
