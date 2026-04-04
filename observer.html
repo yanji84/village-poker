@@ -5788,12 +5788,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           }, 1500);
         }
 
+        // Re-render after a short delay so action highlight settles
         if (state.lastActed) {
           clearTimeout(actionFlashTimer);
-          actionFlashTimer = setTimeout(() => {
-            state.lastActed = null;
-            render();
-          }, 1000);
+          actionFlashTimer = setTimeout(() => render(), 1000);
         }
       }
     };
