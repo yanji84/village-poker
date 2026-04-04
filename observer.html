@@ -3270,6 +3270,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     let humanActionTimer = null;
     let humanActionCountdown = 60;
     let humanTurnActive = false;
+    let isHumanPlayer = false; // true if current user is playing in human mode
 
     function showActionPanel(data) {
       const panel = document.getElementById('human-action-panel');
@@ -4630,7 +4631,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         drawPixelChar(pokerCtx, px, py, i, isActive, isTalking, isFolded, charScale);
 
         // Hole cards to the side of avatar (scaled with charScale)
-        const hCards = state.holeCards[bot.name];
+        // In human mode, only show your own cards — others get face-down backs
+        const myBot = getMyBotCookie();
+        const isMyCards = myBot && bot.name === myBot;
+        const rawCards = state.holeCards[bot.name];
+        const hCards = (isHumanPlayer && !isMyCards && !isWinner) ? (rawCards ? true : undefined) : rawCards;
+        // hCards = true means "has cards but hidden" (show face-down)
         const cardSc = Math.max(0.8, Math.min(1.2, w / 500));
         const cw = Math.round(20 * cardSc), ch = Math.round(30 * cardSc), cardGap = Math.round(3 * cardSc);
         const cardsW = cw * 2 + cardGap;
@@ -4650,7 +4656,19 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           cardBaseY = Math.floor(py - ch / 2 - 2 * charScale);
         }
 
-        if (hCards && hCards.length === 2 && !isFolded) {
+        if (hCards === true && !isFolded) {
+          // Hidden cards (human mode — show face-down backs for other players)
+          for (let ci = 0; ci < 2; ci++) {
+            const cardX = cardBaseX + ci * (cw + cardGap);
+            pxRect(pokerCtx, cardX + 1, cardBaseY + 1, cw, ch, 'rgba(0,0,0,0.3)');
+            pxRect(pokerCtx, cardX, cardBaseY, cw, ch, '#1a3a6a');
+            pxRect(pokerCtx, cardX, cardBaseY, cw, 1, '#2a5a9a');
+            pxRect(pokerCtx, cardX + cw - 1, cardBaseY, 1, ch, '#0f2a50');
+            const dm = Math.round(3 * cardSc);
+            pxRect(pokerCtx, cardX + dm, cardBaseY + dm + 2, cw - dm * 2, 1, '#2a5a9a');
+            pxRect(pokerCtx, cardX + dm, cardBaseY + ch - dm - 3, cw - dm * 2, 1, '#2a5a9a');
+          }
+        } else if (hCards && hCards.length === 2 && !isFolded) {
           for (let ci = 0; ci < 2; ci++) {
             const cardX = cardBaseX + ci * (cw + cardGap);
             // Card shadow
@@ -5028,7 +5046,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     function renderReasoningPanel() {
-      // Prefer the bot that just acted (has fresh reasoning), then active player
+      // In human mode, hide other players' reasoning (no cheating!)
+      if (isHumanPlayer) {
+        const myBot = getMyBotCookie();
+        if (myBot && state.lastThought[myBot]) {
+          renderReasoningForBot(myBot);
+        } else {
+          reasoningWhoEl.textContent = 'Your reasoning';
+          if (reasoningTickEl) reasoningTickEl.textContent = '';
+          reasoningBodyEl.innerHTML = '<div class="reasoning-empty">Your thoughts will appear here after you act.</div>';
+        }
+        return;
+      }
+
+      // Spectator mode: show the last acted bot's reasoning
       let targetBot = null;
       if (state.lastActed && state.lastThought[state.lastActed]) {
         targetBot = state.lastActed;
@@ -5037,7 +5068,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
 
       if (!targetBot) {
-        // Fallback: any bot with thoughts
         const anyThought = Object.keys(state.lastThought).find(k => state.lastThought[k]);
         if (anyThought) {
           renderReasoningForBot(anyThought);
@@ -5726,6 +5756,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (data.type === 'your_turn') {
         const myBot = getMyBotCookie();
         if (data.botName === myBot) {
+          isHumanPlayer = true;
           showActionPanel(data);
         }
         return;
