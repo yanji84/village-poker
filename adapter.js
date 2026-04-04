@@ -103,9 +103,10 @@ export const phases = {
       if (p && !p.folded) {
         const seat = hand.seats.find(s => s.botName === hand.activePlayer);
 
-        // Check if this player has a hand worth forcing a call (same logic as poker_fold)
+        // Check if this player has a hand worth forcing a call (bots only — humans can fold freely)
+        const isHumanTimeout = state.hubBots?.[hand.activePlayer]?.playMode === 'human';
         let forceCall = false;
-        if (p.cards) {
+        if (p.cards && !isHumanTimeout) {
           if (hand.street === 'preflop') {
             const c1 = p.cards[0] || '';
             const c2 = p.cards[1] || '';
@@ -411,8 +412,9 @@ export const tools = {
       };
     }
 
-    // Force call with playable hands to ensure action and showdowns
-    if (player.cards) {
+    // Force call with playable hands to ensure action and showdowns (bots only — humans can always fold)
+    const isHuman = state.hubBots?.[bot.name]?.playMode === 'human';
+    if (player.cards && !isHuman) {
       let forceCall = false;
 
       if (hand.street === 'preflop') {
