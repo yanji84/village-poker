@@ -1917,8 +1917,6 @@
       <span class="join-bar-prompt">&gt;</span>
       <input type="text" id="join-username" maxlength="20" placeholder="player name" class="join-bar-input" />
       <span class="join-bar-sep">|</span>
-      <span class="join-bar-cmd" onclick="document.getElementById('join-username').value = generateRandomName()">~random</span>
-      <span class="join-bar-sep">|</span>
       <span class="join-bar-cmd human" onclick="joinGame('human')" title="Play the cards yourself">/human</span>
       <span class="join-bar-sep">|</span>
       <span class="join-bar-cmd bot" onclick="joinGame('bot')" title="Write a strategy for your AI bot">/bot</span>
@@ -5431,6 +5429,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     renderTemplateButtons('modal-template-btns', 'full-editor-textarea');
     renderCodeTemplateButtons();
     checkReturningUser();
+    // Pre-fill username: saved name or random
+    const joinInput = document.getElementById('join-username');
+    if (joinInput && !joinInput.value) {
+      joinInput.value = authUsername || generateRandomName();
+    }
     render();
 
     // (countdown timer removed — adaptive ticks make fixed countdown meaningless)
