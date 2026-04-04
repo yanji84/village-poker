@@ -221,8 +221,9 @@
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: #555;
-      padding: 10px 16px 6px;
+      padding: 8px 16px;
       border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
       background: var(--bg-card);
     }
 
@@ -239,18 +240,20 @@
     .reasoning-header {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       padding: 8px 16px;
       border-bottom: 1px solid var(--border);
       border-top: 1px solid var(--border);
       background: var(--bg-card);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
       transition: background 0.3s ease;
     }
     .reasoning-header.flash {
       background: var(--accent);
     }
     .reasoning-header .who {
-      font-size: 12px;
       font-weight: 700;
       color: var(--text-primary);
     }
@@ -1829,7 +1832,7 @@
       <div class="left-col">
         <div class="reasoning-panel" id="reasoning-panel">
           <div class="reasoning-header">
-            <span style="color:#444;font-size:9px;letter-spacing:0.5px">private thought</span>
+            <span style="color:#555;font-weight:700">private thought</span>
             <span class="who" id="reasoning-who">Waiting for action...</span>
           </div>
           <div class="reasoning-body" id="reasoning-body">
