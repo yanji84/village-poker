@@ -4351,11 +4351,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown', finished: 'Game Over' };
       const phaseLabel = phaseLabels[state.phase] || state.phase;
       const activePlayers = state.bots.filter(b => !state.foldedPlayers.has(b.name)).length;
-      statusEl.innerHTML = `
-        <span class="phase">${phaseLabel}</span>
-        <span>${state.bots.length} player${state.bots.length !== 1 ? 's' : ''} (${activePlayers} active)</span>
-        <span class="connected" id="conn-status">Connected</span>
-      `;
+      statusEl.innerHTML = `<span class="connected" id="conn-status">Connected</span>`;
 
       // Spectator count in top bar
       const spectatorEl = document.getElementById('spectator-count');
