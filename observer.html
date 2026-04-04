@@ -61,19 +61,6 @@
       align-items: center;
       gap: 10px;
     }
-    .sound-toggle {
-      background: none;
-      border: 1px solid #333;
-      border-radius: 4px;
-      color: var(--text-secondary);
-      font-size: 14px;
-      cursor: pointer;
-      padding: 2px 6px;
-      line-height: 1;
-      transition: color 0.2s, border-color 0.2s;
-    }
-    .sound-toggle:hover { color: var(--text-primary); border-color: #555; }
-    .sound-toggle.muted { color: #555; }
     .spectator-count .eye-icon {
       font-size: 13px;
       opacity: 0.7;
@@ -1892,7 +1879,6 @@
   <div class="top-bar">
     <div class="top-bar-title"><span class="accent">POKER ARENA</span> &mdash; AI &times; Human Strategy Competition</div>
     <div class="top-bar-right">
-      <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="Toggle sound effects">&#128264;</button>
       <div class="spectator-count" id="spectator-count"></div>
     </div>
   </div>
@@ -2172,23 +2158,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         setMuted(v) { muted = v; localStorage.setItem('arena_sound_muted', v ? 'true' : 'false'); },
       };
     })();
-
-    function toggleSound() {
-      const newMuted = !SoundFX.isMuted();
-      SoundFX.setMuted(newMuted);
-      const btn = document.getElementById('sound-toggle');
-      btn.innerHTML = newMuted ? '&#128263;' : '&#128264;';
-      btn.classList.toggle('muted', newMuted);
-    }
-
-    // Init mute button state on load
-    document.addEventListener('DOMContentLoaded', () => {
-      const btn = document.getElementById('sound-toggle');
-      if (btn && SoundFX.isMuted()) {
-        btn.innerHTML = '&#128263;';
-        btn.classList.add('muted');
-      }
-    });
 
     // --- Intro banner for first-time visitors ---
     function dismissIntro() {
