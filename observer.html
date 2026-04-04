@@ -1884,7 +1884,7 @@
       <div class="action-info" id="action-info"></div>
     </div>
     <div class="action-buttons">
-      <button class="action-btn fold" onclick="submitHumanAction('fold')">Fold</button>
+      <button class="action-btn fold" onclick="submitHumanAction('fold')" id="btn-fold">Fold</button>
       <button class="action-btn check" onclick="submitHumanAction('check')" id="btn-check">Check</button>
       <button class="action-btn call" onclick="submitHumanAction('call')" id="btn-call">Call <span id="call-amount"></span></button>
       <div class="raise-controls">
@@ -2534,31 +2534,45 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const minRaise = data.minRaise || 0;
       const chips = data.chips || 0;
       const actualCall = Math.min(toCall, chips);
+      const btnFold = document.getElementById('btn-fold');
       const allinBtn = document.getElementById('btn-allin');
       const raiseControls = raiseInput.parentElement;
 
-      // Show check or call based on toCall
-      if (toCall === 0) {
-        btnCheck.style.display = '';
-        btnCall.style.display = 'none';
-      } else {
-        btnCheck.style.display = 'none';
+      const noBet = toCall === 0;
+      const canAffordCall = chips > toCall;
+      const callIsAllIn = toCall >= chips && toCall > 0;
+      const canRaise = canAffordCall && chips > toCall;
+
+      // Fold: hide when there's nothing to call (can just check)
+      btnFold.style.display = noBet ? 'none' : '';
+
+      // Check: only when no bet to face
+      btnCheck.style.display = noBet ? '' : 'none';
+
+      // Call: when facing a bet and can afford it (or call is all-in)
+      if (toCall > 0) {
         btnCall.style.display = '';
-        callAmountEl.textContent = actualCall + (actualCall < toCall ? ' (all-in)' : '');
+        callAmountEl.textContent = callIsAllIn ? actualCall + ' (all-in)' : actualCall;
+      } else {
+        btnCall.style.display = 'none';
       }
 
-      // Raise: cap min at chips, hide if can't raise above call
-      if (minRaise > chips || chips <= toCall) {
-        raiseControls.style.display = 'none';
-      } else {
+      // Raise/Bet: only when you have chips above the call amount
+      if (canRaise && minRaise <= chips) {
         raiseControls.style.display = '';
         raiseInput.min = Math.min(minRaise, chips);
         raiseInput.value = Math.min(minRaise, chips);
         raiseInput.max = chips;
+        // Label: "Bet" when no prior bet, "Raise" when facing a bet
+        const raiseBtn = raiseControls.querySelector('.action-btn.raise');
+        if (raiseBtn) raiseBtn.textContent = noBet ? 'Bet' : 'Raise';
+      } else {
+        raiseControls.style.display = 'none';
       }
 
-      // All-in button shows chip count
+      // All-in: always show (unless call already is all-in)
       if (allinBtn) {
+        allinBtn.style.display = callIsAllIn ? 'none' : '';
         allinBtn.textContent = 'All In ' + chips;
       }
 
