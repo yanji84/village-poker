@@ -3998,6 +3998,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               actionLabel = lastAct.amount ? 'CALL ' + lastAct.amount : 'CALL';
               actionColor = '#6ab';
               break;
+            case 'bet':
+              actionLabel = lastAct.amount ? 'BET ' + lastAct.amount : 'BET';
+              actionColor = '#e8a020';
+              break;
             case 'raise':
               actionLabel = lastAct.amount ? 'RAISE ' + lastAct.amount : 'RAISE';
               actionColor = '#e8a020';
@@ -4699,12 +4703,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (chatFeedMessages.length > 20) chatFeedMessages.shift();
       }
 
-      if (['check', 'call', 'raise', 'fold'].includes(entry.action) && entry.bot) {
+      if (['check', 'call', 'raise', 'bet', 'allin', 'fold'].includes(entry.action) && entry.bot) {
         state.lastActed = entry.bot;
         // Track last action for canvas display
-        const isAllIn = entry.message?.includes('all-in') || entry.message?.includes('ALL-IN');
         state.lastActions[entry.bot] = {
-          action: isAllIn ? 'allin' : entry.action,
+          action: entry.action,
           amount: entry.amount || null,
           time: Date.now(),
         };
@@ -4810,17 +4813,22 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           }
           break;
 
+        case 'bet':
         case 'raise':
+        case 'allin':
           {
             const prevBet = state.currentBets[entry.bot] || 0;
             const cost = (entry.amount || 0) - prevBet;
             state.pot += cost;
             state.currentBets[entry.bot] = entry.amount || 0;
-            const isAllIn = entry.message?.includes('all-in') || state.chips[entry.bot] === 0;
+            const isAllIn = entry.action === 'allin' || entry.message?.includes('all-in');
             if (isAllIn) {
-              state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
+              state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> goes ALL-IN for ${entry.amount || ''} <span style="color:#e44;font-weight:700">ALL-IN!</span>`;
               state.dramaticEvent = 'allin';
               if (!state._isInitReplay) broadcastNotable('⚡ <b>' + escapeHtml(botDisplayName(entry.bot)) + '</b> goes ALL-IN for ' + (entry.amount || '') + '!');
+            } else if (entry.action === 'bet') {
+              state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> bets ${entry.amount || ''}`;
+              if (!state._isInitReplay) broadcastNotable('💰 <b>' + esc(botDisplayName(entry.bot)) + '</b> bets ' + (entry.amount || ''));
             } else {
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
               if (!state._isInitReplay) broadcastNotable('💪 <b>' + esc(botDisplayName(entry.bot)) + '</b> raises to ' + (entry.amount || ''));

@@ -448,10 +448,18 @@ export const tools = {
 
     advanceAction(state);
 
+    const isAllIn = player.chips === 0;
+    // "bet" when no prior bet this street (only blinds), "raise" when increasing an existing bet
+    const isBet = hand.currentBet <= hand.bigBlind && cost === amount;
+    const actionWord = isBet ? 'bet' : 'raise';
+    const label = isAllIn
+      ? `goes all-in for ${amount}`
+      : isBet ? `bets ${amount}` : `raises to ${amount}`;
+
     return {
-      action: 'raise',
+      action: isAllIn ? 'allin' : actionWord,
       amount,
-      message: `raises to ${amount}${player.chips === 0 ? ' (all-in!)' : ''}`,
+      message: label,
       visibility: 'public',
       ...(params?.thought ? { thought: params.thought } : {}),
     };
