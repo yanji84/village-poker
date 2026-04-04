@@ -563,210 +563,73 @@
     }
     .built-with a:hover { text-decoration: underline; }
 
-    /* --- Join Game Side Panel --- */
-    .join-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 340px;
-      height: 100vh;
+    /* --- Join Bar (inline, top-level) --- */
+    .join-bar {
+      padding: 6px 12px;
       background: var(--bg-card);
-      border-left: 1px solid var(--border);
-      z-index: 1000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-    .join-panel.open { transform: translateX(0); }
-
-    .fab-row {
-      position: fixed;
-      right: 16px;
-      bottom: 24px;
-      display: flex;
-      gap: 8px;
-      z-index: 999;
-    }
-    .fab-btn {
-      background: var(--bg-elevated);
-      color: var(--accent);
-      padding: 10px 18px;
-      cursor: pointer;
-      border-radius: 6px;
-      border: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
       font-family: var(--mono);
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      transition: all 0.15s;
-      user-select: none;
-    }
-    .fab-btn:hover {
-      background: #1a1a1a;
-      border-color: #444;
-      color: #fff;
-    }
-    .fab-btn.primary {
-      background: var(--bg-primary);
-      color: var(--green);
-      border-color: #2a5a2a;
-    }
-    .fab-btn.primary:hover {
-      background: #0e1e0e;
-      border-color: #3a7a3a;
-      color: #5f5;
-    }
-    .fab-row.hidden { display: none; }
-
-    .join-panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .join-panel-header h3 {
-      color: #eee;
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin: 0;
-    }
-    .join-panel-close {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 1.3em;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 4px;
-      transition: color 0.2s, background 0.2s;
-    }
-    .join-panel-close:hover { color: #fff; background: rgba(255,255,255,0.06); }
-
-    .join-panel-section {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .join-panel-section h4 {
-      color: var(--text-secondary);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin: 0 0 10px;
-    }
-    .join-panel-section label {
-      display: block;
       font-size: 11px;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
-    .join-panel-section input,
-    .join-panel-section textarea {
-      width: 100%;
+    .join-bar-inner {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .join-bar-input {
       background: var(--bg-primary);
       border: 1px solid var(--border);
       border-radius: 4px;
-      padding: 8px 10px;
+      padding: 5px 8px;
       color: #e0e0e0;
       font-family: var(--mono);
       font-size: 12px;
-      margin-bottom: 12px;
-      resize: vertical;
+      width: 140px;
     }
-    .join-panel-section input:focus,
-    .join-panel-section textarea:focus {
-      outline: none;
-      border-color: #444;
+    .join-bar-input:focus { outline: none; border-color: #444; }
+    .join-bar-random {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 10px;
+      font-family: var(--mono);
     }
-    .join-panel-section textarea {
-      min-height: 100px;
-      line-height: 1.5;
-    }
-
-    .join-panel-btn {
-      display: block;
-      width: 100%;
+    .join-bar-random:hover { color: var(--text-primary); border-color: #444; }
+    .join-bar-btn {
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       color: var(--accent);
-      padding: 9px 16px;
+      padding: 5px 12px;
       border-radius: 4px;
       font-family: var(--mono);
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      transition: all 0.15s;
+      white-space: nowrap;
     }
-    .join-panel-btn:hover { background: #1e1e1e; color: #6cf; }
-    .join-panel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .join-panel-btn.danger {
-      border-color: #332222;
-      color: var(--red);
+    .join-bar-btn:hover { background: #1a1a1a; border-color: #444; color: #fff; }
+    .join-bar-btn.human { color: var(--green); border-color: #2a5a2a; }
+    .join-bar-btn.human:hover { background: #0e1e0e; border-color: #3a7a3a; }
+    .join-bar-btn.bot { color: var(--accent); }
+    .join-bar-btn.about { color: var(--text-muted); padding: 5px 8px; }
+    .join-bar-btn.leave { color: #a66; border-color: #533; }
+    .join-bar-btn.leave:hover { background: #1a0e0e; color: #c88; }
+    .join-bar-btn.edit-strat { color: var(--text-secondary); }
+    .join-bar-msg {
+      font-size: 11px;
+      padding: 2px 0;
+      min-height: 0;
     }
-    .join-panel-btn.danger:hover { background: #1a0e0e; color: #c88; }
-    .join-panel-btn.secondary {
-      background: var(--bg-primary);
-      color: var(--text-secondary);
-      font-weight: 400;
-      margin-top: 8px;
-    }
-    .join-panel-btn.secondary:hover { background: #1a1a1a; color: var(--text-primary); }
+    .join-bar-msg:empty { display: none; }
+    .join-bar-msg.error { color: var(--red); }
+    .join-bar-msg.success { color: var(--green); }
+    .join-bar-status span { color: var(--text-secondary); }
 
-    .join-panel-msg {
-      font-size: 11px;
-      margin-bottom: 8px;
-      min-height: 1.2em;
-      font-family: var(--mono);
-    }
-    .join-panel-msg.error { color: var(--red); }
-    .join-panel-msg.success { color: var(--green); }
-
-    .waitlist-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .waitlist-list li {
-      padding: 3px 0;
-      color: var(--text-secondary);
-      font-size: 11px;
-      font-family: var(--mono);
-    }
-    .waitlist-list .waitlist-num {
-      color: var(--text-muted);
-      margin-right: 6px;
-    }
-    .waitlist-empty {
-      color: var(--text-muted);
-      font-size: 11px;
-      font-style: italic;
-    }
-
-    .seated-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .seated-list li {
-      padding: 3px 0;
-      color: var(--text-secondary);
-      font-size: 11px;
-      font-family: var(--mono);
-    }
-    .seated-list .seat-status { margin-right: 4px; }
-    .seated-list .seat-owner { color: var(--text-muted); }
-    .join-panel-actions { padding: 14px 16px; }
 
     .panel-quick-stats { padding: 0 16px 8px; }
     .panel-quick-stats h4 { color: var(--text-muted); font-size: 11px; margin: 8px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
@@ -923,17 +786,8 @@
       min-height: 44px;
     }
 
-    @media (max-width: 700px) {
-      .join-panel { width: 100%; }
-    }
 
     /* --- Join two-button layout --- */
-    .join-btns-row { display: flex; gap: 8px; margin-top: 8px; }
-    .join-btns-row button { flex: 1; }
-    .random-name-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: var(--mono); }
-    .random-name-btn:hover { color: var(--text-primary); border-color: #444; }
-    .username-row { display: flex; gap: 6px; align-items: stretch; margin-bottom: 12px; }
-    .username-row input { flex: 1; margin-bottom: 0; }
 
     /* --- Prompt Example --- */
     .prompt-example { margin-bottom: 10px; }
@@ -981,21 +835,6 @@
     /* (player-stats-box CSS removed) */
 
     /* --- Join status display --- */
-    .join-status-display {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .join-status-display .status-greeting {
-      color: var(--text-primary);
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-    .join-status-display .status-detail {
-      color: var(--text-secondary);
-      font-size: 11px;
-    }
-
     /* --- Char counter --- */
     .char-counter {
       font-size: 10px;
@@ -1972,18 +1811,6 @@
         padding: 3px 7px;
       }
 
-      /* Join panel: full width, adjust tab position */
-      .join-panel {
-        width: 100%;
-      }
-      .fab-btn {
-        padding: 8px 14px;
-        font-size: 11px;
-      }
-      .join-panel-section {
-        padding: 12px 14px;
-      }
-
       /* Hand result toast: fit on mobile */
       .hand-result-toast {
         max-width: calc(100vw - 32px);
@@ -2132,6 +1959,23 @@
 
   <div class="action-ticker" id="action-ticker"></div>
 
+  <!-- Join Bar -->
+  <div class="join-bar" id="join-bar">
+    <div class="join-bar-inner" id="join-bar-form">
+      <input type="text" id="join-username" maxlength="20" placeholder="Pick a name" class="join-bar-input" />
+      <button class="join-bar-random" onclick="document.getElementById('join-username').value = generateRandomName()" title="Random name">random</button>
+      <button class="join-bar-btn human" onclick="joinGame('human')">Join as Human</button>
+      <button class="join-bar-btn bot" onclick="joinGame('bot')">Join as Bot</button>
+      <button class="join-bar-btn about" onclick="showAbout()">?</button>
+    </div>
+    <div class="join-bar-inner join-bar-status" id="join-bar-status" style="display:none">
+      <span id="join-bar-status-text"></span>
+      <button class="join-bar-btn edit-strat" id="join-bar-edit-btn" onclick="showEditStrategy()" style="display:none">Edit Strategy</button>
+      <button class="join-bar-btn leave" onclick="leaveOrRelease()">Leave</button>
+    </div>
+    <div class="join-bar-msg" id="join-msg"></div>
+  </div>
+
   <!-- Main Dashboard Grid -->
   <div class="dashboard">
     <!-- Canvas: full width on desktop -->
@@ -2183,67 +2027,6 @@
   <div id="thoughts" style="display:none"></div>
   <div id="table-container" style="display:none"></div>
 
-  <!-- Floating Action Buttons -->
-  <div class="fab-row" id="fab-row">
-    <div class="fab-btn" onclick="showAbout()">?</div>
-    <div class="fab-btn primary" onclick="toggleJoinPanel()">&#9654; play</div>
-  </div>
-
-  <!-- Join Game Side Panel -->
-  <div class="join-panel" id="join-panel">
-    <div class="join-panel-header">
-      <h3>Join Game</h3>
-      <button class="join-panel-close" onclick="toggleJoinPanel()">&times;</button>
-    </div>
-
-    <div style="padding: 8px 16px; font-family: var(--mono); font-size: 11px; color: var(--text-secondary);">
-      <span id="table-occupancy"></span>
-    </div>
-
-    <div class="join-status-display" id="join-status-display" style="display:none">
-      <div class="status-greeting" id="status-greeting"></div>
-      <div class="status-detail" id="status-detail"></div>
-    </div>
-
-    <div class="join-panel-section" id="join-form-section">
-      <div class="join-panel-msg" id="join-msg"></div>
-      <label for="join-username">Username</label>
-      <div class="username-row">
-        <input type="text" id="join-username" maxlength="20" placeholder="Pick a name" />
-        <button class="random-name-btn" onclick="document.getElementById('join-username').value = generateRandomName()" title="Random name">random</button>
-      </div>
-      <div class="join-btns-row">
-        <button class="join-panel-btn" onclick="joinGame('human')">Join as Human</button>
-        <button class="join-panel-btn" onclick="joinGame('bot')">Join as Bot</button>
-      </div>
-    </div>
-
-    <!-- Session Countdown (shown for seated players) -->
-    <div class="session-panel-section" id="session-panel-section" style="display:none">
-      <h4>Session</h4>
-      <div class="session-panel-text" id="session-panel-text">0 of 20 hands played</div>
-      <div class="session-bar"><div class="session-bar-fill" id="session-panel-bar-fill" style="width:0%"></div></div>
-      <div class="session-panel-note">After 20 hands, the next player in the waitlist takes your seat.</div>
-    </div>
-
-    <!-- My Hands (shown for authenticated users) -->
-    <div class="my-hands-section" id="my-hands-section" style="display:none">
-      <h4 id="my-hands-header" style="cursor:pointer;user-select:none" onclick="toggleMyHands()">My Hands <span class="my-hands-progress" id="my-hands-progress"></span> <span id="my-hands-toggle" style="color:var(--text-muted);font-size:9px"></span></h4>
-      <div id="my-hands-content">
-        <button class="join-panel-btn secondary" onclick="fetchMyHands()" style="margin:0">Load My Hands</button>
-      </div>
-    </div>
-
-    <!-- Player Stats (shown for logged-in users) -->
-    <div class="panel-quick-stats" id="panel-quick-stats" style="display:none">
-      <h4>My Stats</h4>
-      <div class="pqs-grid" id="pqs-grid"></div>
-    </div>
-
-    <div class="join-panel-actions" id="join-actions" style="display:none">
-      <button class="join-panel-btn secondary" id="edit-strategy-btn" onclick="showEditStrategy()">Edit Strategy</button>
-    </div>
-  </div>
 
   <!-- Human Action Panel -->
   <div class="human-action-panel" id="human-action-panel" style="display:none">
@@ -2717,19 +2500,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     function toggleJoinPanel() {
-      joinPanelOpen = !joinPanelOpen;
-      const panel = document.getElementById('join-panel');
-      const fabRow = document.getElementById('fab-row');
-      if (joinPanelOpen) {
-        panel.classList.add('open');
-        fabRow.classList.add('hidden');
-        fetchWaitlist();
-        fetchPanelStats();
-      } else {
-        panel.classList.remove('open');
-        fabRow.classList.remove('hidden');
-        editingStrategy = false;
-      }
+      // No-op — join bar is always visible. Kept for compat.
       renderJoinPanel();
     }
 
@@ -2766,62 +2537,34 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const isSeated = !!myBot;
       let isQueued = !!wlState;
 
-      // If seated, clear stale waitlist state
       if (isSeated && isQueued) {
         setWaitlistState(null);
         isQueued = false;
       }
 
-      // Table occupancy display
-      const occupancyEl = document.getElementById('table-occupancy');
-      if (occupancyEl) {
-        const pc = state.playerCount || state.bots.length;
-        const mp = state.maxPlayers || 6;
-        occupancyEl.textContent = 'Table: ' + pc + '/' + mp + ' players';
-      }
-
-      const statusDisplay = document.getElementById('join-status-display');
-      const formSection = document.getElementById('join-form-section');
-
-      let myChips = null;
-      if (isSeated && myBot) {
-        myChips = state.chips[myBot];
-      }
+      const formEl = document.getElementById('join-bar-form');
+      const statusEl = document.getElementById('join-bar-status');
+      const statusText = document.getElementById('join-bar-status-text');
+      const editBtn = document.getElementById('join-bar-edit-btn');
 
       if (isSeated || isQueued) {
-        statusDisplay.style.display = '';
-        formSection.style.display = 'none';
-
-        const greetingEl = document.getElementById('status-greeting');
-        const detailEl = document.getElementById('status-detail');
-
+        formEl.style.display = 'none';
+        statusEl.style.display = '';
         if (isSeated) {
-          greetingEl.textContent = 'Playing as ' + (authUsername || 'you');
-          detailEl.textContent = myChips != null ? 'Chips: ' + myChips : '';
+          const chips = state.chips[myBot];
+          statusText.textContent = 'Playing as ' + (authUsername || 'you') + (chips != null ? ' — ' + chips + ' chips' : '');
+          editBtn.style.display = (isHumanPlayer ? 'none' : '');
         } else {
-          const pos = waitlistData.findIndex(w => (w.username || w) === (authUsername || wlState?.username));
-          const posText = pos >= 0 ? '#' + (pos + 1) : '';
-          greetingEl.textContent = 'In waitlist as ' + (authUsername || wlState?.username || 'you');
-          detailEl.textContent = posText ? 'Position ' + posText : 'Waiting for a seat...';
+          statusText.textContent = 'In waitlist as ' + (authUsername || wlState?.username || 'you');
+          editBtn.style.display = 'none';
         }
       } else {
-        statusDisplay.style.display = 'none';
-        formSection.style.display = '';
-
-        // Pre-fill username if we have one saved
+        formEl.style.display = '';
+        statusEl.style.display = 'none';
         if (authUsername) {
-          const usernameInput = document.getElementById('join-username');
-          if (usernameInput && !usernameInput.value) usernameInput.value = authUsername;
+          const inp = document.getElementById('join-username');
+          if (inp && !inp.value) inp.value = authUsername;
         }
-      }
-
-      const actionsDiv = document.getElementById('join-actions');
-      const editBtn = document.getElementById('edit-strategy-btn');
-      if (isSeated && !isHumanPlayer) {
-        actionsDiv.style.display = '';
-        editBtn.style.display = '';
-      } else {
-        actionsDiv.style.display = 'none';
       }
     }
 
@@ -2836,11 +2579,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     async function joinGame(mode) {
       const username = document.getElementById('join-username').value.trim();
       const msgEl = document.getElementById('join-msg');
-      msgEl.className = 'join-panel-msg';
+      msgEl.className = 'join-bar-msg';
       msgEl.textContent = '';
 
       if (!username || username.length < 1 || username.length > 20) {
-        msgEl.className = 'join-panel-msg error';
+        msgEl.className = 'join-bar-msg error';
         msgEl.textContent = 'Pick a name (1-20 characters).';
         return;
       }
@@ -2868,7 +2611,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          msgEl.className = 'join-panel-msg error';
+          msgEl.className = 'join-bar-msg error';
           msgEl.textContent = data.error || 'Failed to join.';
           return;
         }
@@ -2879,11 +2622,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           document.cookie = 'arena_bot=' + encodeURIComponent(respData.botName) + ';path=/;max-age=604800;SameSite=Strict';
           setWaitlistState(null);
           if (playMode === 'human') isHumanPlayer = true;
-          msgEl.className = 'join-panel-msg success';
+          msgEl.className = 'join-bar-msg success';
           msgEl.textContent = 'You are seated!';
         } else {
           setWaitlistState({ username, strategy });
-          msgEl.className = 'join-panel-msg success';
+          msgEl.className = 'join-bar-msg success';
           msgEl.textContent = 'You are on the waitlist!';
         }
         document.getElementById('join-username').value = '';
@@ -2891,7 +2634,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         await fetchWaitlist();
         renderJoinPanel();
       } catch (e) {
-        msgEl.className = 'join-panel-msg error';
+        msgEl.className = 'join-bar-msg error';
         msgEl.textContent = 'Network error. Please try again.';
       }
     }
