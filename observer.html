@@ -3286,33 +3286,68 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     let _canvasW = 600;
     let _fs = 1;
 
-    // Chip toss animations
+    // Chip animations
     const chipAnims = [];
-    let _prevBets = {};
-    function triggerChipAnim(botName, amount) {
+    const POT_POS = { x: 0.5, y: 0.65 }; // below community cards
+
+    function triggerChipsToPot(botName) {
       const bot = (state.bots || []).find(b => b.name === botName);
       if (!bot) return;
-      const SEAT_POSITIONS = [{x:0.13,y:0.20},{x:0.50,y:0.13},{x:0.87,y:0.20},{x:0.87,y:0.76},{x:0.50,y:0.84},{x:0.13,y:0.76}];
-      const idx = state.bots.indexOf(bot) % SEAT_POSITIONS.length;
-      const seat = SEAT_POSITIONS[idx];
-      chipAnims.push({ fromX: seat.x, fromY: seat.y, toX: 0.78, toY: 0.5, frame: 0, amount });
+      const SEATS = [{x:0.13,y:0.20},{x:0.50,y:0.13},{x:0.87,y:0.20},{x:0.87,y:0.76},{x:0.50,y:0.84},{x:0.13,y:0.76}];
+      const idx = state.bots.indexOf(bot) % SEATS.length;
+      const seat = SEATS[idx];
+      // Stagger 3 chips with slight random spread
+      for (let c = 0; c < 3; c++) {
+        const spread = (Math.random() - 0.5) * 0.04;
+        chipAnims.push({
+          fromX: seat.x, fromY: seat.y,
+          toX: POT_POS.x + spread, toY: POT_POS.y + (Math.random() - 0.5) * 0.02,
+          frame: -c * 3, // stagger start
+          totalFrames: 18,
+        });
+      }
     }
+
+    function triggerChipsToWinner(winnerBotName) {
+      const bot = (state.bots || []).find(b => b.name === winnerBotName);
+      if (!bot) return;
+      const SEATS = [{x:0.13,y:0.20},{x:0.50,y:0.13},{x:0.87,y:0.20},{x:0.87,y:0.76},{x:0.50,y:0.84},{x:0.13,y:0.76}];
+      const idx = state.bots.indexOf(bot) % SEATS.length;
+      const seat = SEATS[idx];
+      for (let c = 0; c < 5; c++) {
+        const spread = (Math.random() - 0.5) * 0.04;
+        chipAnims.push({
+          fromX: POT_POS.x + spread, fromY: POT_POS.y + (Math.random() - 0.5) * 0.02,
+          toX: seat.x, toY: seat.y,
+          frame: -c * 3 - 20, // delay: start after the to-pot anims finish
+          totalFrames: 18,
+        });
+      }
+    }
+
     function drawChipAnims(ctx, w, h) {
       for (let i = chipAnims.length - 1; i >= 0; i--) {
         const a = chipAnims[i];
-        const t = Math.min(a.frame / 15, 1); // 15 frames duration
-        const ease = t * (2 - t); // ease-out
+        if (a.frame < 0) { a.frame++; continue; } // waiting for stagger delay
+        const t = Math.min(a.frame / a.totalFrames, 1);
+        const ease = t * (2 - t);
         const x = a.fromX * w + (a.toX * w - a.fromX * w) * ease;
-        const y = a.fromY * h + (a.toY * h - a.fromY * h) * ease - 10 * Math.sin(t * Math.PI);
-        const alpha = t < 0.8 ? 1 : 1 - (t - 0.8) / 0.2;
+        const y = a.fromY * h + (a.toY * h - a.fromY * h) * ease - 8 * Math.sin(t * Math.PI) * _fs;
+        const alpha = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = '#e8b828';
+        // Draw as small 3D chip
+        const r = 3.5 * _fs;
+        ctx.fillStyle = '#a08020';
         ctx.beginPath();
-        ctx.arc(x, y, 4 * _fs, 0, Math.PI * 2);
+        ctx.ellipse(x, y + 1.5 * _fs, r, r * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#e8c840';
+        ctx.beginPath();
+        ctx.ellipse(x, y, r, r * 0.4, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
         a.frame++;
-        if (a.frame > 15) chipAnims.splice(i, 1);
+        if (a.frame > a.totalFrames) chipAnims.splice(i, 1);
       }
     }
     const f = (px) => Math.round(px * _fs) + 'px';
@@ -3791,32 +3826,30 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function drawPotDisplay(ctx, w, h, pot) {
       if (!pot) return;
       const potSc = Math.max(0.8, Math.min(1.2, w / 500));
-      // Position: below community cards, right of center to avoid overlap
-      const cardH = Math.round(40 * potSc);
-      const cx = Math.floor(w * 0.78);
-      const cy = Math.floor(h / 2 + 2);
+      const cx = Math.floor(w * POT_POS.x);
+      const cy = Math.floor(h * POT_POS.y);
 
-      // Small chip stack (2-4 chips)
+      // Chip stack (2-4 chips)
       const chipR = Math.round(4 * potSc);
       const stackN = Math.min(4, Math.max(2, Math.floor(pot / 500)));
       for (let i = 0; i < stackN; i++) {
         const y = cy - i * Math.round(2.5 * potSc);
         ctx.fillStyle = '#a08020';
         ctx.beginPath();
-        ctx.ellipse(cx, y + Math.round(1.5 * potSc), chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
+        ctx.ellipse(cx - Math.round(12 * potSc), y + Math.round(1.5 * potSc), chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#e8c840';
         ctx.beginPath();
-        ctx.ellipse(cx, y, chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
+        ctx.ellipse(cx - Math.round(12 * potSc), y, chipR, Math.round(chipR * 0.4), 0, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Pot number next to chips
-      const potFontSize = Math.round(11 * potSc);
+      // Pot number
+      const potFontSize = Math.round(12 * potSc);
       ctx.font = 'bold ' + potFontSize + 'px monospace';
-      ctx.textAlign = 'left';
+      ctx.textAlign = 'center';
       ctx.fillStyle = '#e8c840';
-      ctx.fillText(pot, cx + Math.round(8 * potSc), cy + Math.round(4 * potSc));
+      ctx.fillText(pot, cx + Math.round(6 * potSc), cy + Math.round(4 * potSc));
     }
 
     // --- Card dealing animation: face-down cards fly from center deck to players ---
@@ -5010,11 +5043,14 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               if (!state._isInitReplay) {
                 showHandResultToast(winnerNames, amount, handName);
                 SoundFX.win();
-                // Chip toss: all non-folded players send chips to pot
+                // Chips to pot from all non-folded players, then from pot to winner
                 for (const bot of (state.bots || [])) {
                   if (!state.foldedPlayers.has(bot.name)) {
-                    triggerChipAnim(bot.name);
+                    triggerChipsToPot(bot.name);
                   }
+                }
+                for (const wb of winnerBots) {
+                  triggerChipsToWinner(wb);
                 }
               }
             }
