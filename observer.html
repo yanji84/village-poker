@@ -2235,10 +2235,10 @@
       <div class="join-panel-msg" id="join-msg"></div>
       <label for="join-username">Username</label>
       <input type="text" id="join-username" maxlength="20" placeholder="Your name" />
-      <label for="join-pin">PIN (4 digits)</label>
+      <label for="join-pin">PIN (optional)</label>
       <input type="password" id="join-pin" maxlength="4" inputmode="numeric" pattern="\d{4}"
              placeholder="****" autocomplete="off">
-      <div class="pin-hint">Remember this -- it's how you reclaim your seat later</div>
+      <div class="pin-hint">Set a 4-digit PIN to save your seat &amp; chips across sessions. Leave blank to play anonymously.</div>
       <div class="play-mode-toggle">
         <label class="play-mode-option">
           <input type="radio" name="playMode" value="bot" checked onchange="togglePlayMode()"> AI Bot plays for me
@@ -3177,9 +3177,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         return;
       }
 
-      if (!/^\d{4}$/.test(pin)) {
+      if (pin && !/^\d{4}$/.test(pin)) {
         msgEl.className = 'join-panel-msg error';
-        msgEl.textContent = 'PIN must be exactly 4 digits.';
+        msgEl.textContent = 'PIN must be exactly 4 digits (or leave blank for anonymous).';
         return;
       }
 
