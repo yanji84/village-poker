@@ -5509,9 +5509,23 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.contextMessage = `${esc(entry.displayName || entry.bot)} left the table`;
           break;
 
-        case 'deal_hole':
-          state.holeCards[entry.bot] = entry.cards || [];
+        case 'deal_hole': {
+          if (entry.cards && entry.cards.length) {
+            state.holeCards[entry.bot] = entry.cards;
+          } else {
+            // Cards stripped by server (human at table) — mark as "has cards"
+            state.holeCards[entry.bot] = true;
+          }
+          // If this is our bot and cards were stripped, fetch our own cards
+          const dealMyBot = getMyBotCookie();
+          if (dealMyBot && entry.bot === dealMyBot && (!entry.cards || !entry.cards.length)) {
+            fetch(apiBase + '/my-cards', { credentials: 'include' })
+              .then(r => r.ok ? r.json() : null)
+              .then(d => { if (d?.cards?.length) { state.holeCards[dealMyBot] = d.cards; render(); } })
+              .catch(() => {});
+          }
           break;
+        }
 
         case 'blind':
           state.pot += (entry.amount || 0);
@@ -5722,7 +5736,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Restore hole cards from init payload (log replay may not include deal_hole)
         if (data.holeCards) {
           for (const [name, cards] of Object.entries(data.holeCards)) {
-            if (cards && cards.length) state.holeCards[name] = cards;
+            if (cards === true) {
+              // Server hid the actual cards (human at table) — mark as "has cards"
+              state.holeCards[name] = true;
+            } else if (cards && cards.length) {
+              state.holeCards[name] = cards;
+            }
+          }
+          // Fetch own cards if we're a player
+          const myBot = getMyBotCookie();
+          if (myBot && (!state.holeCards[myBot] || state.holeCards[myBot] === true)) {
+            fetch(apiBase + '/my-cards', { credentials: 'include' })
+              .then(r => r.ok ? r.json() : null)
+              .then(d => { if (d?.cards?.length) { state.holeCards[myBot] = d.cards; render(); } })
+              .catch(() => {});
           }
         }
         if (data.handsPlayed) state.handNumber = data.handsPlayed;
