@@ -2709,7 +2709,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (!pin || !/^\d{4}$/.test(pin)) return;
 
       // Use last known strategy or a default
-      const lastStrategy = seatData ? Object.values(seatData).find(s => s.username === authUsername)?.strategy : null;
+      const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
       const strategy = lastStrategy || 'Play smart and adapt to opponents.';
 
       btn.disabled = true;
@@ -2758,7 +2758,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const seatsObj = data.seats || data;
         let found = false;
         for (const [botName, s] of Object.entries(seatsObj)) {
-          if ((s.claimedBy || s.username) === authUsername) {
+          if (authUsername && (s.claimedBy || s.username || '').toLowerCase() === authUsername.toLowerCase()) {
             seatData[botName] = seatData[botName] || {};
             seatData[botName].username = authUsername;
             fetchPlayerStats(authUsername);
@@ -5618,6 +5618,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           }
         }
         state.activePlayer = data.activePlayer || null;
+        // Restore hole cards from init payload (log replay may not include deal_hole)
+        if (data.holeCards) {
+          for (const [name, cards] of Object.entries(data.holeCards)) {
+            if (cards && cards.length) state.holeCards[name] = cards;
+          }
+        }
         if (data.handsPlayed) state.handNumber = data.handsPlayed;
         if (data.gamesPlayed) state.gamesPlayed = data.gamesPlayed;
         if (data.leaderboard) state.leaderboard = data.leaderboard;

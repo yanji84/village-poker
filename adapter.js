@@ -226,7 +226,7 @@ export const phases = {
             state.buyIns[bot] = BUY_IN;
           }
           state.handsPlayed = 0;
-          state.chipBank = {};
+          // Don't wipe chipBank — players who left still need their saved chips on rejoin
           return true;
         },
       },
@@ -397,6 +397,19 @@ export const tools = {
     const active = getActivePlayer(state, bot);
     if (!active) return null;
     const { hand, player } = active;
+
+    // Can't fold when there's nothing to call — convert to check
+    if (player.bet >= hand.currentBet) {
+      player.acted = true;
+      emitSay(bot, params, state);
+      advanceAction(state);
+      return {
+        action: 'check',
+        message: 'checks',
+        visibility: 'public',
+        ...(params?.thought ? { thought: params.thought } : {}),
+      };
+    }
 
     // Force call with playable hands to ensure action and showdowns
     if (player.cards) {
