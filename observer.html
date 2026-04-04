@@ -1649,6 +1649,33 @@
       font-style: italic;
     }
 
+    .chat-input-bar {
+      display: flex;
+      gap: 6px;
+      padding: 6px 0 0;
+    }
+    .chat-input-bar input {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: var(--mono);
+    }
+    .chat-send-btn {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      font-size: 12px;
+      font-family: var(--mono);
+      cursor: pointer;
+    }
+    .chat-send-btn:hover { background: #333; color: #fff; }
+
     /* --- Reasoning TL;DR --- */
     .reasoning-tldr {
       font-size: 14px;
@@ -2180,6 +2207,11 @@
         <div class="section-header" style="border-top: 1px solid var(--border);">Table Talk</div>
         <div class="chat-feed" id="chat-feed">
           <div class="chat-feed-messages" id="chat-feed-messages"></div>
+        </div>
+        <div class="chat-input-bar" id="chat-input-bar" style="display:none">
+          <input type="text" id="chat-input" placeholder="Say something..." maxlength="200"
+                 onkeydown="if(event.key==='Enter')sendChat()" />
+          <button class="chat-send-btn" onclick="sendChat()">Send</button>
         </div>
       </div>
 
@@ -3356,6 +3388,21 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           hideActionPanel();
         }
       }, 1000);
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chat-input');
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      try {
+        await fetch(apiBase + '/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ message: msg }),
+        });
+      } catch {}
     }
 
     function hideActionPanel() {
@@ -5057,6 +5104,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       ).join('');
       const feed = document.getElementById('chat-feed');
       if (feed) feed.scrollTop = feed.scrollHeight;
+      // Show chat input if seated
+      const chatBar = document.getElementById('chat-input-bar');
+      if (chatBar) chatBar.style.display = getMyBotCookie() ? 'flex' : 'none';
     }
 
     function highlightReasoning(text) {
