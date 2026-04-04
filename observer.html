@@ -56,6 +56,24 @@
       align-items: center;
       gap: 5px;
     }
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sound-toggle {
+      background: none;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 2px 6px;
+      line-height: 1;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .sound-toggle:hover { color: var(--text-primary); border-color: #555; }
+    .sound-toggle.muted { color: #555; }
     .spectator-count .eye-icon {
       font-size: 13px;
       opacity: 0.7;
@@ -1873,7 +1891,10 @@
   <!-- Top Header -->
   <div class="top-bar">
     <div class="top-bar-title"><span class="accent">POKER ARENA</span> &mdash; AI &times; Human Strategy Competition</div>
-    <div class="spectator-count" id="spectator-count"></div>
+    <div class="top-bar-right">
+      <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="Toggle sound effects">&#128264;</button>
+      <div class="spectator-count" id="spectator-count"></div>
+    </div>
   </div>
 
   <!-- Intro Banner (first-time visitors) -->
@@ -2117,6 +2138,58 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
   </div>
 
   <script>
+    // --- Sound Effects (Web Audio API) ---
+    const SoundFX = (() => {
+      let ctx;
+      let muted = localStorage.getItem('arena_sound_muted') === 'true';
+      function getCtx() {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        return ctx;
+      }
+      function play(freq, duration, type = 'sine', vol = 0.1) {
+        if (muted) return;
+        try {
+          const c = getCtx();
+          const o = c.createOscillator();
+          const g = c.createGain();
+          o.type = type;
+          o.frequency.value = freq;
+          g.gain.value = vol;
+          g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+          o.connect(g);
+          g.connect(c.destination);
+          o.start();
+          o.stop(c.currentTime + duration);
+        } catch(e) {}
+      }
+      return {
+        yourTurn() { play(440, 0.1); setTimeout(() => play(660, 0.15), 100); },
+        deal() { play(800, 0.05, 'square', 0.03); },
+        chip() { play(1200, 0.06, 'sine', 0.05); },
+        win() { play(523, 0.1); setTimeout(() => play(659, 0.1), 80); setTimeout(() => play(784, 0.15), 160); },
+        fold() { play(200, 0.08, 'sine', 0.03); },
+        isMuted() { return muted; },
+        setMuted(v) { muted = v; localStorage.setItem('arena_sound_muted', v ? 'true' : 'false'); },
+      };
+    })();
+
+    function toggleSound() {
+      const newMuted = !SoundFX.isMuted();
+      SoundFX.setMuted(newMuted);
+      const btn = document.getElementById('sound-toggle');
+      btn.innerHTML = newMuted ? '&#128263;' : '&#128264;';
+      btn.classList.toggle('muted', newMuted);
+    }
+
+    // Init mute button state on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('sound-toggle');
+      if (btn && SoundFX.isMuted()) {
+        btn.innerHTML = '&#128263;';
+        btn.classList.add('muted');
+      }
+    });
+
     // --- Intro banner for first-time visitors ---
     function dismissIntro() {
       document.getElementById('intro-banner').style.display = 'none';
@@ -2468,7 +2541,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const isHuman = isHumanPlayer || seatData[myBot]?.playMode === 'human';
           editBtn.style.display = isHuman ? 'none' : '';
         } else {
-          statusText.textContent = 'In waitlist as ' + (authUsername || wlState?.username || 'you');
+          statusText.textContent = 'waitlist — ' + (authUsername || wlState?.username || 'you');
           editBtn.style.display = 'none';
         }
       } else {
@@ -4899,6 +4972,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               }
             }
           }
+          if (!state._isInitReplay) SoundFX.chip();
           break;
 
         case 'check':
@@ -4922,6 +4996,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> calls ${entry.amount || ''}`;
               if (!state._isInitReplay) broadcastNotable('<b>' + esc(botDisplayName(entry.bot)) + '</b> calls ' + (entry.amount || ''));
             }
+            if (!state._isInitReplay) SoundFX.chip();
           }
           break;
 
@@ -4940,6 +5015,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> raises to ${entry.amount || ''}`;
               if (!state._isInitReplay) broadcastNotable('💪 <b>' + esc(botDisplayName(entry.bot)) + '</b> raises to ' + (entry.amount || ''));
             }
+            if (!state._isInitReplay) SoundFX.chip();
           }
           break;
 
@@ -4947,7 +5023,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           state.foldedPlayers.add(entry.bot);
           if (state.activePlayer === entry.bot) state.activePlayer = null;
           state.contextMessage = `<span class="highlight">${esc(botDisplayName(entry.bot))}</span> folds`;
-          if (!state._isInitReplay) broadcastNotable('<b>' + esc(botDisplayName(entry.bot)) + '</b> folds');
+          if (!state._isInitReplay) {
+            broadcastNotable('<b>' + esc(botDisplayName(entry.bot)) + '</b> folds');
+            SoundFX.fold();
+          }
           break;
 
         case 'deal':
@@ -4966,6 +5045,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
                 newCardStartIdx: oldLen,
                 totalCards: cards.length,
               };
+              SoundFX.deal();
             }
             const streetLabels = { flop: 'Flop', turn: 'Turn', river: 'River' };
             state.contextMessage = `Dealing the <span class="highlight">${streetLabels[state.street] || state.street}</span>`;
@@ -5010,6 +5090,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               lastToastResult = state.lastResult;
               if (!state._isInitReplay) {
                 showHandResultToast(winnerNames, amount, handName);
+                SoundFX.win();
               }
             }
           }
@@ -5125,6 +5206,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (data.botName === myBot) {
           isHumanPlayer = true;
           showActionPanel(data);
+          SoundFX.yourTurn();
         }
         return;
       }
