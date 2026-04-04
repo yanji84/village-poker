@@ -71,25 +71,18 @@
     }
 
     /* --- Status Bar --- */
-    .status {
-      position: fixed;
-      top: 8px;
-      left: 8px;
-      font-family: var(--mono);
-      font-size: 9px;
-      z-index: 998;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .status .conn-dot {
+    .conn-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
       background: var(--green);
+      animation: conn-pulse 3s ease-in-out infinite;
     }
-    .status .conn-dot.disconnected { background: var(--red); }
-    .status .conn-label { color: var(--text-muted); }
+    .conn-dot.disconnected { background: var(--red); animation: none; }
+    @keyframes conn-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
 
     /* --- Info Strip (pot, board, street, hand) --- */
     .info-strip {
@@ -676,8 +669,6 @@
     }
 
 
-    .panel-quick-stats { padding: 0 16px 8px; }
-    .panel-quick-stats h4 { color: var(--text-muted); font-size: 11px; margin: 8px 0 6px; text-transform: uppercase; letter-spacing: 1px; }
     .pqs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 11px; font-family: var(--mono); }
     .pqs-label { color: var(--text-muted); }
     .pqs-value { color: var(--text-secondary); font-weight: 600; }
@@ -1147,58 +1138,6 @@
     ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
     /* --- Hand History Records --- */
-    .hand-record {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 4px;
-      padding: 8px 12px;
-      margin-bottom: 4px;
-      font-size: 11px;
-      font-family: var(--mono);
-    }
-    .hand-record.win { border-left: 3px solid #4a6; }
-    .hand-record.loss { border-left: 3px solid #a44; }
-    .hand-record.fold { border-left: 3px solid #555; }
-    .hr-top {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .hr-num { color: var(--text-muted); font-size: 10px; min-width: 36px; }
-    .hr-cards { font-size: 12px; flex: 1; }
-    .hr-profit { font-weight: 700; font-size: 11px; }
-    .hr-profit.profit-pos { color: var(--green); }
-    .hr-profit.profit-neg { color: var(--red); }
-    .hr-board { color: var(--text-muted); font-size: 10px; margin: 3px 0 0 44px; }
-    .hr-play { color: var(--text-secondary); font-size: 10px; margin: 2px 0 0 44px; }
-    .hr-meta {
-      display: flex; gap: 8px; flex-wrap: wrap;
-      color: var(--text-muted); font-size: 9px; margin: 2px 0 0 44px;
-    }
-    .hr-handname { color: var(--accent); }
-    .hr-winner { color: var(--text-muted); }
-    .hr-bluff.won { color: var(--green); }
-    .hr-bluff.caught { color: var(--red); }
-
-    /* --- Session Progress Bar --- */
-    .session-bar {
-      height: 4px;
-      background: #222;
-      border-radius: 2px;
-      overflow: hidden;
-      margin: 6px 0;
-    }
-    .session-bar-fill {
-      height: 100%;
-      background: #4af;
-      transition: width 0.3s;
-    }
-    .session-info {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
 
     /* --- Bluff Tags --- */
     .bluff-tag {
@@ -1248,58 +1187,6 @@
       color: #4af;
     }
 
-    /* --- My Hands Panel Section --- */
-    .my-hands-section {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .my-hands-section h4 {
-      color: var(--text-secondary);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin: 0 0 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .my-hands-progress {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      font-weight: 400;
-      letter-spacing: 0;
-      text-transform: none;
-    }
-
-    /* --- Session panel section --- */
-    .session-panel-section {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .session-panel-section h4 {
-      color: var(--text-secondary);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin: 0 0 8px;
-    }
-    .session-panel-text {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-    }
-    .session-panel-note {
-      font-size: 10px;
-      color: var(--text-muted);
-      font-style: italic;
-      margin-top: 4px;
-    }
 
     /* --- Toast Notification --- */
     .toast-container {
@@ -1871,6 +1758,7 @@
   <div class="top-bar">
     <div class="top-bar-title"><span class="accent">POKER ARENA</span> &mdash; AI &times; Human Texas Hold'em</div>
     <div class="top-bar-right">
+      <span class="conn-dot" id="conn-dot"></span>
       <div class="spectator-count" id="spectator-count"></div>
     </div>
   </div>
@@ -1892,8 +1780,6 @@
   </div>
   <script>if(!localStorage.getItem('arena_intro_seen'))document.getElementById('intro-banner').style.display='';</script>
 
-  <!-- Status Bar -->
-  <div class="status" id="status"><span class="conn-dot" id="conn-dot"></span><span class="conn-label" id="conn-label">connecting</span></div>
 
   <!-- Info Strip: Pot / Board / Street / Hand -->
   <div class="info-strip" id="info-strip">
@@ -1940,7 +1826,7 @@
     <!-- Players + Reasoning side by side on desktop, stacked on mobile -->
     <div class="players-reasoning-row">
       <div class="left-col">
-        <div class="section-header" style="border-top: 1px solid var(--border);">Table Talk <span style="color:#444;font-size:9px;font-weight:400;letter-spacing:0.5px">PUBLIC</span></div>
+        <div class="section-header" style="border-top: 1px solid var(--border);">Table Talk</div>
         <div class="chat-feed" id="chat-feed">
           <div class="chat-feed-messages" id="chat-feed-messages"></div>
         </div>
@@ -1955,7 +1841,7 @@
         <div class="reasoning-panel" id="reasoning-panel">
           <div class="reasoning-header">
             <span class="who" id="reasoning-who">Waiting for action...</span>
-            <span style="color:#444;font-size:9px;font-weight:400;letter-spacing:0.5px;margin-left:auto">PRIVATE — only spectators see this</span>
+            <span style="color:#444;font-size:9px;font-weight:400;letter-spacing:0.5px;margin-left:auto">private thought</span>
           </div>
           <div class="reasoning-body" id="reasoning-body">
             <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
@@ -2628,40 +2514,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     // (openAuthStrategyEditor removed — replaced by openJoinStrategyEditor)
-
-    // --- Panel Player Stats ---
-    let panelStatsData = null;
-
-    async function fetchPanelStats() {
-      if (!authUsername) return;
-      try {
-        const res = await fetch(apiBase + '/player-stats?username=' + encodeURIComponent(authUsername), { credentials: 'include' });
-        if (!res.ok) return;
-        panelStatsData = await res.json();
-        renderPanelStats();
-      } catch (e) {}
-    }
-
-    function renderPanelStats() {
-      const container = document.getElementById('panel-quick-stats');
-      const grid = document.getElementById('pqs-grid');
-      if (!authUsername || !panelStatsData) { container.style.display = 'none'; return; }
-      const s = panelStatsData.stats || panelStatsData;
-      const hands = s.handsPlayed || s.hands || 0;
-      if (hands === 0) { container.style.display = 'none'; return; }
-      container.style.display = '';
-      const wins = s.wins || s.handsWon || 0;
-      const winRate = hands > 0 ? Math.round(wins / hands * 100) + '%' : '--';
-      const elo = s.elo ? Math.round(s.elo) : '--';
-      const profit = s.chipProfit != null ? s.chipProfit : ((s.totalChipsWon || 0) - (s.totalChipsLost || 0));
-      const chips = profit !== 0 ? (profit >= 0 ? '+' + profit : '' + profit) : '0';
-
-      grid.innerHTML =
-        '<div class="pqs-label">Hands</div><div class="pqs-value">' + hands + '</div>' +
-        '<div class="pqs-label">Win Rate</div><div class="pqs-value">' + winRate + '</div>' +
-        '<div class="pqs-label">Elo</div><div class="pqs-value">' + elo + '</div>' +
-        '<div class="pqs-label">Chips</div><div class="pqs-value">' + chips + '</div>';
-    }
 
     // --- Human Action Panel ---
     let humanActionTimer = null;
@@ -4411,10 +4263,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       // --- Game Stats ---
 
       // Update join panel if open
-      if (joinPanelOpen) {
-        renderJoinPanel();
-        renderSessionPanel();
-      }
+      renderJoinPanel();
     }
 
     function renderChatFeed() {
@@ -5289,16 +5138,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     events.onerror = () => {
       const dot = document.getElementById('conn-dot');
-      const label = document.getElementById('conn-label');
       if (dot) dot.className = 'conn-dot disconnected';
-      if (label) label.textContent = 'reconnecting';
     };
 
     events.onopen = () => {
       const dot = document.getElementById('conn-dot');
-      const label = document.getElementById('conn-label');
       if (dot) dot.className = 'conn-dot';
-      if (label) label.textContent = '';
     };
 
     function toggleLeaderboardDetail(id) {
@@ -5320,150 +5165,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     // --- My Hands (authenticated users) ---
-    let myHandsData = [];
-    let myHandsLoaded = false;
-
-    async function fetchMyHands() {
-      const content = document.getElementById('my-hands-content');
-      content.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:11px;padding:8px;">Loading...</div>';
-      try {
-        const userParam = authUsername ? '?username=' + encodeURIComponent(authUsername) : '';
-        const res = await fetch(apiBase + '/my-records' + userParam, { credentials: 'include' });
-        if (!res.ok) {
-          content.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">Hand records not available yet.</div>';
-          return;
-        }
-        const data = await res.json();
-        myHandsData = Array.isArray(data) ? data : (data.hands || data.records || []);
-        myHandsLoaded = true;
-        renderMyHands();
-      } catch (e) {
-        content.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">Failed to load records.</div>';
-      }
-    }
-
-    let myHandsCollapsed = false;
-
-    function toggleMyHands() {
-      if (!myHandsLoaded) return;
-      myHandsCollapsed = !myHandsCollapsed;
-      const content = document.getElementById('my-hands-content');
-      const toggle = document.getElementById('my-hands-toggle');
-      content.style.display = myHandsCollapsed ? 'none' : '';
-      toggle.textContent = myHandsCollapsed ? '[show]' : '[hide]';
-    }
-
-    function renderMyHands() {
-      const content = document.getElementById('my-hands-content');
-      const progressEl = document.getElementById('my-hands-progress');
-      const toggle = document.getElementById('my-hands-toggle');
-      if (myHandsData.length === 0) {
-        content.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">No hands played yet.</div>';
-        progressEl.textContent = '';
-        if (toggle) toggle.textContent = '';
-        return;
-      }
-
-      if (toggle) toggle.textContent = myHandsCollapsed ? '[show]' : '[hide]';
-      content.style.display = myHandsCollapsed ? 'none' : '';
-
-      // Try to determine session progress from the data
-      const sessionMax = myHandsData[0]?.sessionMax || myHandsData[0]?.maxHands || null;
-      if (sessionMax) {
-        progressEl.textContent = '(' + myHandsData.length + '/' + sessionMax + ')';
-      } else {
-        progressEl.textContent = '(' + myHandsData.length + ' hands)';
-      }
-
-      content.innerHTML = myHandsData.map((h, i) => {
-        const handNum = h.handNumber || h.id || '';
-        const result = h.result || h.outcome || 'unknown';
-        const isWin = result === 'win' || result === 'won';
-        const isFold = result === 'fold' || result === 'folded';
-        const profit = h.chipDelta || h.delta || h.profit || 0;
-        const profitStr = profit > 0 ? '+' + profit : '' + profit;
-        const profitClass = profit > 0 ? 'profit-pos' : (profit < 0 ? 'profit-neg' : '');
-
-        const cards = h.cards || h.holeCards || [];
-        const cardsHtml = cards.length > 0 ? cards.map(c => renderCard(c)).join(' ') : '';
-        const boardHtml = (h.community || []).length > 0 ? h.community.map(c => renderCard(c)).join(' ') : '';
-
-        // Build your action line: "called 80 > checked > folded"
-        const sa = h.streetActions || [];
-        let yourPlay = '';
-        if (sa.length > 0) {
-          yourPlay = sa.map(a => {
-            const act = a.action === 'blind' ? 'blind' : a.action.replace('poker_', '');
-            return act + (a.amount ? ' ' + a.amount : '');
-          }).join(' > ');
-        } else if (h.actions && h.actions.length > 0) {
-          // Legacy flat strings
-          yourPlay = h.actions.filter(a => {
-            const s = typeof a === 'string' ? a : a.action;
-            return !['deal_hole','thought','deal_flop','deal_turn','deal_river'].includes(s);
-          }).map(a => typeof a === 'string' ? a : a.action).join(' > ');
-        }
-
-        const winnerText = h.winner && !isWin ? 'Won by ' + esc(h.winner) : '';
-        const handName = h.handName && isWin ? esc(h.handName) : '';
-        const bluffNote = h.bluffCaught ? 'Bluff caught' : (h.bluffWon ? 'Bluff won' : '');
-        const potText = h.pot ? 'Pot ' + h.pot : '';
-
-        return `
-          <div class="hand-record ${isWin ? 'win' : (isFold ? 'fold' : 'loss')}">
-            <div class="hr-top">
-              <span class="hr-num">#${handNum}</span>
-              <span class="hr-cards">${cardsHtml}</span>
-              <span class="hr-profit ${profitClass}">${profitStr}</span>
-            </div>
-            ${boardHtml ? `<div class="hr-board">${boardHtml}</div>` : ''}
-            ${yourPlay ? `<div class="hr-play">${esc(yourPlay)}</div>` : ''}
-            <div class="hr-meta">
-              ${potText ? `<span>${potText}</span>` : ''}
-              ${handName ? `<span class="hr-handname">${handName}</span>` : ''}
-              ${winnerText ? `<span class="hr-winner">${winnerText}</span>` : ''}
-              ${bluffNote ? `<span class="hr-bluff ${h.bluffWon ? 'won' : 'caught'}">${bluffNote}</span>` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-
-    // --- Session Panel Rendering ---
-    function renderSessionPanel() {
-      const myBot = getMyBotCookie();
-      const sessionSection = document.getElementById('session-panel-section');
-      const myHandsSection = document.getElementById('my-hands-section');
-
-      const isAuthenticated = hasArenaToken() || !!authUsername;
-
-      // Show/hide my hands section — hide when actively playing or queued
-      const isQueued = !!getWaitlistState();
-      if (isAuthenticated && !myBot && !isQueued && myHandsSection) {
-        myHandsSection.style.display = '';
-      } else if (myHandsSection) {
-        myHandsSection.style.display = 'none';
-      }
-
-      // Show/hide session countdown
-      if (myBot && sessionSection) {
-        const sd = seatData[myBot];
-        const sessionInfo = sd?.sessionInfo || state.sessionInfo?.[myBot];
-        if (sessionInfo && sessionInfo.maxHands) {
-          const played = sessionInfo.handsPlayed || 0;
-          const max = sessionInfo.maxHands;
-          const pct = Math.min(100, Math.round((played / max) * 100));
-          sessionSection.style.display = '';
-          document.getElementById('session-panel-text').textContent = played + ' of ' + max + ' hands played';
-          document.getElementById('session-panel-bar-fill').style.width = pct + '%';
-        } else {
-          sessionSection.style.display = 'none';
-        }
-      } else if (sessionSection) {
-        sessionSection.style.display = 'none';
-      }
-    }
 
     // Initialize
     renderTemplateButtons('modal-template-btns', 'full-editor-textarea');
