@@ -2648,23 +2648,35 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const buttons = document.querySelectorAll('.human-action-panel .action-btn');
       buttons.forEach(b => b.disabled = true);
 
-      try {
-        const res = await fetch(apiBase + '/action', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ action, amount, say, thought: 'Human decision' }),
-        });
-        if (!res.ok) {
+      // Retry logic: if server says "not your turn yet" (409), wait and retry
+      const maxRetries = 5;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const res = await fetch(apiBase + '/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ action, amount, say, thought: 'Human decision' }),
+          });
+          if (res.ok) break; // Success
+          if (res.status === 409 && attempt < maxRetries) {
+            // Server not ready yet — wait and retry
+            await new Promise(r => setTimeout(r, 1000));
+            continue;
+          }
           const data = await res.json().catch(() => ({}));
-          showToast(data.error || 'Action failed — you may be auto-folded');
+          showToast(data.error || 'Action failed');
           buttons.forEach(b => b.disabled = false);
-          return; // Keep panel open so user can retry
+          return;
+        } catch (e) {
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 1000));
+            continue;
+          }
+          showToast('Network error — action not sent.');
+          buttons.forEach(b => b.disabled = false);
+          return;
         }
-      } catch (e) {
-        showToast('Network error — action not sent. Try again.');
-        buttons.forEach(b => b.disabled = false);
-        return; // Keep panel open so user can retry
       }
 
       hideActionPanel();
