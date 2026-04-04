@@ -2533,6 +2533,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const toCall = data.toCall || 0;
       const minRaise = data.minRaise || 0;
       const chips = data.chips || 0;
+      const actualCall = Math.min(toCall, chips);
+      const allinBtn = document.getElementById('btn-allin');
+      const raiseControls = raiseInput.parentElement;
 
       // Show check or call based on toCall
       if (toCall === 0) {
@@ -2541,14 +2544,25 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       } else {
         btnCheck.style.display = 'none';
         btnCall.style.display = '';
-        callAmountEl.textContent = toCall;
+        callAmountEl.textContent = actualCall + (actualCall < toCall ? ' (all-in)' : '');
       }
 
-      raiseInput.min = minRaise;
-      raiseInput.value = minRaise;
-      raiseInput.max = chips;
+      // Raise: cap min at chips, hide if can't raise above call
+      if (minRaise > chips || chips <= toCall) {
+        raiseControls.style.display = 'none';
+      } else {
+        raiseControls.style.display = '';
+        raiseInput.min = Math.min(minRaise, chips);
+        raiseInput.value = Math.min(minRaise, chips);
+        raiseInput.max = chips;
+      }
 
-      infoEl.textContent = 'Pot: ' + (data.pot || 0) + ' | Chips: ' + chips + (toCall > 0 ? ' | To call: ' + toCall : '');
+      // All-in button shows chip count
+      if (allinBtn) {
+        allinBtn.textContent = 'All In ' + chips;
+      }
+
+      infoEl.textContent = 'Pot: ' + (data.pot || 0) + ' | Chips: ' + chips + (toCall > 0 ? ' | To call: ' + actualCall : '');
 
       panel.style.display = '';
       humanTurnActive = true;
