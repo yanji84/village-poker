@@ -583,29 +583,35 @@
 
     .join-tab {
       position: fixed;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-      background: var(--bg-elevated);
-      color: var(--accent);
-      padding: 14px 8px;
+      right: 16px;
+      bottom: 24px;
+      background: linear-gradient(135deg, #1a5a2a 0%, #0e3a1a 100%);
+      color: #4ae44a;
+      padding: 14px 28px;
       cursor: pointer;
-      border-radius: 6px 0 0 6px;
-      border: 1px solid var(--border);
-      border-right: none;
+      border-radius: 12px;
+      border: 2px solid #3a8a3a;
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 1px;
       text-transform: uppercase;
       z-index: 999;
-      transition: background 0.2s;
+      transition: all 0.2s;
       user-select: none;
+      box-shadow: 0 4px 20px rgba(40, 160, 40, 0.3);
+      animation: join-pulse 3s ease-in-out infinite;
     }
-    .join-tab:hover { background: #1e1e1e; }
+    .join-tab:hover {
+      background: linear-gradient(135deg, #2a7a3a 0%, #1a5a2a 100%);
+      box-shadow: 0 4px 30px rgba(40, 160, 40, 0.5);
+      transform: scale(1.05);
+    }
     .join-tab.hidden { display: none; }
+    @keyframes join-pulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(40, 160, 40, 0.3); }
+      50% { box-shadow: 0 4px 30px rgba(40, 160, 40, 0.5); }
+    }
 
     .join-panel-header {
       display: flex;
@@ -2248,7 +2254,7 @@
   <div id="table-container" style="display:none"></div>
 
   <!-- Join Game Tab -->
-  <div class="join-tab" id="join-tab" onclick="toggleJoinPanel()">JOIN</div>
+  <div class="join-tab" id="join-tab" onclick="toggleJoinPanel()">&#9654; Play</div>
 
   <!-- Join Game Side Panel -->
   <div class="join-panel" id="join-panel">
@@ -2292,8 +2298,8 @@
         </label>
       </div>
       <div id="strategy-section">
-      <label for="join-strategy">Strategy</label>
-      <details class="prompt-example">
+      <label for="join-strategy">Strategy <span style="color:var(--text-muted);font-weight:400;font-size:11px">— tell your AI how to play</span></label>
+      <details class="prompt-example" open>
         <summary>How your strategy becomes a prompt ▸</summary>
         <div class="prompt-example-content">
           <p class="prompt-example-desc">Each turn, your bot gets a system prompt + the table state. Your strategy is injected at the top:</p>
@@ -2333,13 +2339,15 @@ Min raise: <b>40</b></pre>
           <p class="prompt-example-desc">Your strategy shapes <em>how</em> the bot reasons about this scene. Be specific about when to fold, raise, bluff, and talk.</p>
         </div>
       </details>
-      <textarea id="join-strategy" rows="11" maxlength="2000" placeholder="Play tight-aggressive. Bluff occasionally on the river when the pot is large." oninput="updateCharCounter()"></textarea>
-      <div class="char-counter" id="strategy-char-counter">0 / 2000</div>
-      <div class="template-bar">
-        <div class="template-bar-label">Start from template:</div>
+      <div class="template-bar" style="margin-bottom:8px">
+        <div class="template-bar-label">Pick a style or write your own:</div>
         <div class="template-btns" id="panel-template-btns"></div>
       </div>
-      <button class="join-panel-btn secondary" style="margin-top:0;margin-bottom:8px" onclick="openFullEditor()">Full Editor</button>
+      <textarea id="join-strategy" rows="8" maxlength="2000" placeholder="Play tight-aggressive. Bluff occasionally on the river when the pot is large." oninput="updateCharCounter()"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="char-counter" id="strategy-char-counter">0 / 2000</div>
+        <button class="join-panel-btn secondary" style="margin:0;padding:4px 12px;font-size:11px" onclick="openFullEditor()">Full Editor</button>
+      </div>
       </div>
       <button class="join-panel-btn" id="join-btn" onclick="submitWaitlist()">Join Waitlist</button>
     </div>
