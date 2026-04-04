@@ -4063,10 +4063,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const chipText = chips >= 1000 ? (chips / 1000).toFixed(1) + 'k' : String(chips);
         const blindTag = state.blinds[bot.name] === 'small' ? ' SB' : state.blinds[bot.name] === 'big' ? ' BB' : '';
 
-        // Determine action label to show
+        // Determine action label to show (only from current hand)
         const lastAct = state.lastActions[bot.name];
         const actAge = lastAct ? (Date.now() - lastAct.time) : Infinity;
-        const showAction = lastAct && actAge < 30000; // show for 30s
+        const actFromCurrentHand = lastAct && lastAct.hand === state.handNumber;
+        const showAction = lastAct && actAge < 15000 && actFromCurrentHand;
         let actionLabel = '';
         let actionColor = '#888';
         if (isFolded) {
@@ -4113,7 +4114,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const plateW = Math.max(nameW, chipW2, actionW) + 14;
         const lineH = Math.round(14 * _fs);
         const hasAction = !!actionLabel;
-        const hasBet = bet > 0 && !isFolded;
+        const hasBet = bet > 0 && !isFolded && state.phase === 'betting';
         const lines = 2 + (hasAction ? 1 : 0) + (hasBet ? 1 : 0);
         const plateH = lineH * lines + Math.round(4 * _fs);
         const plateX = Math.floor(px - plateW / 2);
@@ -4792,6 +4793,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           action: entry.action,
           amount: entry.amount || null,
           time: Date.now(),
+          hand: state.handNumber,
         };
         // Add to hand reasoning history
         handReasoningHistory.push({
@@ -4994,11 +4996,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               if (!state._isInitReplay) {
                 showHandResultToast(winnerNames, amount, handName);
                 SoundFX.win();
-                // Chips to pot from all non-folded players, then from pot to winner
+                // Chips to pot from all players who bet, then pot to winner
                 for (const bot of (state.bots || [])) {
-                  if (!state.foldedPlayers.has(bot.name)) {
-                    triggerChipsToPot(bot.name);
-                  }
+                  triggerChipsToPot(bot.name);
                 }
                 for (const wb of winnerBots) {
                   triggerChipsToWinner(wb);
