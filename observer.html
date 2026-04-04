@@ -753,23 +753,22 @@
     .action-buttons {
       display: flex;
       gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
+      align-items: stretch;
     }
     .action-btn {
-      padding: 14px 24px;
+      padding: 12px 0;
       border: 2px solid var(--border);
       border-radius: 8px;
       cursor: pointer;
       font-family: var(--mono);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       text-transform: uppercase;
       transition: background 0.15s, border-color 0.15s, transform 0.1s;
       flex: 1;
-      min-height: 48px;
-      min-width: 70px;
+      min-height: 44px;
       text-align: center;
+      white-space: nowrap;
     }
     .action-btn:active { transform: scale(0.95); }
     .action-btn.fold {
@@ -792,20 +791,24 @@
     .action-btn.call:hover { background: #1f3a1f; border-color: #336633; }
     .raise-controls {
       display: flex;
-      gap: 6px;
-      align-items: center;
+      gap: 4px;
+      align-items: stretch;
+      flex: 1.5;
     }
     .raise-controls input {
-      width: 80px;
+      width: 60px;
+      min-width: 50px;
       background: var(--bg-primary);
       border: 2px solid var(--border);
       border-radius: 6px;
       color: var(--text-primary);
-      padding: 12px 8px;
+      padding: 8px 4px;
       font-family: var(--mono);
-      font-size: 15px;
+      font-size: 14px;
       text-align: center;
-      min-height: 48px;
+    }
+    .raise-controls .action-btn {
+      flex: 1;
     }
     .action-btn.raise {
       background: #2a2515;
