@@ -1580,26 +1580,23 @@
         border-bottom: 1px solid var(--border);
       }
 
-      /* Section headers */
-      .section-header {
-        padding: 8px 12px 5px;
+      /* Section headers — consistent between talk and thought */
+      .section-header,
+      .reasoning-header {
+        padding: 8px 12px;
+        font-size: 9px;
+      }
+      .reasoning-header .who {
         font-size: 9px;
       }
 
-      /* Stats dashboard */
-      /* Reasoning panel: limit height on mobile so it doesn't push content */
+      /* Reasoning panel: limit height on mobile */
       .reasoning-panel {
         max-height: 60vh;
       }
       .reasoning-body {
         max-height: 50vh;
         padding: 12px;
-      }
-      .reasoning-header {
-        padding: 8px 12px;
-      }
-      .reasoning-header .who {
-        font-size: 11px;
       }
       .reasoning-scene {
         font-size: 10px;
