@@ -2548,14 +2548,19 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             strategy: s.strategy || '',
             stats: s.stats || null,
             sessionInfo: s.sessionInfo || s.session || null,
+            playMode: s.playMode || 'bot',
           };
           if (s.sessionInfo || s.session) {
             state.sessionInfo[botName] = s.sessionInfo || s.session;
           }
           // Auto-detect if current user is seated (recovers missing arena_bot cookie)
           const seatOwner = s.claimedBy || s.username;
-          if (authUsername && seatOwner && seatOwner.toLowerCase() === authUsername.toLowerCase() && !getMyBotCookie()) {
-            document.cookie = 'arena_bot=' + encodeURIComponent(botName) + ';path=/;max-age=604800;SameSite=Strict';
+          if (authUsername && seatOwner && seatOwner.toLowerCase() === authUsername.toLowerCase()) {
+            if (!getMyBotCookie()) {
+              document.cookie = 'arena_bot=' + encodeURIComponent(botName) + ';path=/;max-age=604800;SameSite=Strict';
+            }
+            // Detect human play mode from seat data
+            if (s.playMode === 'human') isHumanPlayer = true;
           }
         }
         // Clear stale arena_bot cookie if it points to a bot not at the table
@@ -2563,6 +2568,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (myBot && !seatsObj[myBot]) {
           document.cookie = 'arena_bot=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
           document.cookie = 'arena_token=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+          isHumanPlayer = false;
+        } else if (myBot && seatsObj[myBot]?.playMode === 'human') {
+          isHumanPlayer = true;
         }
         render();
       } catch (e) {}
