@@ -2599,13 +2599,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (!authUsername) return;
       const btn = document.getElementById('auth-join-btn');
 
-      // Only ask for PIN if user has one
-      const hasPin = localStorage.getItem('arena_has_pin') === 'true';
-      let pin = null;
-      if (hasPin) {
-        pin = prompt('Enter your 4-digit PIN to rejoin:');
-        if (!pin || !/^\d{4}$/.test(pin)) return;
-      }
+      // User is already authenticated via arena_token cookie — no PIN needed.
 
       const authPlayMode = document.querySelector('input[name="authPlayMode"]:checked')?.value || 'bot';
       const storedStrategy = localStorage.getItem('arena_strategy_' + (authUsername || ''));
@@ -2619,7 +2613,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ username: authUsername, pin, strategy, playMode: authPlayMode, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
+          body: JSON.stringify({ username: authUsername, strategy, playMode: authPlayMode, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
