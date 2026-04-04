@@ -2923,7 +2923,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const wlState = getWaitlistState();
       viewerWaitlist = wlState;
       const hasToken = hasArenaToken();
-      const isAuthenticated = hasToken || !!authUsername;
+      const hasPin = localStorage.getItem('arena_has_pin') === 'true';
+      // Only treat as authenticated if we have a valid token, or username without PIN (anonymous)
+      const isAuthenticated = hasToken || (!!authUsername && !hasPin);
       const isSeated = !!myBot;
       let isQueued = !!wlState;
 
@@ -2994,6 +2996,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         authIdleActions.style.display = 'none';
         statsContainer.style.display = 'none';
         formSection.style.display = '';
+
+        // Pre-fill username if returning with stale token
+        if (authUsername && hasPin && !hasToken) {
+          const usernameInput = document.getElementById('join-username');
+          if (usernameInput && !usernameInput.value) usernameInput.value = authUsername;
+        }
 
         if (!editingStrategy) {
           const msgEl = document.getElementById('join-msg');
