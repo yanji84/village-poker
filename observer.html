@@ -1913,9 +1913,9 @@
   <!-- Join Bar -->
   <div class="join-bar" id="join-bar">
     <div id="join-bar-form">
-      <span class="join-bar-label">join</span>
+      <span class="join-bar-label">join game</span>
       <span class="join-bar-prompt">&gt;</span>
-      <input type="text" id="join-username" maxlength="20" placeholder="your name" class="join-bar-input" />
+      <input type="text" id="join-username" maxlength="20" placeholder="player name" class="join-bar-input" />
       <span class="join-bar-sep">|</span>
       <span class="join-bar-cmd" onclick="document.getElementById('join-username').value = generateRandomName()">~random</span>
       <span class="join-bar-sep">|</span>
@@ -2576,6 +2576,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       setTimeout(() => modalTextarea.focus(), 100);
 
       const saveBtn = document.querySelector('.full-editor-save');
+      saveBtn.textContent = 'Join Game';
       saveBtn.onclick = function() {
         const strategy = modalTextarea.value.trim();
         if (!strategy) { showToast('Write a strategy first.', 'error'); return; }
@@ -2583,6 +2584,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         localStorage.setItem('arena_strategy_' + username.toLowerCase(), strategy);
         if (customCode) localStorage.setItem('arena_customCode_' + username, customCode);
         document.getElementById('full-editor-overlay').classList.remove('open');
+        saveBtn.textContent = 'Save & Close';
         doJoin(username, 'bot', strategy);
       };
     }
