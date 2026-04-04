@@ -3525,6 +3525,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       leaderboard: {},
       sessionInfo: {},
       lastSay: {},
+      lastActions: {},  // botName → { action, amount, time }
       maxPlayers: 6,
       playerCount: 0,
       dramaticEvent: null,
@@ -4674,20 +4675,55 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const chipText = chips >= 1000 ? (chips / 1000).toFixed(1) + 'k' : String(chips);
         const blindTag = state.blinds[bot.name] === 'small' ? ' SB' : state.blinds[bot.name] === 'big' ? ' BB' : '';
 
+        // Determine action label to show
+        const lastAct = state.lastActions[bot.name];
+        const actAge = lastAct ? (Date.now() - lastAct.time) : Infinity;
+        const showAction = lastAct && actAge < 30000; // show for 30s
+        let actionLabel = '';
+        let actionColor = '#888';
+        if (isFolded) {
+          actionLabel = 'FOLD';
+          actionColor = '#a44';
+        } else if (showAction) {
+          switch (lastAct.action) {
+            case 'check':
+              actionLabel = 'CHECK';
+              actionColor = '#6ab';
+              break;
+            case 'call':
+              actionLabel = lastAct.amount ? 'CALL ' + lastAct.amount : 'CALL';
+              actionColor = '#6ab';
+              break;
+            case 'raise':
+              actionLabel = lastAct.amount ? 'RAISE ' + lastAct.amount : 'RAISE';
+              actionColor = '#e8a020';
+              break;
+            case 'allin':
+              actionLabel = 'ALL-IN';
+              actionColor = '#e44';
+              break;
+          }
+        }
+
         // Bottom-row seats put labels ABOVE avatar (toward table)
         const isBottomRow = seatIdx >= 3;
 
         // Measure for background
         const nameFontSize = Math.round(13 * _fs);
         const chipFontSize = Math.round(14 * _fs);
+        const actionFontSize = Math.round(11 * _fs);
         pokerCtx.font = nameFontSize + 'px monospace';
         const nameW = pokerCtx.measureText(shortName + blindTag).width;
         pokerCtx.font = 'bold ' + chipFontSize + 'px monospace';
         const chipW2 = pokerCtx.measureText(chipText).width;
-        const plateW = Math.max(nameW, chipW2) + 14;
+        pokerCtx.font = 'bold ' + actionFontSize + 'px monospace';
+        const actionW = actionLabel ? pokerCtx.measureText(actionLabel).width : 0;
+        const plateW = Math.max(nameW, chipW2, actionW) + 14;
         const lineH = Math.round(14 * _fs);
-        const lines = (bet > 0 && !isFolded) ? 3 : (isFolded ? 3 : 2);
-        const plateH = lineH * lines + Math.round(6 * _fs);
+        const hasAction = !!actionLabel;
+        const hasBet = bet > 0 && !isFolded;
+        const lines = 2 + (hasAction ? 1 : 0) + (hasBet ? 1 : 0);
+        const plateH = lineH * lines + Math.round(4 * _fs);
         const plateX = Math.floor(px - plateW / 2);
         const plateY = isBottomRow
           ? Math.floor(py - 12 * charScale - plateH + bobOffset)
@@ -4716,19 +4752,25 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         pokerCtx.fillStyle = isFolded ? '#555' : '#ddd';
         pokerCtx.fillText(chipText, px, chipY);
 
-        // Bet amount (gold, compact)
-        if (bet > 0 && !isFolded) {
-          const betY = chipY + lineH;
-          pokerCtx.font = Math.round(12 * _fs) + 'px monospace';
-          pokerCtx.fillStyle = '#e8b828';
-          pokerCtx.fillText('\u25C9 ' + bet, px, betY);
+        // Action label (CHECK, CALL, RAISE, FOLD, ALL-IN)
+        let nextLineY = chipY + lineH;
+        if (hasAction) {
+          pokerCtx.font = 'bold ' + actionFontSize + 'px monospace';
+          pokerCtx.fillStyle = actionColor;
+          // Fade action out over last 5 seconds
+          if (!isFolded && actAge > 25000) {
+            pokerCtx.globalAlpha = Math.max(0.2, 1 - (actAge - 25000) / 5000);
+          }
+          pokerCtx.fillText(actionLabel, px, nextLineY);
+          pokerCtx.globalAlpha = 1.0;
+          nextLineY += lineH;
         }
 
-        // Folded status label
-        if (isFolded) {
-          pokerCtx.font = 'bold ' + Math.round(11 * _fs) + 'px monospace';
-          pokerCtx.fillStyle = '#a44';
-          pokerCtx.fillText('FOLD', px, chipY + lineH);
+        // Bet amount (gold, compact) — separate line if both action + bet
+        if (hasBet) {
+          pokerCtx.font = Math.round(12 * _fs) + 'px monospace';
+          pokerCtx.fillStyle = '#e8b828';
+          pokerCtx.fillText('\u25C9 ' + bet, px, nextLineY);
         }
 
         // Thinking dots above active player
@@ -5329,6 +5371,13 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (['check', 'call', 'raise', 'fold'].includes(entry.action) && entry.bot) {
         state.lastActed = entry.bot;
+        // Track last action for canvas display
+        const isAllIn = entry.message?.includes('all-in') || entry.message?.includes('ALL-IN');
+        state.lastActions[entry.bot] = {
+          action: isAllIn ? 'allin' : entry.action,
+          amount: entry.amount || null,
+          time: Date.now(),
+        };
         // Add to hand reasoning history
         handReasoningHistory.push({
           tick: state.tick,
@@ -5377,6 +5426,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.blinds[entry.bot] = 'small';
             state.lastThought = {};
             state.lastSay = {};
+            state.lastActions = {};
             chatFeedMessages = [];
             state.lastActed = null;
             state.contextMessage = `Hand #${state.handNumber} starting...`;
