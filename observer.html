@@ -2323,7 +2323,15 @@ Min raise: <b>40</b></pre>
     </div>
 
     <div class="join-panel-section" id="auth-idle-actions" style="display:none">
-      <button class="join-panel-btn" id="auth-join-btn" onclick="submitWaitlistAuthenticated()">Join Waitlist</button>
+      <div class="play-mode-toggle" style="margin-bottom:8px">
+        <label class="play-mode-option">
+          <input type="radio" name="authPlayMode" value="bot" checked> AI Bot plays for me
+        </label>
+        <label class="play-mode-option">
+          <input type="radio" name="authPlayMode" value="human"> I play myself
+        </label>
+      </div>
+      <button class="join-panel-btn" id="auth-join-btn" onclick="submitWaitlistAuthenticated()">Join Game</button>
     </div>
 
     <!-- Session Countdown (shown for seated players) -->
@@ -2748,7 +2756,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       // Use last known strategy or a default
       const lastStrategy = seatData ? Object.values(seatData).find(s => s.username && authUsername && s.username.toLowerCase() === authUsername.toLowerCase())?.strategy : null;
-      const strategy = lastStrategy || 'Play smart and adapt to opponents.';
+      const authPlayMode = document.querySelector('input[name="authPlayMode"]:checked')?.value || 'bot';
+      const strategy = authPlayMode === 'human' ? 'Human player' : (lastStrategy || 'Play smart and adapt to opponents.');
 
       btn.disabled = true;
       btn.textContent = 'Joining...';
@@ -2757,7 +2766,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ username: authUsername, pin, strategy, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
+          body: JSON.stringify({ username: authUsername, pin, strategy, playMode: authPlayMode, customCode: document.getElementById('full-editor-code')?.value?.trim() || null }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
