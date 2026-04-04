@@ -564,95 +564,63 @@
     .built-with a:hover { text-decoration: underline; }
 
     /* --- Join Bar (inline, top-level) --- */
+    /* --- Join Bar: terminal-style inline prompt --- */
     .join-bar {
-      padding: 8px 14px;
-      background: var(--bg-card);
+      padding: 5px 12px;
+      background: var(--bg-primary);
       border-bottom: 1px solid var(--border);
       font-family: var(--mono);
-      font-size: 11px;
-    }
-    .join-bar-inner {
+      font-size: 12px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 0;
+      min-height: 32px;
     }
+    .join-bar-prompt { color: var(--green); margin-right: 6px; white-space: nowrap; user-select: none; }
     .join-bar-input {
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 6px 10px;
-      color: #e0e0e0;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
       font-family: var(--mono);
       font-size: 12px;
-      flex: 1;
-      min-width: 120px;
-      max-width: 200px;
+      width: 130px;
+      padding: 4px 0;
+      caret-color: var(--green);
     }
-    .join-bar-input:focus { outline: none; border-color: #444; }
-    .join-bar-random {
-      background: none;
-      border: 1px solid var(--border);
+    .join-bar-input:focus { outline: none; }
+    .join-bar-input::placeholder { color: #444; }
+    .join-bar-sep { color: #333; margin: 0 8px; user-select: none; }
+    .join-bar-cmd {
       color: var(--text-muted);
-      padding: 5px 10px;
-      border-radius: 4px;
       cursor: pointer;
-      font-size: 10px;
-      font-family: var(--mono);
-      transition: all 0.15s;
-    }
-    .join-bar-random:hover { color: var(--text-primary); border-color: #444; }
-    .join-bar-btn {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      color: var(--accent);
-      padding: 6px 14px;
-      border-radius: 4px;
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
+      padding: 2px 0;
+      transition: color 0.1s;
       white-space: nowrap;
     }
-    .join-bar-btn:hover { background: #1a1a1a; border-color: #444; color: #fff; }
-    .join-bar-btn.human { color: var(--green); border-color: #2a5a2a; }
-    .join-bar-btn.human:hover { background: #0e1e0e; border-color: #3a7a3a; }
-    .join-bar-btn.bot { color: var(--accent); border-color: #2a3a5a; }
-    .join-bar-btn.bot:hover { background: #0e121e; border-color: #3a5a8a; }
-    .join-bar-btn.leave { color: #a66; border-color: #533; }
-    .join-bar-btn.leave:hover { background: #1a0e0e; color: #c88; }
-    .join-bar-btn.edit-strat { color: var(--text-secondary); }
+    .join-bar-cmd:hover { color: var(--text-primary); }
+    .join-bar-cmd.human { color: #5a8a5a; }
+    .join-bar-cmd.human:hover { color: var(--green); }
+    .join-bar-cmd.bot { color: #5a7aaa; }
+    .join-bar-cmd.bot:hover { color: var(--accent); }
+    .join-bar-cmd.leave { color: #886655; }
+    .join-bar-cmd.leave:hover { color: #c88; }
+    .join-bar-cmd.edit { color: #777; }
+    .join-bar-cmd.edit:hover { color: var(--text-primary); }
     .join-bar-msg {
       font-size: 11px;
-      padding: 2px 0;
-      min-height: 0;
+      margin-left: 8px;
+      white-space: nowrap;
     }
     .join-bar-msg:empty { display: none; }
     .join-bar-msg.error { color: var(--red); }
     .join-bar-msg.success { color: var(--green); }
-    .join-bar-status {
-      justify-content: space-between;
-    }
-    .join-bar-status span { color: var(--text-secondary); }
-    .join-bar-status-actions {
-      display: flex;
-      gap: 8px;
-      margin-left: auto;
-    }
+    .join-bar-status { color: var(--text-secondary); white-space: nowrap; }
+    .join-bar-status-actions { display: flex; gap: 0; margin-left: auto; }
 
-    @media (max-width: 600px) {
-      .join-bar-inner {
-        flex-wrap: wrap;
-      }
-      .join-bar-input {
-        flex: 1 1 100%;
-        max-width: none;
-      }
-      .join-bar-btn.human,
-      .join-bar-btn.bot {
-        flex: 1;
-      }
+    @media (max-width: 520px) {
+      .join-bar { flex-wrap: wrap; gap: 0; padding: 4px 10px; }
+      .join-bar-input { width: 90px; }
+      .join-bar-sep { margin: 0 5px; }
     }
 
     /* --- About FAB --- */
@@ -1943,20 +1911,27 @@
 
   <!-- Join Bar -->
   <div class="join-bar" id="join-bar">
-    <div class="join-bar-inner" id="join-bar-form">
-      <input type="text" id="join-username" maxlength="20" placeholder="Pick a name" class="join-bar-input" />
-      <button class="join-bar-random" onclick="document.getElementById('join-username').value = generateRandomName()" title="Random name">random</button>
-      <button class="join-bar-btn human" onclick="joinGame('human')">Join as Human</button>
-      <button class="join-bar-btn bot" onclick="joinGame('bot')">Join as Bot</button>
+    <div id="join-bar-form">
+      <span class="join-bar-prompt">&gt;</span>
+      <input type="text" id="join-username" maxlength="20" placeholder="name" class="join-bar-input" />
+      <span class="join-bar-sep">|</span>
+      <span class="join-bar-cmd" onclick="document.getElementById('join-username').value = generateRandomName()">~random</span>
+      <span class="join-bar-sep">|</span>
+      <span class="join-bar-cmd human" onclick="joinGame('human')">/human</span>
+      <span class="join-bar-sep">|</span>
+      <span class="join-bar-cmd bot" onclick="joinGame('bot')">/bot</span>
     </div>
-    <div class="join-bar-inner join-bar-status" id="join-bar-status" style="display:none">
-      <span id="join-bar-status-text"></span>
+    <div id="join-bar-status" style="display:none">
+      <span class="join-bar-prompt">&gt;</span>
+      <span class="join-bar-status" id="join-bar-status-text"></span>
       <div class="join-bar-status-actions">
-        <button class="join-bar-btn edit-strat" id="join-bar-edit-btn" onclick="showEditStrategy()" style="display:none">Edit Strategy</button>
-        <button class="join-bar-btn leave" onclick="leaveOrRelease()">Leave</button>
+        <span class="join-bar-sep">|</span>
+        <span class="join-bar-cmd edit" id="join-bar-edit-btn" onclick="showEditStrategy()" style="display:none">/strategy</span>
+        <span class="join-bar-sep">|</span>
+        <span class="join-bar-cmd leave" onclick="leaveOrRelease()">/leave</span>
       </div>
     </div>
-    <div class="join-bar-msg" id="join-msg"></div>
+    <span class="join-bar-msg" id="join-msg"></span>
   </div>
 
   <!-- Main Dashboard Grid -->
