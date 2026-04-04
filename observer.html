@@ -2601,7 +2601,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         if (isSeated) {
           const chips = state.chips[myBot];
           statusText.textContent = 'Playing as ' + (authUsername || 'you') + (chips != null ? ' — ' + chips + ' chips' : '');
-          editBtn.style.display = (isHumanPlayer ? 'none' : '');
+          const isHuman = isHumanPlayer || seatData[myBot]?.playMode === 'human';
+          editBtn.style.display = isHuman ? 'none' : '';
         } else {
           statusText.textContent = 'In waitlist as ' + (authUsername || wlState?.username || 'you');
           editBtn.style.display = 'none';
@@ -2667,9 +2668,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         localStorage.setItem('arena_username', username);
         const respData = await res.json().catch(() => ({}));
         if (respData.botName) {
-          document.cookie = 'arena_bot=' + encodeURIComponent(respData.botName) + ';path=/;max-age=604800;SameSite=Strict';
+          document.cookie = 'arena_bot=' + encodeURIComponent(respData.botName) + ';path=/;max-age=2592000;SameSite=Strict';
           setWaitlistState(null);
-          if (playMode === 'human') isHumanPlayer = true;
+          isHumanPlayer = (playMode === 'human');
           msgEl.className = 'join-bar-msg success';
           msgEl.textContent = 'You are seated!';
         } else {
@@ -2678,9 +2679,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           msgEl.textContent = 'You are on the waitlist!';
         }
         document.getElementById('join-username').value = '';
-        fetchSeats();
-        await fetchWaitlist();
+        await fetchSeats();
         renderJoinPanel();
+        render();
       } catch (e) {
         msgEl.className = 'join-bar-msg error';
         msgEl.textContent = 'Network error. Please try again.';
