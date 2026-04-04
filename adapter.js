@@ -241,8 +241,9 @@ export const phases = {
         const displayName = state.remoteParticipants?.[winner]?.displayName || winner;
         state.winner = { botName: winner, displayName, chips: state.buyIns[winner], handsPlayed: state.handsPlayed };
 
-        // Update leaderboard for all participants
+        // Update leaderboard for all participants (skip ephemeral players)
         for (const bot of state.bots) {
+          if (state.hubBots?.[bot]?.ephemeral) continue;
           if (!state.leaderboard[bot]) {
             state.leaderboard[bot] = { wins: 0, gamesPlayed: 0, displayName: state.remoteParticipants?.[bot]?.displayName || bot };
           }
@@ -250,7 +251,9 @@ export const phases = {
           state.leaderboard[bot].displayName = state.hubBots?.[bot]?.displayName || state.remoteParticipants?.[bot]?.displayName || bot;
           state.leaderboard[bot].username = state.hubBots?.[bot]?.claimedBy || null;
         }
-        state.leaderboard[winner].wins++;
+        if (!state.hubBots?.[winner]?.ephemeral) {
+          state.leaderboard[winner].wins++;
+        }
 
         logAction(state, {
           bot: 'dealer',
