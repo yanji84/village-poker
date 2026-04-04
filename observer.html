@@ -1869,7 +1869,7 @@
         border-right: none;
       }
       #poker-canvas {
-        height: 300px;
+        height: 380px;
       }
     }
 
@@ -1914,7 +1914,7 @@
 
       /* Canvas: shorter on mobile */
       #poker-canvas {
-        height: 220px;
+        height: 320px;
       }
 
       /* Dashboard: single column, no min-height */
@@ -3982,7 +3982,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function resizePokerCanvas() {
       const rect = pokerCanvas.parentElement.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      const cssHeight = window.innerWidth <= 520 ? 220 : window.innerWidth <= 800 ? 300 : 500;
+      const cssHeight = window.innerWidth <= 520 ? 320 : window.innerWidth <= 800 ? 380 : 500;
       pokerCanvas.style.height = cssHeight + 'px';
       pokerCanvas.width = Math.floor(rect.width * dpr);
       pokerCanvas.height = Math.floor(cssHeight * dpr);
@@ -4557,8 +4557,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       // Players
       const bots = state.bots || [];
-      const charScale = Math.max(1.5, Math.min(4, w / 280));
-      _fs = Math.max(0.6, Math.min(1, w / 600));
+      const charScale = Math.max(2, Math.min(4, w / 250));
+      _fs = Math.max(0.7, Math.min(1, w / 500));
       _canvasW = w;
 
       bots.forEach((bot, i) => {
