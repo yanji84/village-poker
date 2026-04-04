@@ -2547,6 +2547,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       raiseInput.min = minRaise;
       raiseInput.value = minRaise;
       raiseInput.max = chips;
+      raiseInput.dataset.playerBet = data.currentBet || 0;
 
       infoEl.textContent = 'Pot: ' + (data.pot || 0) + ' | Chips: ' + chips + (toCall > 0 ? ' | To call: ' + toCall : '');
 
@@ -2604,11 +2605,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     async function submitHumanAction(action) {
-      // All-in: raise with all chips
+      // All-in: raise to total chips + current bet in hand
       if (action === 'allin') {
         action = 'raise';
         const raiseInput = document.getElementById('raise-amount');
-        raiseInput.value = raiseInput.max;
+        const playerBet = parseInt(raiseInput.dataset.playerBet || '0');
+        raiseInput.value = parseInt(raiseInput.max) + playerBet;
       }
       const amount = action === 'raise' ? parseInt(document.getElementById('raise-amount').value) : undefined;
       const say = undefined;

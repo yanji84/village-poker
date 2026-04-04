@@ -144,8 +144,8 @@ export function dealNewHand(state) {
 function postBlind(state, botName, amount, type) {
   const p = state.hand.players[botName];
   const actual = Math.min(amount, p.chips);
-  const isAllIn = actual < amount && p.chips === actual;
   p.chips -= actual;
+  const isAllIn = p.chips === 0;
   p.bet += actual;
   p.totalBet += actual;
   state.hand.pot += actual;
