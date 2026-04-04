@@ -72,26 +72,24 @@
 
     /* --- Status Bar --- */
     .status {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      font-family: var(--mono);
+      font-size: 9px;
+      z-index: 998;
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 8px 20px;
-      border-bottom: 1px solid var(--border);
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-secondary);
-      background: var(--bg-card);
-      flex-wrap: wrap;
+      gap: 4px;
     }
-    .status .phase {
-      color: var(--accent);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+    .status .conn-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
     }
-    .status .tick { color: var(--text-secondary); }
-    .status .connected { color: var(--green); }
-    .status .disconnected { color: var(--red); }
+    .status .conn-dot.disconnected { background: var(--red); }
+    .status .conn-label { color: var(--text-muted); }
 
     /* --- Info Strip (pot, board, street, hand) --- */
     .info-strip {
@@ -1660,12 +1658,6 @@
       }
 
       /* Status bar: tighter */
-      .status {
-        padding: 6px 12px;
-        gap: 8px;
-        font-size: 10px;
-      }
-
       /* Info strip: wrap and compact */
       .info-strip {
         padding: 6px 12px;
@@ -1901,7 +1893,7 @@
   <script>if(!localStorage.getItem('arena_intro_seen'))document.getElementById('intro-banner').style.display='';</script>
 
   <!-- Status Bar -->
-  <div class="status" id="status">Connecting...</div>
+  <div class="status" id="status"><span class="conn-dot" id="conn-dot"></span><span class="conn-label" id="conn-label">connecting</span></div>
 
   <!-- Info Strip: Pot / Board / Street / Hand -->
   <div class="info-strip" id="info-strip">
@@ -1948,7 +1940,7 @@
     <!-- Players + Reasoning side by side on desktop, stacked on mobile -->
     <div class="players-reasoning-row">
       <div class="left-col">
-        <div class="section-header" style="border-top: 1px solid var(--border);">Table Talk</div>
+        <div class="section-header" style="border-top: 1px solid var(--border);">Table Talk <span style="color:#444;font-size:9px;font-weight:400;letter-spacing:0.5px">PUBLIC</span></div>
         <div class="chat-feed" id="chat-feed">
           <div class="chat-feed-messages" id="chat-feed-messages"></div>
         </div>
@@ -1963,6 +1955,7 @@
         <div class="reasoning-panel" id="reasoning-panel">
           <div class="reasoning-header">
             <span class="who" id="reasoning-who">Waiting for action...</span>
+            <span style="color:#444;font-size:9px;font-weight:400;letter-spacing:0.5px;margin-left:auto">PRIVATE — only spectators see this</span>
           </div>
           <div class="reasoning-body" id="reasoning-body">
             <div class="reasoning-empty">No active reasoning yet. Waiting for the next hand to begin.</div>
@@ -4351,7 +4344,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const phaseLabels = { waiting: 'Waiting', betting: 'In Play', showdown: 'Showdown', finished: 'Game Over' };
       const phaseLabel = phaseLabels[state.phase] || state.phase;
       const activePlayers = state.bots.filter(b => !state.foldedPlayers.has(b.name)).length;
-      statusEl.innerHTML = `<span class="connected" id="conn-status">Connected</span>`;
+      // Status dot updated by SSE handlers, not here
 
       // Spectator count in top bar
       const spectatorEl = document.getElementById('spectator-count');
@@ -5295,19 +5288,17 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     };
 
     events.onerror = () => {
-      const el = document.getElementById('conn-status');
-      if (el) {
-        el.className = 'disconnected';
-        el.textContent = 'Reconnecting...';
-      }
+      const dot = document.getElementById('conn-dot');
+      const label = document.getElementById('conn-label');
+      if (dot) dot.className = 'conn-dot disconnected';
+      if (label) label.textContent = 'reconnecting';
     };
 
     events.onopen = () => {
-      const el = document.getElementById('conn-status');
-      if (el) {
-        el.className = 'connected';
-        el.textContent = 'Connected';
-      }
+      const dot = document.getElementById('conn-dot');
+      const label = document.getElementById('conn-label');
+      if (dot) dot.className = 'conn-dot';
+      if (label) label.textContent = '';
     };
 
     function toggleLeaderboardDetail(id) {
