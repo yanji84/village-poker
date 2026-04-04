@@ -632,46 +632,49 @@
     /* --- About FAB --- */
     .fab-group {
       position: fixed;
-      bottom: 16px;
-      right: 16px;
+      bottom: 20px;
+      right: 14px;
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       z-index: 999;
     }
-    .fab-circle {
-      width: 28px;
-      height: 28px;
+    .fab-pill {
       display: flex;
       align-items: center;
       justify-content: center;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 50%;
+      border-radius: 4px;
       color: var(--text-muted);
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 10px;
+      padding: 4px 8px;
       cursor: pointer;
       transition: all 0.15s;
+      user-select: none;
+      letter-spacing: 0.5px;
     }
-    .fab-circle:hover { color: var(--text-primary); border-color: #444; }
+    .fab-pill:hover { color: var(--text-primary); border-color: #444; background: #1a1a1a; }
     .leaderboard-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       z-index: 2000;
       align-items: flex-start;
       justify-content: center;
-      padding: 40px 16px;
+      padding: 60px 20px 40px;
       overflow-y: auto;
     }
     .leaderboard-overlay.open { display: flex; }
     .leaderboard-overlay .leaderboard {
-      max-width: 700px;
+      max-width: 640px;
       width: 100%;
       margin: 0;
-      padding: 0;
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
     }
 
 
@@ -5522,8 +5525,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
   </script>
 
   <div class="fab-group">
-    <div class="fab-circle" onclick="toggleLeaderboard()" title="Leaderboard">&#9776;</div>
-    <div class="fab-circle" onclick="showAbout()" title="About">?</div>
+    <div class="fab-pill" onclick="toggleLeaderboard()">/leaderboard</div>
+    <div class="fab-pill" onclick="showAbout()">/about</div>
   </div>
 </body>
 </html>
