@@ -1610,27 +1610,38 @@
     .chat-input-bar {
       display: flex;
       gap: 6px;
-      padding: 6px 0 0;
+      padding: 8px 12px;
+      border-top: 1px solid #2a2a2a;
+      background: var(--bg-elevated);
     }
     .chat-input-bar input {
       flex: 1;
       background: var(--bg-primary);
-      border: 1px solid var(--border);
+      border: 1px solid #333;
       border-radius: 6px;
       color: var(--text-primary);
       padding: 8px 10px;
       font-size: 13px;
       font-family: var(--mono);
     }
+    .chat-input-bar input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
     .chat-send-btn {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
+      background: #1a2a3a;
+      border: 1px solid #2a3a4a;
       border-radius: 6px;
-      color: var(--text-secondary);
+      color: var(--accent);
       padding: 8px 14px;
       font-size: 12px;
       font-family: var(--mono);
       cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .chat-send-btn:hover {
+      background: #223344;
     }
     .chat-send-btn:hover { background: #333; color: #fff; }
 
@@ -3416,25 +3427,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (myBot) {
         if (!confirm('Leave the table?')) return;
         try {
-          // Only require PIN for users who have an account (set a PIN on join)
-          const hasPin = localStorage.getItem('arena_has_pin') === 'true';
-          if (hasPin && authUsername) {
-            const pin = prompt('Enter your 4-digit PIN to confirm:');
-            if (!pin || !/^\d{4}$/.test(pin)) return;
-
-            const loginRes = await fetch(apiBase + '/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ username: authUsername, pin }),
-            });
-            if (!loginRes.ok) {
-              const loginData = await loginRes.json().catch(() => ({}));
-              alert(loginData.error || 'Authentication failed.');
-              return;
-            }
-          }
-
           const res = await fetch(apiBase + '/leave-seat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3507,27 +3499,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         if (myBot) {
           try {
-            // Ensure valid token — re-auth if needed
-            if (!getArenaTokenCookie()) {
-              const pin = prompt('Enter your 4-digit PIN to save:');
-              if (!pin || !/^\d{4}$/.test(pin)) {
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Save & Close';
-                return;
-              }
-              const loginRes = await fetch(apiBase + '/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ username: authUsername, pin }),
-              });
-              if (!loginRes.ok) {
-                alert('Authentication failed. Check your PIN.');
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Save & Close';
-                return;
-              }
-            }
             const res = await fetch(apiBase + '/strategy', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

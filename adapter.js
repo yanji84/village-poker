@@ -108,6 +108,8 @@ export const phases = {
         let forceCall = false;
         if (p.cards && !isHumanTimeout) {
           if (hand.street === 'preflop') {
+            const toCallAmount = hand.currentBet - p.bet;
+            const reasonableBet = toCallAmount <= hand.bigBlind * 4;
             const c1 = p.cards[0] || '';
             const c2 = p.cards[1] || '';
             const r1 = c1.replace(/[♠♥♦♣]/g, '');
@@ -115,8 +117,19 @@ export const phases = {
             const s1 = c1.replace(/[^♠♥♦♣]/g, '');
             const s2 = c2.replace(/[^♠♥♦♣]/g, '');
             const rankOrder = '23456789TJQKA';
-            const gap = Math.abs(rankOrder.indexOf(r1) - rankOrder.indexOf(r2));
-            forceCall = r1 === r2 || r1 === 'A' || r2 === 'A' || s1 === s2 || gap <= 2;
+            const r1i = rankOrder.indexOf(r1);
+            const r2i = rankOrder.indexOf(r2);
+            const isPair = r1 === r2;
+            const hasAce = r1 === 'A' || r2 === 'A';
+            const hasFace = r1i >= 9 && r2i >= 9;
+            const isSuitedBroadway = s1 === s2 && r1i >= 7 && r2i >= 7;
+            if (reasonableBet) {
+              const isSuited = s1 === s2;
+              const gap = Math.abs(r1i - r2i);
+              forceCall = isPair || hasAce || (isSuited && (r1i >= 5 || r2i >= 5)) || (gap <= 1 && r1i >= 5 && r2i >= 5);
+            } else {
+              forceCall = isPair || hasAce || hasFace || isSuitedBroadway;
+            }
           } else if (hand.community?.length >= 3) {
             const allCards = [...(p.cards || []), ...(hand.community || [])];
             const ranks = allCards.map(c => c.replace(/[♠♥♦♣]/g, ''));
@@ -421,7 +434,10 @@ export const tools = {
       let forceCall = false;
 
       if (hand.street === 'preflop') {
-        // Preflop: force call with any pair, ace, suited, or connected cards
+        // Preflop: force call only with genuinely playable hands
+        // AND only when the bet is reasonable (≤ 4x BB)
+        const toCallAmount = hand.currentBet - player.bet;
+        const reasonableBet = toCallAmount <= hand.bigBlind * 4;
         const c1 = player.cards[0] || '';
         const c2 = player.cards[1] || '';
         const r1 = c1.replace(/[♠♥♦♣]/g, '');
@@ -430,11 +446,21 @@ export const tools = {
         const s2 = c2.replace(/[^♠♥♦♣]/g, '');
         const isPair = r1 === r2;
         const hasAce = r1 === 'A' || r2 === 'A';
-        const isSuited = s1 === s2;
         const rankOrder = '23456789TJQKA';
-        const gap = Math.abs(rankOrder.indexOf(r1) - rankOrder.indexOf(r2));
-        const isConnected = gap <= 2; // connected or one-gapper
-        forceCall = isPair || hasAce || isSuited || isConnected;
+        const r1i = rankOrder.indexOf(r1);
+        const r2i = rankOrder.indexOf(r2);
+        const hasFace = r1i >= 9 && r2i >= 9; // both T or higher
+        const isSuitedBroadway = s1 === s2 && r1i >= 7 && r2i >= 7; // suited 9+
+        // Only force call with premium-ish hands, or any playable hand at reasonable bet size
+        if (reasonableBet) {
+          const isSuited = s1 === s2;
+          const gap = Math.abs(r1i - r2i);
+          const isConnected = gap <= 1;
+          forceCall = isPair || hasAce || (isSuited && (r1i >= 5 || r2i >= 5)) || (isConnected && r1i >= 5 && r2i >= 5);
+        } else {
+          // Large bet: only force with strong hands
+          forceCall = isPair || hasAce || hasFace || isSuitedBroadway;
+        }
       } else if (hand.community?.length >= 3) {
         // Post-flop: force call with any pair or better
         const allCards = [...(player.cards || []), ...(hand.community || [])];
