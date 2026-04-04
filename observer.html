@@ -928,7 +928,7 @@
     }
 
     /* --- PIN input --- */
-    #join-pin, #login-pin {
+    #join-pin {
       width: 140px;
       letter-spacing: 8px;
       text-align: center;
@@ -985,32 +985,6 @@
     }
     .prompt-example-code b { color: #bbb; font-weight: 600; }
     .prompt-hl { color: var(--accent); font-weight: 600; }
-
-    /* --- Auth Tabs --- */
-    .auth-tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 14px;
-    }
-    .auth-tab {
-      flex: 1;
-      padding: 8px;
-      text-align: center;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 2px solid transparent;
-      user-select: none;
-      transition: color 0.2s;
-    }
-    .auth-tab:hover { color: var(--text-secondary); }
-    .auth-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
 
     /* --- Player Stats Box --- */
     .player-stats-box {
@@ -2256,13 +2230,6 @@
 
     <div id="player-stats-container" style="display:none; padding: 0 16px;"></div>
 
-    <div id="auth-tabs-section" style="display:none; padding: 14px 16px 0;">
-      <div class="auth-tabs">
-        <div class="auth-tab active" id="tab-new" onclick="switchAuthTab('new')">New Player</div>
-        <div class="auth-tab" id="tab-returning" onclick="switchAuthTab('returning')">Returning</div>
-      </div>
-    </div>
-
     <div class="join-panel-section" id="join-form-section">
       <div class="join-panel-msg" id="join-msg"></div>
       <label for="join-username">Username</label>
@@ -2270,7 +2237,7 @@
       <label for="join-pin">PIN (optional)</label>
       <input type="password" id="join-pin" maxlength="4" inputmode="numeric" pattern="\d{4}"
              placeholder="****" autocomplete="off">
-      <div class="pin-hint">Set a 4-digit PIN to save your seat &amp; chips across sessions. Leave blank to play anonymously.</div>
+      <div class="pin-hint">Set a PIN to save progress, or leave blank to play anonymously. Returning players: enter your PIN to log back in.</div>
       <div class="play-mode-toggle">
         <label class="play-mode-option">
           <input type="radio" name="playMode" value="bot" checked onchange="togglePlayMode()"> AI Bot plays for me
@@ -2334,16 +2301,6 @@ Min raise: <b>40</b></pre>
       <button class="join-panel-btn" id="join-btn" onclick="submitWaitlist()">Join Waitlist</button>
     </div>
 
-    <div class="join-panel-section" id="login-form-section" style="display:none">
-      <div class="join-panel-msg" id="login-msg"></div>
-      <label for="login-username">Username</label>
-      <input type="text" id="login-username" maxlength="20" placeholder="Your username" />
-      <label for="login-pin">PIN</label>
-      <input type="password" id="login-pin" maxlength="4" inputmode="numeric" pattern="\d{4}"
-             placeholder="****" autocomplete="off">
-      <button class="join-panel-btn" id="login-btn" onclick="submitLogin()" style="margin-top:8px">Log In</button>
-    </div>
-
     <div class="join-panel-section" id="auth-idle-actions" style="display:none">
       <div class="play-mode-toggle" style="margin-bottom:8px">
         <label class="play-mode-option">
@@ -2369,7 +2326,7 @@ Min raise: <b>40</b></pre>
 
     <!-- My Hands (shown for authenticated users) -->
     <div class="my-hands-section" id="my-hands-section" style="display:none">
-      <h4>My Hands <span class="my-hands-progress" id="my-hands-progress"></span></h4>
+      <h4 id="my-hands-header" style="cursor:pointer;user-select:none" onclick="toggleMyHands()">My Hands <span class="my-hands-progress" id="my-hands-progress"></span> <span id="my-hands-toggle" style="color:var(--text-muted);font-size:9px"></span></h4>
       <div id="my-hands-content">
         <button class="join-panel-btn secondary" onclick="fetchMyHands()" style="margin:0">Load My Hands</button>
       </div>
@@ -2620,7 +2577,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // --- Auth state ---
     let authUsername = localStorage.getItem('arena_username') || null;
-    let authTab = 'new';
     let playerStats = null;
 
     function getArenaTokenCookie() {
@@ -2630,14 +2586,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     function hasArenaToken() {
       return !!getArenaTokenCookie();
-    }
-
-    function switchAuthTab(tab) {
-      authTab = tab;
-      document.getElementById('tab-new').className = 'auth-tab' + (tab === 'new' ? ' active' : '');
-      document.getElementById('tab-returning').className = 'auth-tab' + (tab === 'returning' ? ' active' : '');
-      document.getElementById('join-form-section').style.display = tab === 'new' ? '' : 'none';
-      document.getElementById('login-form-section').style.display = tab === 'returning' ? '' : 'none';
     }
 
     async function fetchPlayerStats(username) {
@@ -2683,91 +2631,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           <div class="stat-row"><span>Best Streak</span><span class="stat-value">${bestStreak}</span></div>
         </div>
       `;
-    }
-
-    async function submitLogin() {
-      const username = document.getElementById('login-username').value.trim();
-      const pin = document.getElementById('login-pin').value.trim();
-      const msgEl = document.getElementById('login-msg');
-      msgEl.className = 'join-panel-msg';
-      msgEl.textContent = '';
-
-      if (!username) {
-        msgEl.className = 'join-panel-msg error';
-        msgEl.textContent = 'Username is required.';
-        return;
-      }
-      if (pin && !/^\d{4}$/.test(pin)) {
-        msgEl.className = 'join-panel-msg error';
-        msgEl.textContent = 'PIN must be exactly 4 digits.';
-        return;
-      }
-      if (!pin) {
-        // Anonymous user — just go through the new player flow instead
-        switchAuthTab('new');
-        document.getElementById('join-username').value = username;
-        renderJoinPanel();
-        msgEl.className = 'join-panel-msg';
-        msgEl.textContent = 'No PIN set. Use the New Player tab to rejoin.';
-        btn.disabled = false;
-        btn.textContent = 'Log In';
-        return;
-      }
-
-      const btn = document.getElementById('login-btn');
-      btn.disabled = true;
-      btn.textContent = 'Logging in...';
-
-      try {
-        const res = await fetch(apiBase + '/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ username, pin }),
-        });
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          msgEl.className = 'join-panel-msg error';
-          msgEl.textContent = data.error || data.message || 'Wrong PIN. Try again.';
-          btn.disabled = false;
-          btn.textContent = 'Log In';
-          return;
-        }
-
-        const data = await res.json().catch(() => ({}));
-        authUsername = username;
-        localStorage.setItem('arena_username', username);
-
-        if (data.seated) {
-          if (data.botName) {
-            seatData[data.botName] = seatData[data.botName] || {};
-            seatData[data.botName].username = username;
-          }
-          msgEl.className = 'join-panel-msg success';
-          msgEl.textContent = 'Welcome back! You\'re at the table.';
-        } else if (data.queued) {
-          setWaitlistState({ username, strategy: data.strategy || '' });
-          msgEl.className = 'join-panel-msg success';
-          const pos = data.position ? ' #' + data.position : '';
-          msgEl.textContent = 'Welcome back! You\'re' + pos + ' in the waitlist.';
-        } else {
-          msgEl.className = 'join-panel-msg success';
-          msgEl.textContent = 'Welcome back! Join the waitlist to play.';
-        }
-
-        btn.disabled = false;
-        btn.textContent = 'Log In';
-        fetchPlayerStats(username);
-        fetchSeats();
-        await fetchWaitlist();
-        renderJoinPanel();
-      } catch (e) {
-        msgEl.className = 'join-panel-msg error';
-        msgEl.textContent = 'Network error. Please try again.';
-        btn.disabled = false;
-        btn.textContent = 'Log In';
-      }
     }
 
     async function submitWaitlistAuthenticated() {
@@ -3140,9 +3003,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (authJoinBtn && !authJoinBtn.disabled) authJoinBtn.textContent = joinBtnText;
 
       const authStatusSection = document.getElementById('auth-status-section');
-      const authTabsSection = document.getElementById('auth-tabs-section');
       const formSection = document.getElementById('join-form-section');
-      const loginSection = document.getElementById('login-form-section');
       const authIdleActions = document.getElementById('auth-idle-actions');
       const statsContainer = document.getElementById('player-stats-container');
 
@@ -3153,9 +3014,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (isAuthenticated && (isSeated || isQueued)) {
         authStatusSection.style.display = '';
-        authTabsSection.style.display = 'none';
         formSection.style.display = 'none';
-        loginSection.style.display = 'none';
         authIdleActions.style.display = 'none';
 
         const greetingEl = document.getElementById('auth-greeting');
@@ -3174,9 +3033,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         renderPlayerStats();
       } else if (isAuthenticated && !isSeated && !isQueued) {
         authStatusSection.style.display = '';
-        authTabsSection.style.display = 'none';
         formSection.style.display = 'none';
-        loginSection.style.display = 'none';
         authIdleActions.style.display = '';
 
         const greetingEl = document.getElementById('auth-greeting');
@@ -3189,26 +3046,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         authStatusSection.style.display = 'none';
         authIdleActions.style.display = 'none';
         statsContainer.style.display = 'none';
-
-        const showReturning = hasToken && !authUsername;
-        authTabsSection.style.display = '';
-
-        if (authTab === 'new' && !showReturning) {
-          formSection.style.display = '';
-          loginSection.style.display = 'none';
-        } else if (authTab === 'returning' || showReturning) {
-          formSection.style.display = 'none';
-          loginSection.style.display = '';
-          if (showReturning) {
-            authTab = 'returning';
-            document.getElementById('tab-new').className = 'auth-tab';
-            document.getElementById('tab-returning').className = 'auth-tab active';
-          }
-        }
+        formSection.style.display = '';
 
         if (!editingStrategy) {
           const msgEl = document.getElementById('join-msg');
-          if (msgEl && formSection.style.display !== 'none') msgEl.textContent = '';
+          if (msgEl) msgEl.textContent = '';
         }
       }
 
@@ -3256,6 +3098,74 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       btn.textContent = 'Joining...';
 
       try {
+        // If PIN is provided, try to authenticate first (returning player flow)
+        if (pin) {
+          try {
+            const loginRes = await fetch(apiBase + '/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ username, pin }),
+            });
+
+            if (loginRes.ok) {
+              const loginData = await loginRes.json().catch(() => ({}));
+              authUsername = username;
+              localStorage.setItem('arena_username', username);
+              localStorage.setItem('arena_has_pin', 'true');
+
+              if (loginData.seated) {
+                // Already seated — update state and show message
+                if (loginData.botName) {
+                  seatData[loginData.botName] = seatData[loginData.botName] || {};
+                  seatData[loginData.botName].username = username;
+                }
+                msgEl.className = 'join-panel-msg success';
+                msgEl.textContent = 'Welcome back! You\'re already at the table.';
+                document.getElementById('join-username').value = '';
+                document.getElementById('join-pin').value = '';
+                btn.disabled = false;
+                btn.textContent = 'Join Game';
+                fetchPlayerStats(username);
+                fetchSeats();
+                await fetchWaitlist();
+                renderJoinPanel();
+                return;
+              } else if (loginData.queued) {
+                // Already in waitlist
+                setWaitlistState({ username, strategy: loginData.strategy || '' });
+                const pos = loginData.position ? ' #' + loginData.position : '';
+                msgEl.className = 'join-panel-msg success';
+                msgEl.textContent = 'Welcome back! You\'re' + pos + ' in the waitlist.';
+                document.getElementById('join-username').value = '';
+                document.getElementById('join-pin').value = '';
+                btn.disabled = false;
+                btn.textContent = 'Join Game';
+                fetchPlayerStats(username);
+                fetchSeats();
+                await fetchWaitlist();
+                renderJoinPanel();
+                return;
+              }
+              // Login succeeded but user is idle — fall through to waitlist POST below
+            } else {
+              const loginErr = await loginRes.json().catch(() => ({}));
+              // If login fails with auth error (wrong PIN), show error and stop
+              if (loginRes.status === 401 || loginRes.status === 403) {
+                msgEl.className = 'join-panel-msg error';
+                msgEl.textContent = loginErr.error || loginErr.message || 'Wrong PIN. Try again or leave blank for a new account.';
+                btn.disabled = false;
+                btn.textContent = 'Join Game';
+                return;
+              }
+              // For other errors (e.g. 404 user not found), treat as new user — fall through
+            }
+          } catch (loginNetErr) {
+            // Login network error — fall through to waitlist as new user
+          }
+        }
+
+        // Post to waitlist (new user, or returning user who is idle)
         const res = await fetch(apiBase + '/waitlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3267,7 +3177,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           msgEl.className = 'join-panel-msg error';
           msgEl.textContent = data.error || data.message || 'Failed to join waitlist.';
           btn.disabled = false;
-          btn.textContent = 'Join Waitlist';
+          btn.textContent = 'Join Game';
           return;
         }
         authUsername = username;
@@ -3306,7 +3216,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           msgEl.textContent = 'Network error. Please try again.';
         }
         btn.disabled = false;
-        btn.textContent = 'Join Waitlist';
+        btn.textContent = 'Join Game';
       }
     }
 
@@ -6114,14 +6024,30 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
     }
 
+    let myHandsCollapsed = false;
+
+    function toggleMyHands() {
+      if (!myHandsLoaded) return;
+      myHandsCollapsed = !myHandsCollapsed;
+      const content = document.getElementById('my-hands-content');
+      const toggle = document.getElementById('my-hands-toggle');
+      content.style.display = myHandsCollapsed ? 'none' : '';
+      toggle.textContent = myHandsCollapsed ? '[show]' : '[hide]';
+    }
+
     function renderMyHands() {
       const content = document.getElementById('my-hands-content');
       const progressEl = document.getElementById('my-hands-progress');
+      const toggle = document.getElementById('my-hands-toggle');
       if (myHandsData.length === 0) {
         content.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">No hands played yet.</div>';
         progressEl.textContent = '';
+        if (toggle) toggle.textContent = '';
         return;
       }
+
+      if (toggle) toggle.textContent = myHandsCollapsed ? '[show]' : '[hide]';
+      content.style.display = myHandsCollapsed ? 'none' : '';
 
       // Try to determine session progress from the data
       const sessionMax = myHandsData[0]?.sessionMax || myHandsData[0]?.maxHands || null;
