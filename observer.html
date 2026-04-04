@@ -565,7 +565,7 @@
 
     /* --- Join Bar (inline, top-level) --- */
     .join-bar {
-      padding: 6px 12px;
+      padding: 8px 14px;
       background: var(--bg-card);
       border-bottom: 1px solid var(--border);
       font-family: var(--mono);
@@ -574,36 +574,39 @@
     .join-bar-inner {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       flex-wrap: wrap;
     }
     .join-bar-input {
       background: var(--bg-primary);
       border: 1px solid var(--border);
       border-radius: 4px;
-      padding: 5px 8px;
+      padding: 6px 10px;
       color: #e0e0e0;
       font-family: var(--mono);
       font-size: 12px;
-      width: 140px;
+      flex: 1;
+      min-width: 120px;
+      max-width: 200px;
     }
     .join-bar-input:focus { outline: none; border-color: #444; }
     .join-bar-random {
       background: none;
       border: 1px solid var(--border);
       color: var(--text-muted);
-      padding: 4px 8px;
+      padding: 5px 10px;
       border-radius: 4px;
       cursor: pointer;
       font-size: 10px;
       font-family: var(--mono);
+      transition: all 0.15s;
     }
     .join-bar-random:hover { color: var(--text-primary); border-color: #444; }
     .join-bar-btn {
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       color: var(--accent);
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 4px;
       font-family: var(--mono);
       font-size: 11px;
@@ -615,8 +618,8 @@
     .join-bar-btn:hover { background: #1a1a1a; border-color: #444; color: #fff; }
     .join-bar-btn.human { color: var(--green); border-color: #2a5a2a; }
     .join-bar-btn.human:hover { background: #0e1e0e; border-color: #3a7a3a; }
-    .join-bar-btn.bot { color: var(--accent); }
-    .join-bar-btn.about { color: var(--text-muted); padding: 5px 8px; }
+    .join-bar-btn.bot { color: var(--accent); border-color: #2a3a5a; }
+    .join-bar-btn.bot:hover { background: #0e121e; border-color: #3a5a8a; }
     .join-bar-btn.leave { color: #a66; border-color: #533; }
     .join-bar-btn.leave:hover { background: #1a0e0e; color: #c88; }
     .join-bar-btn.edit-strat { color: var(--text-secondary); }
@@ -628,7 +631,51 @@
     .join-bar-msg:empty { display: none; }
     .join-bar-msg.error { color: var(--red); }
     .join-bar-msg.success { color: var(--green); }
+    .join-bar-status {
+      justify-content: space-between;
+    }
     .join-bar-status span { color: var(--text-secondary); }
+    .join-bar-status-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    @media (max-width: 600px) {
+      .join-bar-inner {
+        flex-wrap: wrap;
+      }
+      .join-bar-input {
+        flex: 1 1 100%;
+        max-width: none;
+      }
+      .join-bar-btn.human,
+      .join-bar-btn.bot {
+        flex: 1;
+      }
+    }
+
+    /* --- About FAB --- */
+    .about-fab {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 999;
+      transition: all 0.15s;
+    }
+    .about-fab:hover { color: var(--text-primary); border-color: #444; }
 
 
     .panel-quick-stats { padding: 0 16px 8px; }
@@ -1966,12 +2013,13 @@
       <button class="join-bar-random" onclick="document.getElementById('join-username').value = generateRandomName()" title="Random name">random</button>
       <button class="join-bar-btn human" onclick="joinGame('human')">Join as Human</button>
       <button class="join-bar-btn bot" onclick="joinGame('bot')">Join as Bot</button>
-      <button class="join-bar-btn about" onclick="showAbout()">?</button>
     </div>
     <div class="join-bar-inner join-bar-status" id="join-bar-status" style="display:none">
       <span id="join-bar-status-text"></span>
-      <button class="join-bar-btn edit-strat" id="join-bar-edit-btn" onclick="showEditStrategy()" style="display:none">Edit Strategy</button>
-      <button class="join-bar-btn leave" onclick="leaveOrRelease()">Leave</button>
+      <div class="join-bar-status-actions">
+        <button class="join-bar-btn edit-strat" id="join-bar-edit-btn" onclick="showEditStrategy()" style="display:none">Edit Strategy</button>
+        <button class="join-bar-btn leave" onclick="leaveOrRelease()">Leave</button>
+      </div>
     </div>
     <div class="join-bar-msg" id="join-msg"></div>
   </div>
@@ -5518,5 +5566,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // (countdown timer removed — adaptive ticks make fixed countdown meaningless)
   </script>
+
+  <div class="about-fab" onclick="showAbout()">?</div>
 </body>
 </html>
