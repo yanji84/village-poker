@@ -540,7 +540,7 @@
     /* --- Pixel Poker Canvas --- */
     #poker-canvas {
       width: 100%;
-      height: 380px;
+      height: 500px;
       background: #070b07;
       display: block;
       border-bottom: 1px solid var(--border);
@@ -1869,7 +1869,7 @@
         border-right: none;
       }
       #poker-canvas {
-        height: 200px;
+        height: 300px;
       }
     }
 
@@ -1914,7 +1914,7 @@
 
       /* Canvas: shorter on mobile */
       #poker-canvas {
-        height: 180px;
+        height: 220px;
       }
 
       /* Dashboard: single column, no min-height */
@@ -3965,12 +3965,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     ];
 
     const SEAT_POSITIONS = [
-      { x: 0.14, y: 0.22 },
+      { x: 0.10, y: 0.18 },
       { x: 0.50, y: 0.08 },
-      { x: 0.86, y: 0.22 },
-      { x: 0.86, y: 0.80 },
+      { x: 0.90, y: 0.18 },
+      { x: 0.90, y: 0.82 },
       { x: 0.50, y: 0.92 },
-      { x: 0.14, y: 0.80 },
+      { x: 0.10, y: 0.82 },
     ];
 
     // Tile size for the room floor
@@ -3979,7 +3979,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     function resizePokerCanvas() {
       const rect = pokerCanvas.parentElement.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      const cssHeight = window.innerWidth <= 520 ? 180 : window.innerWidth <= 800 ? 200 : 300;
+      const cssHeight = window.innerWidth <= 520 ? 220 : window.innerWidth <= 800 ? 300 : 500;
       pokerCanvas.style.height = cssHeight + 'px';
       pokerCanvas.width = Math.floor(rect.width * dpr);
       pokerCanvas.height = Math.floor(cssHeight * dpr);
@@ -4033,8 +4033,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // --- Poker table: pixelated rectangle with green felt ---
     function drawPokerTable(ctx, w, h) {
-      const tw = Math.floor(w * 0.46);
-      const th = Math.floor(h * 0.36);
+      const tw = Math.floor(w * 0.55);
+      const th = Math.floor(h * 0.43);
       const tx = Math.floor(w / 2 - tw / 2);
       const ty = Math.floor(h / 2 - th / 2);
 
@@ -4279,7 +4279,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Community cards: pixelated rectangles with reveal animation ---
     function drawCommunityCards(ctx, cards, w, h) {
       if (!cards || cards.length === 0) return;
-      const cardW = 20, cardH = 28, gap = 4;
+      const cardW = 26, cardH = 36, gap = 4;
       const totalW = cards.length * (cardW + gap) - gap;
       const startX = Math.floor(w / 2 - totalW / 2);
       const startY = Math.floor(h / 2 - cardH / 2 - 4);
@@ -4361,12 +4361,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             ctx.scale(scaleX, 1);
             ctx.translate(-(cx + cardW / 2), 0);
 
-            ctx.font = 'bold 10px monospace';
+            ctx.font = 'bold 14px monospace';
             ctx.textAlign = 'center';
             ctx.fillStyle = isRed ? '#922B21' : '#1a1a1a';
-            ctx.fillText(rank, cx + cardW / 2, drawY + 14);
-            ctx.font = '11px serif';
-            ctx.fillText(suit, cx + cardW / 2, drawY + 24);
+            ctx.fillText(rank, cx + cardW / 2, drawY + 17);
+            ctx.font = '15px serif';
+            ctx.fillText(suit, cx + cardW / 2, drawY + 31);
 
             ctx.restore();
           }
@@ -4399,7 +4399,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // --- Speech bubble: pixelated rectangle, no curves ---
     function drawSpeechBubble(ctx, x, y, text) {
-      ctx.font = '11px monospace';
+      ctx.font = '15px monospace';
       const maxLen = 20;
       const trimmed = text.length > maxLen ? text.slice(0, maxLen - 2) + '..' : text;
       const tw = ctx.measureText(trimmed).width;
@@ -4424,7 +4424,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Pot display ---
     function drawPotDisplay(ctx, w, h, pot) {
       if (!pot) return;
-      ctx.font = 'bold 13px monospace';
+      ctx.font = 'bold 17px monospace';
       ctx.textAlign = 'center';
       ctx.fillStyle = '#D4A017';
       ctx.fillText('Pot: ' + pot, Math.floor(w / 2), Math.floor(h / 2 + 26));
@@ -4444,7 +4444,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
 
       // Source: deck position on the table (left of center, matching drawPokerTable deck)
-      const tw = Math.floor(w * 0.46);
+      const tw = Math.floor(w * 0.55);
       const srcX = Math.floor(w / 2 - tw * 0.18 + 5);  // center of the deck stack
       const srcY = Math.floor(h / 2 - 10 + 7);          // vertical center of the deck
 
@@ -4519,7 +4519,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Phase label ---
     function drawPhaseLabel(ctx, w, phase) {
       const labels = { waiting: 'WAITING', betting: 'IN PLAY', showdown: 'SHOWDOWN', finished: 'GAME OVER' };
-      ctx.font = '11px monospace';
+      ctx.font = '15px monospace';
       ctx.textAlign = 'left';
       ctx.fillStyle = '#665577';
       ctx.fillText(labels[phase] || phase || '', TILE * 2 + 4, TILE * 2 + 12);
@@ -4554,7 +4554,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       // Players
       const bots = state.bots || [];
-      const charScale = Math.max(1.5, Math.min(2.5, w / 350));
+      const charScale = 4;
 
       bots.forEach((bot, i) => {
         const seatIdx = i % SEAT_POSITIONS.length;
@@ -4590,13 +4590,13 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // Hole cards to the side of avatar (never overlapping)
         const hCards = state.holeCards[bot.name];
-        const cw = 14, ch = 20, cardGap = 3;
+        const cw = 18, ch = 26, cardGap = 3;
         const cardsW = cw * 2 + cardGap;
         // Place cards on the side closer to the table center
         const onLeftHalf = seat.x < 0.5;
         const cardBaseX = onLeftHalf
-          ? Math.floor(px + 12 * charScale)   // right side of avatar
-          : Math.floor(px - 12 * charScale - cardsW); // left side of avatar
+          ? Math.floor(px + 16 * charScale)   // right side of avatar
+          : Math.floor(px - 16 * charScale - cardsW); // left side of avatar
         const cardBaseY = Math.floor(py - ch / 2);
 
         if (hCards && hCards.length === 2 && !isFolded) {
@@ -4611,12 +4611,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             const rank = card.replace(/[♠♥♦♣]/g, '');
             const suit = card.replace(/[^♠♥♦♣]/g, '');
             const isRed = suit === '♥' || suit === '♦';
-            pokerCtx.font = 'bold 10px monospace';
+            pokerCtx.font = 'bold 14px monospace';
             pokerCtx.textAlign = 'center';
             pokerCtx.fillStyle = isRed ? '#922B21' : '#222';
-            pokerCtx.fillText(rank, cardX + cw / 2, cardBaseY + 12);
-            pokerCtx.font = '10px sans-serif';
-            pokerCtx.fillText(suit, cardX + cw / 2, cardBaseY + 19);
+            pokerCtx.fillText(rank, cardX + cw / 2, cardBaseY + 15);
+            pokerCtx.font = '14px sans-serif';
+            pokerCtx.fillText(suit, cardX + cw / 2, cardBaseY + 23);
           }
         } else if (hCards === undefined && !isFolded && state.phase === 'betting') {
           for (let ci = 0; ci < 2; ci++) {
@@ -4631,7 +4631,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // Name label
         const bobOffset = Math.floor(Math.sin(pokerAnimFrame * 0.04 + px * 0.1));
-        pokerCtx.font = '11px monospace';
+        pokerCtx.font = '15px monospace';
         pokerCtx.textAlign = 'center';
         pokerCtx.fillStyle = isWinner ? '#f0d060' : (isFolded ? '#555' : (isActive ? '#8AAFD4' : '#B0A89A'));
         const shortName = displayName.length > 8 ? displayName.slice(0, 7) + '..' : displayName;
@@ -4639,11 +4639,11 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // SB/BB label
         if (state.blinds[bot.name] === 'small') {
-          pokerCtx.font = 'bold 10px monospace';
+          pokerCtx.font = 'bold 14px monospace';
           pokerCtx.fillStyle = '#69d';
           pokerCtx.fillText('SB', px + 15 * charScale, py + 12 * charScale + bobOffset);
         } else if (state.blinds[bot.name] === 'big') {
-          pokerCtx.font = 'bold 10px monospace';
+          pokerCtx.font = 'bold 14px monospace';
           pokerCtx.fillStyle = '#e66';
           pokerCtx.fillText('BB', px + 15 * charScale, py + 12 * charScale + bobOffset);
         }
@@ -4651,7 +4651,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // Chip count text below name
         const chips = state.chips[bot.name] || 0;
         const bet = state.currentBets[bot.name] || 0;
-        pokerCtx.font = 'bold 13px monospace';
+        pokerCtx.font = 'bold 17px monospace';
         pokerCtx.textAlign = 'center';
         pokerCtx.fillStyle = isFolded ? '#555' : '#ccc';
         const chipText = chips >= 1000 ? (chips / 1000).toFixed(1) + 'k' : String(chips);
@@ -4659,14 +4659,14 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
         // Bet amount below chip count (if betting)
         if (bet > 0) {
-          pokerCtx.font = '11px monospace';
+          pokerCtx.font = '15px monospace';
           pokerCtx.fillStyle = '#D4A017';
           pokerCtx.fillText('bet ' + bet, px, py + 24 * charScale + bobOffset);
         }
 
         // Folded status label
         if (isFolded) {
-          pokerCtx.font = 'bold 10px monospace';
+          pokerCtx.font = 'bold 14px monospace';
           pokerCtx.fillStyle = '#a44';
           pokerCtx.fillText('FOLD', px, py + 24 * charScale + bobOffset);
         }
@@ -4681,7 +4681,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const handLabel = state.lastResult.handName;
           const labelY = py - 20 * charScale;
           // Background pill
-          pokerCtx.font = 'bold 10px monospace';
+          pokerCtx.font = 'bold 14px monospace';
           const textWidth = pokerCtx.measureText(handLabel).width;
           const pillPadX = 4;
           const pillPadY = 3;
