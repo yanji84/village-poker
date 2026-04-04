@@ -1403,68 +1403,34 @@
       background: #111;
       border: 1px solid #222;
       border-radius: 4px;
-      padding: 10px 14px;
-      margin-bottom: 6px;
-      font-size: 12px;
+      padding: 8px 12px;
+      margin-bottom: 4px;
+      font-size: 11px;
       font-family: var(--mono);
-      cursor: pointer;
-      transition: background 0.2s;
     }
-    .hand-record:hover { background: #161616; }
     .hand-record.win { border-left: 3px solid #4a6; }
     .hand-record.loss { border-left: 3px solid #a44; }
     .hand-record.fold { border-left: 3px solid #555; }
-    .hand-record-header {
+    .hr-top {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      gap: 8px;
     }
-    .hand-record-title {
-      font-weight: 700;
-      color: #ddd;
-      font-size: 12px;
+    .hr-num { color: var(--text-muted); font-size: 10px; min-width: 36px; }
+    .hr-cards { font-size: 12px; flex: 1; }
+    .hr-profit { font-weight: 700; font-size: 11px; }
+    .hr-profit.profit-pos { color: var(--green); }
+    .hr-profit.profit-neg { color: var(--red); }
+    .hr-board { color: var(--text-muted); font-size: 10px; margin: 3px 0 0 44px; }
+    .hr-play { color: var(--text-secondary); font-size: 10px; margin: 2px 0 0 44px; }
+    .hr-meta {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      color: var(--text-muted); font-size: 9px; margin: 2px 0 0 44px;
     }
-    .hand-record-result {
-      font-weight: 600;
-      font-size: 11px;
-    }
-    .hand-record-result.win { color: var(--green); }
-    .hand-record-result.loss { color: var(--red); }
-    .hand-record-result.fold-result { color: var(--text-muted); }
-    .hand-record-cards {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-bottom: 2px;
-    }
-    .hand-record-summary {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-    .hand-record-details {
-      display: none;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid #222;
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-    .hand-record-details.open { display: block; }
-    .hand-record-details .detail-section {
-      margin-bottom: 6px;
-    }
-    .hand-record-details .detail-section-label {
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-    }
-    .hand-record-details .detail-section-content {
-      color: var(--text-secondary);
-      white-space: pre-wrap;
-    }
+    .hr-handname { color: var(--accent); }
+    .hr-winner { color: var(--text-muted); }
+    .hr-bluff.won { color: var(--green); }
+    .hr-bluff.caught { color: var(--red); }
 
     /* --- Session Progress Bar --- */
     .session-bar {
@@ -6170,66 +6136,55 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const result = h.result || h.outcome || 'unknown';
         const isWin = result === 'win' || result === 'won';
         const isFold = result === 'fold' || result === 'folded';
-        const isLoss = !isWin && !isFold;
-        const cssClass = isWin ? 'win' : (isFold ? 'fold' : 'loss');
+        const profit = h.chipDelta || h.delta || h.profit || 0;
+        const profitStr = profit > 0 ? '+' + profit : '' + profit;
+        const profitClass = profit > 0 ? 'profit-pos' : (profit < 0 ? 'profit-neg' : '');
 
         const cards = h.cards || h.holeCards || [];
         const cardsHtml = cards.length > 0 ? cards.map(c => renderCard(c)).join(' ') : '';
-        const handName = h.handName || '';
-        const chipDelta = h.chipDelta || h.delta || h.profit || 0;
-        const deltaStr = chipDelta > 0 ? '+' + chipDelta : (chipDelta < 0 ? '' + chipDelta : '');
+        const boardHtml = (h.community || []).length > 0 ? h.community.map(c => renderCard(c)).join(' ') : '';
 
-        let resultLabel = '';
-        if (isWin) resultLabel = 'Won ' + deltaStr;
-        else if (isFold) resultLabel = 'Fold';
-        else resultLabel = 'Lost ' + deltaStr;
+        // Build your action line: "called 80 > checked > folded"
+        const sa = h.streetActions || [];
+        let yourPlay = '';
+        if (sa.length > 0) {
+          yourPlay = sa.map(a => {
+            const act = a.action === 'blind' ? 'blind' : a.action.replace('poker_', '');
+            return act + (a.amount ? ' ' + a.amount : '');
+          }).join(' > ');
+        } else if (h.actions && h.actions.length > 0) {
+          // Legacy flat strings
+          yourPlay = h.actions.filter(a => {
+            const s = typeof a === 'string' ? a : a.action;
+            return !['deal_hole','thought','deal_flop','deal_turn','deal_river'].includes(s);
+          }).map(a => typeof a === 'string' ? a : a.action).join(' > ');
+        }
 
-        const summary = h.summary || '';
-        const bluffNote = h.bluffCaught ? 'Bluff caught!' : (h.bluffWon ? 'Bluff won!' : '');
-
-        // Detail content
-        let detailHtml = '';
-        if (h.actions && h.actions.length > 0) {
-          detailHtml += '<div class="detail-section"><div class="detail-section-label">Actions</div><div class="detail-section-content">';
-          h.actions.forEach(a => {
-            if (typeof a === 'string') {
-              detailHtml += esc(a) + '\n';
-            } else {
-              const line = (a.message) ? a.message : ((a.name || '') + ' ' + (a.action || '') + (a.amount ? ' ' + a.amount : ''));
-              detailHtml += esc(line) + '\n';
-            }
-          });
-          detailHtml += '</div></div>';
-        }
-        if (h.community && h.community.length > 0) {
-          detailHtml += '<div class="detail-section"><div class="detail-section-label">Board</div><div class="detail-section-content">' + h.community.map(c => renderCard(c)).join(' ') + '</div></div>';
-        }
-        if (h.strategy) {
-          detailHtml += '<div class="detail-section"><div class="detail-section-label">Strategy</div><div class="detail-section-content">' + esc(h.strategy) + '</div></div>';
-        }
-        if (h.thoughts || h.reasoning) {
-          detailHtml += '<div class="detail-section"><div class="detail-section-label">Reasoning</div><div class="detail-section-content">' + esc(h.thoughts || h.reasoning) + '</div></div>';
-        }
+        const winnerText = h.winner && !isWin ? 'Won by ' + esc(h.winner) : '';
+        const handName = h.handName && isWin ? esc(h.handName) : '';
+        const bluffNote = h.bluffCaught ? 'Bluff caught' : (h.bluffWon ? 'Bluff won' : '');
+        const potText = h.pot ? 'Pot ' + h.pot : '';
 
         return `
-          <div class="hand-record ${cssClass}" onclick="toggleMyHandDetail('mh-detail-${i}')">
-            <div class="hand-record-header">
-              <span class="hand-record-title">Hand #${handNum}</span>
-              <span class="hand-record-result ${isWin ? 'win' : (isFold ? 'fold-result' : 'loss')}">${esc(resultLabel)}</span>
+          <div class="hand-record ${isWin ? 'win' : (isFold ? 'fold' : 'loss')}">
+            <div class="hr-top">
+              <span class="hr-num">#${handNum}</span>
+              <span class="hr-cards">${cardsHtml}</span>
+              <span class="hr-profit ${profitClass}">${profitStr}</span>
             </div>
-            ${cardsHtml ? `<div class="hand-record-cards">${cardsHtml}${handName ? ' &rarr; ' + esc(handName) : ''}</div>` : ''}
-            ${summary ? `<div class="hand-record-summary">${esc(summary)}</div>` : ''}
-            ${bluffNote ? `<div class="hand-record-summary" style="color:${h.bluffCaught ? 'var(--red)' : 'var(--green)'}">${bluffNote}</div>` : ''}
-            ${detailHtml ? `<div class="hand-record-details" id="mh-detail-${i}">${detailHtml}</div>` : ''}
+            ${boardHtml ? `<div class="hr-board">${boardHtml}</div>` : ''}
+            ${yourPlay ? `<div class="hr-play">${esc(yourPlay)}</div>` : ''}
+            <div class="hr-meta">
+              ${potText ? `<span>${potText}</span>` : ''}
+              ${handName ? `<span class="hr-handname">${handName}</span>` : ''}
+              ${winnerText ? `<span class="hr-winner">${winnerText}</span>` : ''}
+              ${bluffNote ? `<span class="hr-bluff ${h.bluffWon ? 'won' : 'caught'}">${bluffNote}</span>` : ''}
+            </div>
           </div>
         `;
       }).join('');
     }
 
-    function toggleMyHandDetail(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.toggle('open');
-    }
 
     // --- Session Panel Rendering ---
     function renderSessionPanel() {
