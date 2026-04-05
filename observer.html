@@ -2441,36 +2441,62 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (!el || !t) return;
       let html = '<h2>Tournaments</h2>';
 
+      // All-time standings
+      const points = t.points || {};
+      const sortedPoints = Object.entries(points).sort((a,b) => b[1] - a[1]);
+      if (sortedPoints.length > 0) {
+        html += '<div class="tb-past-title">All-Time Points</div>';
+        html += '<table class="th-table"><tr><th>#</th><th>Player</th><th style="text-align:right">Pts</th></tr>';
+        sortedPoints.forEach(([name, pts], i) => {
+          const cls = i === 0 ? 'tb-1st' : i === 1 ? 'tb-2nd' : i === 2 ? 'tb-3rd' : '';
+          html += '<tr><td class="th-num">' + (i+1) + '</td><td class="' + cls + '">' + escapeHtml(name) + '</td><td style="text-align:right;color:#e8c840;font-weight:600">' + pts + '</td></tr>';
+        });
+        html += '</table>';
+        html += '<div class="tb-divider"></div>';
+      }
+
       // Current tournament
       if (t.phase === 'playing' || t.phase === 'lobby') {
         html += '<div class="tb-current">';
-        html += '<div class="tb-current-title">Tournament #' + t.number + ' — ' + t.phase + '</div>';
-        const active = t.activePlayers || [];
+        html += '<div class="tb-current-title">Tournament #' + t.number + (t.phase === 'lobby' ? ' — lobby' : ' — in progress') + '</div>';
+        const active = (t.activePlayers || []).slice().sort((a, b) => (b.chips || 0) - (a.chips || 0));
         const eliminated = t.placements || [];
-        active.sort((a, b) => (b.chips || 0) - (a.chips || 0));
         for (const p of active) {
-          html += '<div class="tb-player"><span>' + escapeHtml(p.displayName || p.botName) + (p.isHuman ? ' <span class="human-badge">HUMAN</span>' : '') + '</span><span class="chips">' + (p.chips || 0) + '</span></div>';
+          const pct = Math.round((p.chips || 0) / (t.startingChips * (active.length + eliminated.length) || 1) * 100);
+          html += '<div class="tb-player"><span>' + escapeHtml(p.displayName || p.botName) + (p.isHuman ? ' <span class="human-badge">H</span>' : '') + '</span><span class="chips">' + (p.chips || 0) + ' <span style="color:var(--text-muted);font-size:9px">(' + pct + '%)</span></span></div>';
         }
-        for (const p of eliminated) {
-          html += '<div class="tb-player eliminated"><span>' + escapeHtml(p.displayName || p.botName) + '</span><span>' + ordinal(p.position) + '</span></div>';
+        if (eliminated.length > 0) {
+          html += '<div style="font-size:9px;color:var(--text-muted);margin:6px 0 2px;text-transform:uppercase;letter-spacing:1px">Eliminated</div>';
+          for (const p of eliminated) {
+            html += '<div class="tb-player eliminated"><span>' + ordinal(p.position) + ' ' + escapeHtml(p.displayName || p.botName) + '</span></div>';
+          }
         }
+        html += '</div>';
+      } else if (t.phase === 'results') {
+        html += '<div class="tb-current" style="border-color:#5a5a2a;background:rgba(232,200,64,0.04)">';
+        html += '<div class="tb-current-title" style="color:#e8c840">Tournament #' + t.number + ' — complete</div>';
+        (t.placements || []).forEach((p, i) => {
+          const cls = i === 0 ? 'tb-1st' : i === 1 ? 'tb-2nd' : i === 2 ? 'tb-3rd' : '';
+          html += '<div class="tb-player"><span class="' + cls + '">' + ordinal(p.position) + ' ' + escapeHtml(p.displayName || p.botName) + '</span><span style="color:#e8c840">+' + (p.points || 0) + 'pts</span></div>';
+        });
         html += '</div>';
       }
 
       // Past tournaments
       const history = t.history || [];
       if (history.length > 0) {
-        html += '<div class="tb-past-title">Past Tournaments</div>';
+        html += '<div class="tb-divider"></div>';
+        html += '<div class="tb-past-title">Past Results</div>';
         [...history].reverse().forEach(h => {
           html += '<div class="tb-past-entry">';
-          html += '<strong>#' + h.number + '</strong> ';
+          html += '<span class="th-num">#' + h.number + '</span> ';
           (h.placements || []).forEach((p, i) => {
             const cls = i === 0 ? 'tb-1st' : i === 1 ? 'tb-2nd' : i === 2 ? 'tb-3rd' : '';
-            html += '<span class="' + cls + '"><span class="tb-place">' + (i + 1) + '.</span>' + escapeHtml(p.displayName || p.botName) + '</span>  ';
+            html += '<span class="' + cls + '">' + escapeHtml(p.displayName || p.botName) + '</span> ';
           });
           html += '</div>';
         });
-      } else if (t.phase !== 'playing' && t.phase !== 'lobby') {
+      } else if (t.phase !== 'playing' && t.phase !== 'lobby' && t.phase !== 'results') {
         html += '<div style="color:var(--text-muted);font-size:11px">No tournaments completed yet.</div>';
       }
 
