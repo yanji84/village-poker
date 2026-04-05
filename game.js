@@ -50,6 +50,11 @@ export function getActivePlayer(state, bot) {
     console.error(`[village] BLOCKED double-action: ${bot.name} acted=${player.acted} bet=${player.bet} currentBet=${hand.currentBet}`);
     return null;
   }
+  // Prevent same-tick double-action: if player already acted this tick, reject
+  if (player.lastActedTick === state.clock.tick) {
+    console.error(`[village] BLOCKED same-tick double-action: ${bot.name} already acted at tick ${state.clock.tick}`);
+    return null;
+  }
   return { hand, player };
 }
 

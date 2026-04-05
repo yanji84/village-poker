@@ -228,8 +228,6 @@
       background: var(--bg-card);
     }
 
-
-    /* --- Stats Dashboard (below player grid) --- */
     /* --- Reasoning Panel (right col, hero section) --- */
     .reasoning-panel {
       flex: 1;
@@ -437,108 +435,6 @@
       .leaderboard-table .hide-mobile { display: none; }
     }
 
-    /* --- Game Stats --- */
-    .game-stats {
-      border-top: 1px solid var(--border);
-      padding: 12px 20px;
-      background: var(--bg-card);
-    }
-    .game-stats:empty { display: none; }
-    .game-stats h2 {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #555;
-      margin-bottom: 8px;
-    }
-    .game-stats-tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 10px;
-    }
-    .game-stats-tabs button {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      font-family: var(--mono);
-      font-size: 10px;
-      padding: 4px 10px;
-      border-radius: 3px;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .game-stats-tabs button:hover { border-color: #444; }
-    .game-stats-tabs button.active {
-      background: rgba(68,170,255,0.1);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .game-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 8px;
-    }
-    .game-stat-card {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 8px 10px;
-    }
-    .game-stat-label {
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-    }
-    .game-stat-value {
-      font-family: var(--mono);
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-    .game-stat-sub {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-    .street-bar {
-      display: flex;
-      gap: 2px;
-      margin-top: 4px;
-      height: 6px;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .street-bar-segment {
-      height: 100%;
-      min-width: 2px;
-      border-radius: 1px;
-    }
-    .street-legend {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-      flex-wrap: wrap;
-    }
-    .street-legend-item {
-      font-family: var(--mono);
-      font-size: 9px;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 3px;
-    }
-    .street-legend-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
     /* --- Pixel Poker Canvas --- */
     #poker-canvas {
       width: 100%;
@@ -565,7 +461,6 @@
     }
     .built-with a:hover { text-decoration: underline; }
 
-    /* --- Join Bar (inline, top-level) --- */
     /* --- Join Bar: terminal-style inline prompt --- */
     .join-bar {
       padding: 5px 12px;
@@ -750,38 +645,6 @@
     }
 
 
-    .pqs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 11px; font-family: var(--mono); }
-    .pqs-label { color: var(--text-muted); }
-    .pqs-value { color: var(--text-secondary); font-weight: 600; }
-
-    /* --- Play Mode Toggle --- */
-    .play-mode-toggle {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .play-mode-option {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 11px;
-      color: var(--text-secondary);
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .play-mode-option:has(input:checked) {
-      border-color: #555;
-      color: var(--text-primary);
-    }
-    .play-mode-option input[type="radio"] {
-      margin: 0;
-      width: auto;
-    }
-
     /* --- Human Action Panel --- */
     .human-action-panel {
       position: fixed;
@@ -896,8 +759,6 @@
       opacity: 0.3;
       cursor: not-allowed;
     }
-    /* --- Join two-button layout --- */
-
     /* --- Prompt Example --- */
     .prompt-example { margin-bottom: 10px; }
     .prompt-example summary {
@@ -941,9 +802,6 @@
     .prompt-example-code b { color: #bbb; font-weight: 600; }
     .prompt-hl { color: var(--accent); font-weight: 600; }
 
-    /* (player-stats-box CSS removed) */
-
-    /* --- Join status display --- */
     /* --- Char counter --- */
     .char-counter {
       font-size: 10px;
@@ -998,7 +856,7 @@
       max-width: 800px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1154,7 +1012,6 @@
       0% { background: rgba(68,170,255,0.08); }
       100% { background: var(--bg-card); }
     }
-    /* --- Keyboard Shortcuts Overlay --- */
     /* --- Dramatic Moment: All-In --- */
     @keyframes allin-flash {
       0% { background: var(--bg-elevated); }
@@ -1207,6 +1064,10 @@
         border-right: none;
         border-bottom: 1px solid var(--border);
       }
+      .players-reasoning-row {
+        display: flex;
+        flex-direction: column;
+      }
       .reasoning-body {
         max-height: 50vh;
       }
@@ -1217,8 +1078,6 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
-
-    /* --- Hand History Records --- */
 
     /* --- Bluff Tags --- */
     .bluff-tag {
@@ -1260,15 +1119,6 @@
       50% { opacity: 1; }
     }
 
-    /* --- Score Badge --- */
-    .score-badge {
-      font-family: var(--mono);
-      font-size: 14px;
-      font-weight: 700;
-      color: #4af;
-    }
-
-
     /* --- Toast Notification --- */
     .toast-container {
       position: fixed;
@@ -1305,14 +1155,6 @@
     .leaderboard-table .score-col {
       color: #4af;
       font-weight: 700;
-    }
-    .tier-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
     }
     .leaderboard-table .chip-profit-pos { color: #4a6; font-weight: 600; }
     .leaderboard-table .chip-profit-neg { color: #a44; font-weight: 600; }
@@ -1595,19 +1437,6 @@
     }
 
     /* === Mobile Responsive Layout (375px phones) === */
-    @media (max-width: 800px) {
-      .players-reasoning-row {
-        display: flex;
-        flex-direction: column;
-      }
-      .left-col {
-        border-right: none;
-      }
-      #poker-canvas {
-        height: 380px;
-      }
-    }
-
     @media (max-width: 520px) {
       body {
         font-size: 12px;
@@ -1702,28 +1531,6 @@
         padding: 4px 6px;
       }
 
-      /* Game stats */
-      .game-stats {
-        padding: 10px 12px;
-      }
-      .game-stats-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-      }
-      .game-stat-card {
-        padding: 6px 8px;
-      }
-      .game-stat-value {
-        font-size: 14px;
-      }
-      .game-stats-tabs {
-        flex-wrap: wrap;
-      }
-      .game-stats-tabs button {
-        font-size: 9px;
-        padding: 3px 7px;
-      }
-
       /* Hand result toast: fit on mobile */
       .hand-result-toast {
         max-width: calc(100vw - 32px);
@@ -1815,11 +1622,6 @@
         font-size: 10px;
         padding: 1px 4px;
       }
-
-      /* Score badge */
-      .score-badge {
-        font-size: 12px;
-      }
     }
 
     /* --- Tournament Banner --- */
@@ -1887,7 +1689,7 @@
       width: 100%;
       background: var(--bg-card);
       border: 1px solid #3a3a1a;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 28px 32px;
       text-align: center;
       box-shadow: 0 0 60px rgba(240, 208, 96, 0.08);
@@ -1948,7 +1750,7 @@
       z-index: 2000;
       align-items: flex-start;
       justify-content: center;
-      padding: 60px 20px 40px;
+      padding: 40px 20px;
       overflow-y: auto;
     }
     .strategies-overlay.open { display: flex; }
@@ -2234,12 +2036,6 @@
   <!-- Context bar (hidden, kept for state) -->
   <div class="context-bar" id="context-bar"></div>
 
-  <!-- Kept for JS compat: hidden containers for old table -->
-  <div id="pot" style="display:none"></div>
-  <div id="community" style="display:none"></div>
-  <div id="thoughts" style="display:none"></div>
-  <div id="table-container" style="display:none"></div>
-
 
   <!-- Human Action Panel -->
   <div class="human-action-panel" id="human-action-panel" style="display:none">
@@ -2514,13 +2310,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     const apiBase = basePath + '/api/arena';
 
     // --- DOM references ---
-    // Hidden compat elements (old table structure)
-    const potEl = document.getElementById('pot');
-    const communityEl = document.getElementById('community');
-    const tableContainer = document.getElementById('table-container');
-    const statusEl = document.getElementById('status');
     const contextEl = document.getElementById('context-bar');
-    const thoughtsEl = document.getElementById('thoughts');
     const leaderboardEl = document.getElementById('leaderboard');
 
     // New dashboard elements
@@ -2745,15 +2535,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
     }
 
-    function openFullEditor() {
-      const modalTextarea = document.getElementById('full-editor-textarea');
-      const key = authUsername ? authUsername.toLowerCase() : '_draft';
-      modalTextarea.value = localStorage.getItem('arena_strategy_' + key) || '';
-      updateFullEditorCharCounter();
-      document.getElementById('full-editor-overlay').classList.add('open');
-      setTimeout(() => modalTextarea.focus(), 100);
-    }
-
     function saveFullEditor() {
       const modalTextarea = document.getElementById('full-editor-textarea');
       const key = authUsername ? authUsername.toLowerCase() : '_draft';
@@ -2806,11 +2587,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         localStorage.removeItem('arena_waitlist');
       }
       viewerWaitlist = data;
-    }
-
-    function toggleJoinPanel() {
-      // No-op — join bar is always visible. Kept for compat.
-      renderJoinPanel();
     }
 
     async function fetchWaitlist() {
@@ -3355,91 +3131,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       return state.bots.find(b => b.name === name)?.displayName || name;
     }
 
-    function nameHash(name) {
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        hash = hash & hash;
-      }
-      return Math.abs(hash);
-    }
-
-    function avatarColor(name) {
-      const hue = nameHash(name) % 360;
-      return `hsl(${hue}, 55%, 40%)`;
-    }
-
-    function avatarInitial(name) {
-      return (name || '?').charAt(0).toUpperCase();
-    }
-
-    // --- Bot personality archetypes ---
-    const BOT_PERSONALITIES = {
-      'Nova':  { archetype: 'The Shark',      tagline: 'Cold reads, sharp teeth' },
-      'Jinx':  { archetype: 'The Maniac',     tagline: 'Chaos is the plan' },
-      'Pixel': { archetype: 'The Trapper',     tagline: 'Friendly face, hidden fangs' },
-      'Volt':  { archetype: 'The Calculator',  tagline: 'Every bet is an equation' },
-    };
-
-    /**
-     * Derive a personality archetype for human players based on their play stats.
-     * Returns { archetype, tagline } or null if not enough data.
-     */
-    function derivePersonality(stats) {
-      const hands = stats.handsPlayed || 0;
-      if (hands < 5) return null; // not enough data yet
-
-      const vpip = (((stats.calls || 0) + (stats.raises || 0)) / hands) * 100;
-      const raiseRate = ((stats.raises || 0) / Math.max(1, (stats.calls || 0) + (stats.raises || 0))) * 100;
-      const winRate = ((stats.handsWon || 0) / hands) * 100;
-      const bluffsWon = stats.bluffsWon || 0;
-      const bluffsCaught = stats.bluffsCaught || 0;
-      const totalBluffs = bluffsWon + bluffsCaught;
-
-      // High bluff rate
-      if (totalBluffs >= 3 && bluffsWon > bluffsCaught) {
-        return { archetype: 'The Hustler', tagline: 'Sells fiction for chips' };
-      }
-      // Very tight
-      if (vpip < 30) {
-        return { archetype: 'The Rock', tagline: 'Patience is a weapon' };
-      }
-      // Very loose and aggressive
-      if (vpip > 55 && raiseRate > 50) {
-        return { archetype: 'The Wildcard', tagline: 'Any two cards will do' };
-      }
-      // Aggressive raiser
-      if (raiseRate > 60) {
-        return { archetype: 'The Bully', tagline: 'Raises speak louder than words' };
-      }
-      // Passive caller
-      if (vpip > 45 && raiseRate < 30) {
-        return { archetype: 'The Sheriff', tagline: 'Always pays to see' };
-      }
-      // High win rate
-      if (winRate > 40) {
-        return { archetype: 'The Grinder', tagline: 'Steady hands, steady wins' };
-      }
-      // Default
-      return { archetype: 'The Contender', tagline: 'Still finding their edge' };
-    }
-
-    /**
-     * Get personality for a player (bot or human).
-     * Returns { archetype, tagline } or null.
-     */
-    function getPlayerPersonality(botName, displayName, isHuman, stats) {
-      // Check built-in bot personalities by display name
-      if (!isHuman && BOT_PERSONALITIES[displayName]) {
-        return BOT_PERSONALITIES[displayName];
-      }
-      // For humans (or unknown bots), derive from stats
-      if (isHuman && stats) {
-        return derivePersonality(stats);
-      }
-      return null;
-    }
-
     // --- Card rendering ---
     function renderCard(card) {
       const suit = card.slice(-1);
@@ -3562,6 +3253,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     let lastCelebrationResult = null;
     let lastToastResult = null;
     let toastTimeout = null;
+    let eliminationToastTimeout = null;
+    let _prevBets = {};
 
 
     // Community card reveal animation state
@@ -3612,8 +3305,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     // --- Player Elimination ---
-
-    function checkForEliminations() {} // removed — server handles rotation
 
     function showEliminationToast(playerName, handsPlayed, handsWon) {
       const toastEl = document.getElementById('elimination-toast');
@@ -4219,21 +3910,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           ctx.globalAlpha = 1.0;
         }
       });
-    }
-
-    // --- Chip stacks: small stacked rectangles ---
-    function drawChipStack(ctx, x, y, amount) {
-      if (!amount || amount <= 0) return;
-      const chipColors = ['#A93226', '#2E4053', '#1E8449', '#B7950B', '#884EA0'];
-      const numChips = Math.min(5, Math.max(1, Math.ceil(amount / 200)));
-      const chipW = 6, chipH = 3;
-      const sx = Math.floor(x - chipW / 2);
-      for (let i = 0; i < numChips; i++) {
-        const cy = Math.floor(y - i * (chipH + 1));
-        pxRect(ctx, sx, cy, chipW, chipH, chipColors[i % chipColors.length]);
-        // Chip highlight line
-        pxRect(ctx, sx + 1, cy, chipW - 2, 1, '#ddd');
-      }
     }
 
     // --- Speech bubble: pixelated rectangle, no curves ---
@@ -4936,12 +4612,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     }
 
     // --- Leaderboard ---
-    function getEloTier(elo) {
-      if (elo >= 1500) return { name: 'Legend', color: '#f0d060', icon: '\uD83D\uDC51' };
-      if (elo >= 1350) return { name: 'Whale', color: '#4af', icon: '\uD83D\uDC0B' };
-      if (elo >= 1250) return { name: 'Shark', color: '#4a6', icon: '\uD83E\uDD88' };
-      return { name: 'Fish', color: '#888', icon: '\uD83D\uDC1F' };
-    }
 
     // Fetch full leaderboard from API (includes historical players)
     async function fetchLeaderboard() {
@@ -5149,132 +4819,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
     }
 
-    // --- Game Stats ---
-    const gameStatsEl = document.getElementById('game-stats');
-
-    function getDisplayStats(period) {
-      if (period === 'all') return state.gameStats || {};
-      if (period === 'today') {
-        const dayKey = 'day-' + new Date().toISOString().slice(0, 10);
-        return state.gameStatsByTime?.[dayKey] || {};
-      }
-      if (period === 'hour') {
-        const hourKey = new Date().toISOString().slice(0, 13);
-        return state.gameStatsByTime?.[hourKey] || {};
-      }
-      return state.gameStats || {};
-    }
-
-    window.setGameStatsPeriod = function(period) {
-      state.gameStatsPeriod = period;
-    };
-
-    function renderGameStats() {
-      const gs = state.gameStats || {};
-      if (!gs.totalHands && !gs.totalLLMCalls) {
-        gameStatsEl.innerHTML = '';
-        return;
-      }
-      const period = state.gameStatsPeriod || 'all';
-      const display = getDisplayStats(period);
-      const totalHands = display.totalHands || 0;
-
-      // Street breakdown — for 'all' use handsByStreet object, for time buckets use handsByStreet_* keys
-      let streets;
-      if (period === 'all') {
-        streets = gs.handsByStreet || {};
-      } else {
-        streets = {
-          preflop: display.handsByStreet_preflop || 0,
-          flop: display.handsByStreet_flop || 0,
-          turn: display.handsByStreet_turn || 0,
-          river: display.handsByStreet_river || 0,
-          showdown: display.handsByStreet_showdown || 0,
-        };
-      }
-
-      const streetColors = { preflop: '#666', flop: '#4a6', turn: '#4af', river: '#88f', showdown: '#f0d060' };
-      const streetTotal = (streets.preflop || 0) + (streets.flop || 0) + (streets.turn || 0) + (streets.river || 0) + (streets.showdown || 0);
-
-      const streetBar = streetTotal > 0 ? `
-        <div class="street-bar">
-          ${['preflop','flop','turn','river','showdown'].map(s => {
-            const pct = ((streets[s] || 0) / streetTotal * 100);
-            return pct > 0 ? `<div class="street-bar-segment" style="width:${pct}%;background:${streetColors[s]}" title="${s}: ${streets[s] || 0}"></div>` : '';
-          }).join('')}
-        </div>
-        <div class="street-legend">
-          ${['preflop','flop','turn','river','showdown'].map(s => {
-            const count = streets[s] || 0;
-            const pct = streetTotal > 0 ? ((count / streetTotal) * 100).toFixed(0) : 0;
-            return `<span class="street-legend-item"><span class="street-legend-dot" style="background:${streetColors[s]}"></span>${s} ${count} (${pct}%)</span>`;
-          }).join('')}
-        </div>
-      ` : '';
-
-      const bluffs = display.totalBluffs || 0;
-      const bluffsCalled = display.totalBluffsCalled || 0;
-      const tableTalks = display.totalTableTalks || 0;
-      const allIns = display.totalAllIns || 0;
-      const biggestPot = period === 'all' ? (gs.biggestPot || 0) : '-';
-      const llmCalls = display.totalLLMCalls || 0;
-      const llmCost = period === 'all' ? (gs.totalLLMCost || 0) : (display.totalLLMCost || 0);
-      const tokensIn = display.totalTokensInput || 0;
-      const tokensOut = display.totalTokensOutput || 0;
-
-      const tabBtn = (label, val) => `<button class="${period === val ? 'active' : ''}" onclick="setGameStatsPeriod('${val}')">${label}</button>`;
-
-      gameStatsEl.innerHTML = `
-        <h2>Game Stats</h2>
-        <div class="game-stats-tabs">
-          ${tabBtn('All Time', 'all')}
-          ${tabBtn('Today', 'today')}
-          ${tabBtn('Last Hour', 'hour')}
-        </div>
-        <div class="game-stats-grid">
-          <div class="game-stat-card">
-            <div class="game-stat-label">Hands Played</div>
-            <div class="game-stat-value">${totalHands}</div>
-            ${streetBar ? `<div class="game-stat-sub">Ended at street:</div>${streetBar}` : ''}
-          </div>
-          <div class="game-stat-card">
-            <div class="game-stat-label">Bluffs</div>
-            <div class="game-stat-value">${bluffs}</div>
-            <div class="game-stat-sub">Called: ${bluffsCalled}</div>
-          </div>
-          <div class="game-stat-card">
-            <div class="game-stat-label">Table Talks</div>
-            <div class="game-stat-value">${tableTalks}</div>
-          </div>
-          <div class="game-stat-card">
-            <div class="game-stat-label">All-Ins</div>
-            <div class="game-stat-value">${allIns}</div>
-          </div>
-          <div class="game-stat-card">
-            <div class="game-stat-label">Biggest Pot</div>
-            <div class="game-stat-value">${biggestPot}</div>
-          </div>
-          <div class="game-stat-card">
-            <div class="game-stat-label">LLM Calls</div>
-            <div class="game-stat-value">${llmCalls}</div>
-            <div class="game-stat-sub">Cost: $${typeof llmCost === 'number' ? llmCost.toFixed(4) : '0.0000'}</div>
-          </div>
-          <div class="game-stat-card">
-            <div class="game-stat-label">Tokens</div>
-            <div class="game-stat-value">${tokensIn + tokensOut > 0 ? ((tokensIn + tokensOut) / 1000).toFixed(1) + 'k' : '0'}</div>
-            <div class="game-stat-sub">In: ${(tokensIn / 1000).toFixed(1)}k / Out: ${(tokensOut / 1000).toFixed(1)}k</div>
-          </div>
-        </div>
-      `;
-    }
-
-    // --- Pot rendering (old compat, hidden) ---
-    function renderPot(amount) {
-      // No-op, pot is rendered in info strip now
-    }
+    // (Game Stats rendering removed — no DOM element)
 
     // No-op stubs (feed UI removed, but callers remain)
-    function flushHandHeader() {}
     function addFeedEntry() {}
 
     // Process events to reconstruct state
@@ -5832,7 +5379,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (data.type?.startsWith('poker_')) {
         processEvent(data);
-        checkForEliminations();
         addFeedEntry(data, false);
         render();
 

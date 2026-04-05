@@ -109,6 +109,13 @@ export const phases = {
         }
       }
 
+      // Guard: if the active player already acted this tick, advance past them
+      if (activeP && activeP.lastActedTick === state.clock.tick) {
+        activeP.acted = true;
+        advanceAction(state);
+        return hand.activePlayer;
+      }
+
       // First dispatch: mark as dispatched, give them a chance to act
       if (!hand.activePlayerDispatched) {
         hand.activePlayerDispatched = 1;
