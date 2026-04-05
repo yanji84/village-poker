@@ -630,11 +630,15 @@ export function onJoin(state, botName, displayName) {
 export function onLeave(state, botName, displayName) {
   const chips = state.buyIns[botName] || 0;
 
-  // If in a hand, fold them
-  if (state.hand?.players?.[botName] && !state.hand.players[botName].folded) {
+  // If in a hand, fold them — but skip if hand is already resolved or no hand
+  if (state.hand?.players?.[botName] && !state.hand.players[botName].folded && !state.hand.result) {
     state.hand.players[botName].folded = true;
     if (state.hand.activePlayer === botName) {
-      advanceAction(state);
+      try {
+        advanceAction(state);
+      } catch (e) {
+        console.error(`[poker] advanceAction in onLeave failed: ${e.message}`);
+      }
     }
   }
 

@@ -315,10 +315,17 @@ export function resolveHand(state, activePlayers) {
     };
   } else {
     // Showdown — evaluate hands with side pot support
-    const contenders = activePlayers.map(s => ({
-      botName: s.botName,
-      cards: hand.players[s.botName].cards,
-    }));
+    const contenders = activePlayers
+      .filter(s => hand.players[s.botName]?.cards?.length >= 2)
+      .map(s => ({
+        botName: s.botName,
+        cards: hand.players[s.botName].cards,
+      }));
+    if (contenders.length === 0) {
+      hand.result = { winners: [], handName: 'No contest', evaluations: [] };
+      hand.activePlayer = null;
+      return;
+    }
 
     const result = determineWinners(contenders, hand.community);
     hand.result = result;
