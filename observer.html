@@ -3748,15 +3748,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           pxRect(ctx, cx + offsetX + 2, drawY + 3, scaledW, cardH, '#000');
           ctx.globalAlpha = 1.0;
         }
-        // Bright glow on card face reveal
-        if (isFlipping && progress > 0.45) {
-          const glowT = (progress - 0.45) / 0.55;
-          const glowAlpha = (1 - glowT) * 0.6;
-          ctx.globalAlpha = glowAlpha;
-          const glowSize = Math.floor(4 + 6 * (1 - glowT));
-          pxRect(ctx, cx + offsetX - glowSize, drawY - glowSize, scaledW + glowSize * 2, cardH + glowSize * 2, '#FFD700');
-          ctx.globalAlpha = 1.0;
-        }
       });
     }
 
