@@ -4933,9 +4933,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const rows = sorted.map((e, i) => {
           const isViewer = myBot === e.name;
           const rowClass = isViewer ? 'viewer-row expandable' : 'expandable';
-          const seatUser = seatData[e.name]?.username;
-          const isHumanLb = !!seatUser;
-          const lbDisplayName = isHumanLb ? seatUser : (e.displayName || e.name);
+          const isHumanLb = seatData[e.name]?.playMode === 'human';
+          const lbDisplayName = e.displayName || e.name;
           const stats = seatData[e.name]?.stats || e.stats || {};
           const ts = e.tournamentStats || {};
           const handsPlayed = stats.handsPlayed || e.gamesPlayed || 0;
