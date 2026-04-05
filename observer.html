@@ -705,6 +705,40 @@
     .th-winner { color: #e8c840; font-weight: 700; white-space: nowrap; }
     .th-standings { color: var(--text-secondary); font-size: 10px; line-height: 1.5; }
     .th-current { color: var(--green); font-size: 10px; margin-bottom: 8px; }
+    .tournament-browser {
+      max-width: 640px;
+      width: 100%;
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--mono);
+    }
+    .tournament-browser h2 {
+      font-size: 14px;
+      color: var(--text-primary);
+      margin: 0 0 16px;
+      letter-spacing: 0.5px;
+    }
+    .tb-current {
+      padding: 12px;
+      background: rgba(40,160,40,0.08);
+      border: 1px solid #2a5a2a;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    .tb-current-title { color: var(--green); font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+    .tb-player { font-size: 11px; padding: 2px 0; display: flex; justify-content: space-between; }
+    .tb-player.eliminated { color: var(--text-muted); text-decoration: line-through; }
+    .tb-player .chips { color: #e8c840; }
+    .tb-divider { border-top: 1px solid var(--border); margin: 12px 0; }
+    .tb-past-title { color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .tb-past-entry { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 11px; }
+    .tb-past-entry:last-child { border-bottom: none; }
+    .tb-place { color: var(--text-muted); display: inline-block; width: 20px; }
+    .tb-1st { color: #e8c840; font-weight: 700; }
+    .tb-2nd { color: #c0c0c0; }
+    .tb-3rd { color: #cd7f32; }
     .leaderboard-overlay .leaderboard {
       max-width: 640px;
       width: 100%;
@@ -2164,6 +2198,11 @@
     <div class="tournament-history" id="tournament-history"></div>
   </div>
 
+  <!-- Tournaments Browser Overlay -->
+  <div class="leaderboard-overlay" id="tournaments-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="tournament-browser" id="tournament-browser"></div>
+  </div>
+
   <!-- Tournament Results Overlay -->
   <div class="tournament-results-overlay" id="tournament-results-overlay" onclick="if(event.target===this)dismissTournamentResults()">
     <div class="tournament-results-content">
@@ -2380,6 +2419,68 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const overlay = document.getElementById('leaderboard-overlay');
       overlay.classList.toggle('open');
       if (overlay.classList.contains('open')) fetchLeaderboard();
+    }
+
+    function toggleTournaments() {
+      const overlay = document.getElementById('tournaments-overlay');
+      overlay.classList.toggle('open');
+      if (overlay.classList.contains('open')) fetchTournamentBrowser();
+    }
+
+    async function fetchTournamentBrowser() {
+      try {
+        const res = await fetch(apiBase + '/tournament', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        renderTournamentBrowser(data.tournament);
+      } catch (e) {}
+    }
+
+    function renderTournamentBrowser(t) {
+      const el = document.getElementById('tournament-browser');
+      if (!el || !t) return;
+      let html = '<h2>Tournaments</h2>';
+
+      // Current tournament
+      if (t.phase === 'playing' || t.phase === 'lobby') {
+        html += '<div class="tb-current">';
+        html += '<div class="tb-current-title">Tournament #' + t.number + ' — ' + t.phase + '</div>';
+        const active = t.activePlayers || [];
+        const eliminated = t.placements || [];
+        active.sort((a, b) => (b.chips || 0) - (a.chips || 0));
+        for (const p of active) {
+          html += '<div class="tb-player"><span>' + escapeHtml(p.displayName || p.botName) + (p.isHuman ? ' <span class="human-badge">HUMAN</span>' : '') + '</span><span class="chips">' + (p.chips || 0) + '</span></div>';
+        }
+        for (const p of eliminated) {
+          html += '<div class="tb-player eliminated"><span>' + escapeHtml(p.displayName || p.botName) + '</span><span>' + ordinal(p.position) + '</span></div>';
+        }
+        html += '</div>';
+      }
+
+      // Past tournaments
+      const history = t.history || [];
+      if (history.length > 0) {
+        html += '<div class="tb-past-title">Past Tournaments</div>';
+        [...history].reverse().forEach(h => {
+          html += '<div class="tb-past-entry">';
+          html += '<strong>#' + h.number + '</strong> ';
+          (h.placements || []).forEach((p, i) => {
+            const cls = i === 0 ? 'tb-1st' : i === 1 ? 'tb-2nd' : i === 2 ? 'tb-3rd' : '';
+            html += '<span class="' + cls + '"><span class="tb-place">' + (i + 1) + '.</span>' + escapeHtml(p.displayName || p.botName) + '</span>  ';
+          });
+          html += '</div>';
+        });
+      } else if (t.phase !== 'playing' && t.phase !== 'lobby') {
+        html += '<div style="color:var(--text-muted);font-size:11px">No tournaments completed yet.</div>';
+      }
+
+      el.innerHTML = html;
+    }
+
+    function ordinal(n) {
+      const s = ['th','st','nd','rd'];
+      const v = n % 100;
+      return n + (s[(v-20)%10]||s[v]||s[0]);
     }
 
     // --- Base path for API calls (works behind /poker/ reverse proxy) ---
@@ -5976,6 +6077,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
   </script>
 
   <div class="fab-group">
+    <div class="fab-pill" onclick="toggleTournaments()">/tournaments</div>
     <div class="fab-pill" onclick="toggleStrategies()">/strategies</div>
     <div class="fab-pill" onclick="toggleLeaderboard()">/leaderboard</div>
     <div class="fab-pill" onclick="showAbout()">/about</div>
