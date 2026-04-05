@@ -4949,18 +4949,39 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         case 'deal':
           const dealMatch = entry.message?.match(/deals the (\w+): (.+)/);
           if (dealMatch) {
+            // Trigger chip-to-pot animation BEFORE clearing bets
+            if (!state._isInitReplay && Object.keys(state.currentBets).length > 0) {
+              for (const bot of (state.bots || [])) {
+                if ((state.currentBets[bot.name] || 0) > 0) {
+                  triggerChipsToPot(bot.name);
+                }
+              }
+            }
+
             state.street = dealMatch[1];
             const cards = dealMatch[2].split(/\s+/);
             const oldLen = state.community.length;
             state.community = cards;
-            state.currentBets = {};
-            state.lastActions = {};
-            state.blinds = {};
-            _prevBets = {};
+
+            // Delay clearing bets so the chip animation plays first
+            if (!state._isInitReplay) {
+              setTimeout(() => {
+                state.currentBets = {};
+                state.lastActions = {};
+                state.blinds = {};
+                _prevBets = {};
+              }, 600);
+            } else {
+              state.currentBets = {};
+              state.lastActions = {};
+              state.blinds = {};
+              _prevBets = {};
+            }
+
             // Trigger card reveal animation for newly dealt cards (not on init replay)
             if (cards.length > oldLen && !state._isInitReplay) {
               cardRevealAnim = {
-                startTime: Date.now(),
+                startTime: Date.now() + 500, // delay card reveal to let chips animate first
                 newCardStartIdx: oldLen,
                 totalCards: cards.length,
               };
