@@ -3962,17 +3962,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const isTalking = !!(sayData && (Date.now() - (sayData.timestamp || 0)) < 15000);
         const displayName = bot.displayName || bot.name;
 
-        // Winner glow effect behind character
-        if (isWinner && celebrationActive) {
-          const glowPulse = 0.2 + 0.15 * Math.sin(pokerAnimFrame * 0.08);
-          pokerCtx.globalAlpha = glowPulse;
-          const glowSize = 20 * charScale;
-          pokerCtx.fillStyle = '#f0d060';
-          pokerCtx.beginPath();
-          pokerCtx.arc(px, py, glowSize, 0, Math.PI * 2);
-          pokerCtx.fill();
-          pokerCtx.globalAlpha = 1.0;
-        }
 
         // Chair behind the character
         const chairDir = chairFacing(seatIdx);
@@ -4251,9 +4240,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         pokerCtx.globalAlpha = 1.0;
       }
 
-      // --- Winner celebration ---
-      // Trigger celebration when a new result arrives during showdown
-      if (state.phase === 'showdown' && state.lastResult && state.lastResult !== lastCelebrationResult && !state._isInitReplay) {
+      // --- Winner celebration (disabled — too flashy) ---
+      if (false && state.phase === 'showdown' && state.lastResult && state.lastResult !== lastCelebrationResult && !state._isInitReplay) {
         lastCelebrationResult = state.lastResult;
         const winners = state.lastResult.winners || [];
         if (winners.length > 0) {
@@ -4981,10 +4969,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               _prevBets = {};
             }
 
-            // Trigger card reveal animation for newly dealt cards (not on init replay)
-            if (cards.length > oldLen && !state._isInitReplay) {
+            // Trigger card reveal animation for newly dealt cards (not on init replay, not if already animating)
+            if (cards.length > oldLen && !state._isInitReplay && !cardRevealAnim) {
               cardRevealAnim = {
-                startTime: Date.now() + 500, // delay card reveal to let chips animate first
+                startTime: Date.now() + 500,
                 newCardStartIdx: oldLen,
                 totalCards: cards.length,
               };
