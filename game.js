@@ -107,6 +107,12 @@ export function dealNewHand(state) {
     startTick: state.clock.tick,
   };
 
+  // Snapshot pre-hand chip counts for accurate archival (before blinds/bets/pot distribution)
+  state.hand.chipsBeforeHand = {};
+  for (const bot of bots) {
+    state.hand.chipsBeforeHand[bot] = state.buyIns[bot] || 0;
+  }
+
   // Log hole cards (private per player — observer sees via SSE, bots don't)
   for (const seat of seats) {
     logAction(state, {
