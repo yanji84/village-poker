@@ -46,7 +46,10 @@ export function getActivePlayer(state, bot) {
   // All-in players (0 chips) cannot take any action
   if (player.chips === 0) return null;
   // Prevent double-action: if already acted and bet matches current, reject
-  if (player.acted && player.bet >= hand.currentBet) return null;
+  if (player.acted && player.bet >= hand.currentBet) {
+    console.error(`[village] BLOCKED double-action: ${bot.name} acted=${player.acted} bet=${player.bet} currentBet=${hand.currentBet}`);
+    return null;
+  }
   return { hand, player };
 }
 

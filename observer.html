@@ -1746,6 +1746,263 @@
       }
     }
 
+    /* --- Tournament Banner --- */
+    .tournament-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 8px 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.4s, border-color 0.4s;
+    }
+    .tournament-banner.phase-lobby {
+      background: linear-gradient(135deg, #0a1a0a 0%, #0e200e 100%);
+      border-bottom-color: #2a5a2a;
+      color: var(--green);
+    }
+    .tournament-banner.phase-playing {
+      background: linear-gradient(135deg, #0a0e1a 0%, #0e1420 100%);
+      border-bottom-color: #2a3a5a;
+      color: var(--accent);
+    }
+    .tournament-banner.phase-results {
+      background: linear-gradient(135deg, #1a1a0a 0%, #201e0e 100%);
+      border-bottom-color: #5a5a2a;
+      color: #f0d060;
+    }
+    .tournament-banner .tb-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      opacity: 0.7;
+    }
+    .tournament-banner .tb-main {
+      font-size: 13px;
+    }
+    .tournament-banner .tb-countdown {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .tournament-banner .tb-sep {
+      color: var(--text-muted);
+      opacity: 0.4;
+    }
+
+    /* --- Tournament Results Overlay --- */
+    .tournament-results-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      z-index: 2500;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      animation: fadeIn 0.4s ease;
+    }
+    .tournament-results-overlay.open { display: flex; }
+    .tournament-results-content {
+      max-width: 500px;
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid #3a3a1a;
+      border-radius: 10px;
+      padding: 28px 32px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(240, 208, 96, 0.08);
+    }
+    .tournament-results-content h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f0d060;
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    .tournament-results-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .tournament-results-table th {
+      text-align: left;
+      padding: 7px 12px;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    .tournament-results-table td {
+      padding: 6px 12px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid #0e0e0e;
+    }
+    .tournament-results-table tr:last-child td { border-bottom: none; }
+    .tournament-results-table tr.winner td {
+      color: #f0d060;
+      font-weight: 700;
+    }
+    .tournament-results-table .place-1 { color: #f0d060; }
+    .tournament-results-table .place-2 { color: #c0c0c0; }
+    .tournament-results-table .place-3 { color: #cd7f32; }
+    .tournament-results-next {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+
+    /* --- Strategies Overlay --- */
+    .strategies-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 2000;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 60px 20px 40px;
+      overflow-y: auto;
+    }
+    .strategies-overlay.open { display: flex; }
+    .strategies-content {
+      max-width: 640px;
+      width: 100%;
+      margin: 0;
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .strategies-content h2 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+    .strategy-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .strategy-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      transition: border-color 0.2s;
+    }
+    .strategy-card:hover {
+      border-color: #3a3a3a;
+    }
+    .strategy-card .strategy-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .strategy-card .strategy-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .strategy-card .strategy-lineage {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .strategy-card .strategy-text {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      max-height: 40px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: max-height 0.3s ease;
+    }
+    .strategy-card .strategy-text.expanded {
+      max-height: 600px;
+    }
+    .strategy-card .strategy-text-toggle {
+      font-size: 10px;
+      color: var(--accent);
+      cursor: pointer;
+      margin-top: 4px;
+      user-select: none;
+    }
+    .strategy-card .strategy-text-toggle:hover {
+      color: #6cf;
+    }
+    .strategy-card.winner-card {
+      border-color: rgba(240, 208, 96, 0.3);
+    }
+    .strategy-card.winner-card .strategy-name {
+      color: #f0d060;
+    }
+
+    /* --- Human badge in leaderboard --- */
+    .human-badge {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(74, 166, 102, 0.15);
+      color: var(--green);
+      font-weight: 600;
+      margin-left: 4px;
+      vertical-align: middle;
+      letter-spacing: 0.3px;
+    }
+
+    /* --- Tournament join bar prominence --- */
+    .join-bar.tournament-lobby {
+      background: linear-gradient(135deg, #0a1a0a 0%, #0e200e 100%);
+      border-bottom-color: #2a5a2a;
+    }
+    .join-bar.tournament-lobby .join-bar-label {
+      color: var(--green);
+    }
+    .tournament-seats-info {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--green);
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px) {
+      .tournament-banner {
+        padding: 6px 12px;
+        gap: 8px;
+        font-size: 11px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .tournament-banner .tb-main { font-size: 11px; }
+      .tournament-results-content {
+        padding: 20px 16px;
+      }
+      .strategies-content {
+        padding: 16px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1782,6 +2039,12 @@
   </div>
   <script>if(!localStorage.getItem('arena_intro_seen'))document.getElementById('intro-banner').style.display='';</script>
 
+
+  <!-- Tournament Banner -->
+  <div class="tournament-banner phase-lobby" id="tournament-banner" style="display:none">
+    <span class="tb-label">TOURNAMENT</span>
+    <span class="tb-main" id="tournament-banner-text">Loading...</span>
+  </div>
 
   <!-- Info Strip: Pot / Board / Street / Hand -->
   <div class="info-strip" id="info-strip">
@@ -1856,6 +2119,28 @@
   <!-- Leaderboard Overlay -->
   <div class="leaderboard-overlay" id="leaderboard-overlay" onclick="if(event.target===this)this.classList.remove('open')">
     <div class="leaderboard" id="leaderboard"></div>
+  </div>
+
+  <!-- Tournament Results Overlay -->
+  <div class="tournament-results-overlay" id="tournament-results-overlay" onclick="if(event.target===this)dismissTournamentResults()">
+    <div class="tournament-results-content">
+      <h2 id="tournament-results-title">Tournament Complete</h2>
+      <table class="tournament-results-table">
+        <thead><tr><th>#</th><th>Player</th><th>Points</th></tr></thead>
+        <tbody id="tournament-results-body"></tbody>
+      </table>
+      <div class="tournament-results-next" id="tournament-results-next"></div>
+    </div>
+  </div>
+
+  <!-- Strategies Overlay -->
+  <div class="strategies-overlay" id="strategies-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="strategies-content">
+      <h2>Bot Strategies (DNA Pool)</h2>
+      <div class="strategy-list" id="strategy-list">
+        <div style="color:var(--text-muted);font-style:italic;text-align:center;padding:20px 0">Loading strategies...</div>
+      </div>
+    </div>
   </div>
 
   <!-- Game Stats -->
@@ -2316,6 +2601,21 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const editorOverlay = document.getElementById('full-editor-overlay');
         if (editorOverlay && editorOverlay.classList.contains('open')) {
           cancelFullEditor();
+          return;
+        }
+        const strategiesOverlay = document.getElementById('strategies-overlay');
+        if (strategiesOverlay && strategiesOverlay.classList.contains('open')) {
+          strategiesOverlay.classList.remove('open');
+          return;
+        }
+        const resultsOverlay = document.getElementById('tournament-results-overlay');
+        if (resultsOverlay && resultsOverlay.classList.contains('open')) {
+          dismissTournamentResults();
+          return;
+        }
+        const leaderboardOverlay = document.getElementById('leaderboard-overlay');
+        if (leaderboardOverlay && leaderboardOverlay.classList.contains('open')) {
+          leaderboardOverlay.classList.remove('open');
           return;
         }
       }
@@ -4493,6 +4793,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           stats: entry.stats,
           atTable: entry.atTable,
           chips: entry.chips,
+          tournamentStats: entry.tournamentStats || null,
         };
       }
 
@@ -4523,6 +4824,13 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const sorted = lbEntries
           .map(([name, d]) => ({ name, ...d }))
           .sort((a, b) => {
+            const ts_a = a.tournamentStats || {};
+            const ts_b = b.tournamentStats || {};
+            const pts_a = ts_a.points || 0;
+            const pts_b = ts_b.points || 0;
+            // Primary sort: tournament points (descending)
+            if (pts_a !== pts_b) return pts_b - pts_a;
+            // Fallback: BB/100
             const stats_a = a.stats || {};
             const stats_b = b.stats || {};
             const BIG_BLIND = 80;
@@ -4532,9 +4840,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             const profitB = (stats_b.totalChipsWon || 0) - (stats_b.totalChipsLost || 0);
             const bb100A = hpA > 0 ? (profitA / hpA) / BIG_BLIND * 100 : -Infinity;
             const bb100B = hpB > 0 ? (profitB / hpB) / BIG_BLIND * 100 : -Infinity;
-            // Provisional players (< 10 hands) sort to bottom
-            if (hpA < 10 && hpB >= 10) return 1;
-            if (hpB < 10 && hpA >= 10) return -1;
             return bb100B - bb100A;
           });
         const BIG_BLIND = 80;
@@ -4545,10 +4850,19 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const isHumanLb = !!seatUser;
           const lbDisplayName = isHumanLb ? seatUser : (e.displayName || e.name);
           const stats = seatData[e.name]?.stats || e.stats || {};
+          const ts = e.tournamentStats || {};
           const handsPlayed = stats.handsPlayed || e.gamesPlayed || 0;
           const handsWon = stats.handsWon || e.wins || 0;
           const winPct = handsPlayed > 0 ? ((handsWon / handsPlayed) * 100).toFixed(1) + '%' : '-';
-          const isProvisional = handsPlayed < 10;
+
+          // Tournament stats
+          const tPoints = ts.points || 0;
+          const tTournaments = ts.tournaments || 0;
+          const tWins = ts.wins || 0;
+          const tAvgPlace = tTournaments > 0 ? (ts.totalPlace || 0) / tTournaments : 0;
+          const tAvgPlaceDisplay = tTournaments > 0 ? tAvgPlace.toFixed(1) : '-';
+          const tBest = ts.bestPlace || '-';
+          const tWinPct = tTournaments > 0 ? ((tWins / tTournaments) * 100).toFixed(0) + '%' : '-';
 
           // Chip profit from totalChipsWon/Lost
           const chipProfit = (stats.totalChipsWon || 0) - (stats.totalChipsLost || 0);
@@ -4560,8 +4874,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
           // BB/100
           const bb100Raw = handsPlayed > 0 ? (chipProfit / handsPlayed) / BIG_BLIND * 100 : 0;
-          const bb100Display = isProvisional ? '\u2014' : bb100Raw.toFixed(1);
-          const bb100Color = isProvisional ? 'var(--text-muted)' : (bb100Raw > 0 ? '#4a6' : bb100Raw < 0 ? '#a44' : 'var(--text-muted)');
 
           // Aggression factor
           const calls = stats.calls || 0;
@@ -4585,31 +4897,32 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const totalBluffs = bluffsWon + bluffsCaught;
           const bluffSuccessRate = totalBluffs > 0 ? ((bluffsWon / totalBluffs) * 100).toFixed(0) + '%' : '-';
 
-          const mutedClass = isProvisional ? ' style="color:var(--text-muted)"' : '';
+          const humanBadge = isHumanLb ? ' <span class="human-badge">HUMAN</span>' : '';
 
           return `
-            <tr class="${rowClass}"${mutedClass} onclick="toggleLeaderboardDetail('lb-detail-${i}')">
+            <tr class="${rowClass}" onclick="toggleLeaderboardDetail('lb-detail-${i}')">
               <td class="rank">${i + 1}</td>
-              <td>${esc(lbDisplayName)}${e.atTable ? ' <span style="color:var(--green);font-size:9px">\u25CF playing</span>' : ''}</td>
-              <td>${handsPlayed}</td>
-              <td style="color:${bb100Color};font-weight:600">${bb100Display}</td>
-              <td class="winrate">${winPct}</td>
-              <td>${sdWinPct}</td>
-              <td>${af}</td>
+              <td>${esc(lbDisplayName)}${humanBadge}${e.atTable ? ' <span style="color:var(--green);font-size:9px">\u25CF</span>' : ''}</td>
+              <td>${tTournaments}</td>
+              <td style="color:#f0d060;font-weight:700">${tPoints}</td>
+              <td>${tAvgPlaceDisplay}</td>
+              <td>${tBest}</td>
+              <td class="winrate">${tWinPct}</td>
             </tr>
             <tr class="leaderboard-detail" id="lb-detail-${i}">
               <td colspan="7">
                 <div class="detail-grid">
-                  <div class="detail-item"><span class="detail-label">W/L:</span> <span class="detail-value">${handsWon}/${handsPlayed - handsWon}</span></div>
+                  <div class="detail-item"><span class="detail-label">T Wins:</span> <span class="detail-value">${tWins}</span></div>
+                  <div class="detail-item"><span class="detail-label">Hands:</span> <span class="detail-value">${handsPlayed}</span></div>
+                  <div class="detail-item"><span class="detail-label">Hand Win%:</span> <span class="detail-value">${winPct}</span></div>
+                  <div class="detail-item"><span class="detail-label">BB/100:</span> <span class="detail-value" style="color:${bb100Raw > 0 ? '#4a6' : bb100Raw < 0 ? '#a44' : 'var(--text-muted)'}">${handsPlayed > 0 ? bb100Raw.toFixed(1) : '-'}</span></div>
                   <div class="detail-item"><span class="detail-label">VPIP:</span> <span class="detail-value">${vpip}</span></div>
+                  <div class="detail-item"><span class="detail-label">AF:</span> <span class="detail-value">${af}</span></div>
                   <div class="detail-item"><span class="detail-label">Chip P/L:</span> <span class="detail-value" style="color:${chipProfit >= 0 ? '#4a6' : '#a44'}">${chipProfit >= 0 ? '+' : ''}${chipProfit.toLocaleString()}</span></div>
-                  <div class="detail-item"><span class="detail-label">Folds:</span> <span class="detail-value">${folds}</span></div>
-                  <div class="detail-item"><span class="detail-label">Calls:</span> <span class="detail-value">${calls}</span></div>
-                  <div class="detail-item"><span class="detail-label">Raises:</span> <span class="detail-value">${raises}</span></div>
-                  <div class="detail-item"><span class="detail-label">Checks:</span> <span class="detail-value">${checks}</span></div>
+                  <div class="detail-item"><span class="detail-label">W$SD:</span> <span class="detail-value">${sdWinPct}</span></div>
+                  <div class="detail-item"><span class="detail-label">Showdowns:</span> <span class="detail-value">${showdownsReached}</span></div>
                   <div class="detail-item"><span class="detail-label">All-ins:</span> <span class="detail-value">${allIns}</span></div>
                   <div class="detail-item"><span class="detail-label">Biggest pot:</span> <span class="detail-value">${biggestPot}</span></div>
-                  <div class="detail-item"><span class="detail-label">Showdowns:</span> <span class="detail-value">${showdownsReached} (won ${sdWinPct})</span></div>
                   <div class="detail-item"><span class="detail-label">Streak:</span> <span class="detail-value">${streakCurrent > 0 ? '\uD83D\uDD25 ' + streakCurrent + ' wins' : lossStreakCurrent > 0 ? '\u2744\uFE0F ' + lossStreakCurrent + ' losses' : '0'} / ${streakBest} best</span></div>
                   ${totalBluffs > 0 ? `<div class="detail-item"><span class="detail-label">Bluffs:</span> <span class="bluff-success-rate">${bluffSuccessRate} (${bluffsWon}/${totalBluffs})</span></div>` : ''}
                 </div>
@@ -4620,7 +4933,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         leaderboardEl.innerHTML = `
           <h2>Leaderboard${state.gamesPlayed ? ' \u00b7 Game ' + state.gamesPlayed : ''}</h2>
           <table class="leaderboard-table">
-            <tr><th class="rank">#</th><th>Player</th><th>Hands</th><th>BB/100</th><th>Win%</th><th>W$SD</th><th>AF</th></tr>
+            <tr><th class="rank">#</th><th>Player</th><th>Tournaments</th><th>Points</th><th>Avg Place</th><th>Best</th><th>Win%</th></tr>
             ${rows}
           </table>
         `;
@@ -5242,6 +5555,43 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         return;
       }
 
+      // --- Tournament SSE Events ---
+      if (data.type === 'tournament_lobby') {
+        tournamentState.id = data.tournamentId || tournamentState.id;
+        tournamentState.phase = 'lobby';
+        tournamentState.seatsOpen = data.seatsOpen != null ? data.seatsOpen : (data.maxPlayers || 6) - (data.playerCount || 0);
+        tournamentState.totalPlayers = data.maxPlayers || 6;
+        startTournamentCountdown(data.countdown || data.startsIn || 60);
+        updateTournamentBanner();
+        updateJoinBarForTournament();
+        return;
+      }
+
+      if (data.type === 'tournament_update') {
+        tournamentState.id = data.tournamentId || tournamentState.id;
+        tournamentState.phase = 'playing';
+        tournamentState.remaining = data.remaining != null ? data.remaining : tournamentState.remaining;
+        tournamentState.totalPlayers = data.totalPlayers || tournamentState.totalPlayers;
+        tournamentState.blindLevel = data.blindLevel || tournamentState.blindLevel;
+        tournamentState.blinds = data.blinds || tournamentState.blinds;
+        updateTournamentBanner();
+        updateJoinBarForTournament();
+        return;
+      }
+
+      if (data.type === 'tournament_results') {
+        tournamentState.id = data.tournamentId || tournamentState.id;
+        tournamentState.phase = 'results';
+        tournamentState.results = data.placements || data.results || [];
+        tournamentState.nextIn = data.nextIn || 30;
+        startTournamentNextCountdown(tournamentState.nextIn);
+        updateTournamentBanner();
+        updateJoinBarForTournament();
+        showTournamentResults(data);
+        fetchLeaderboard();
+        return;
+      }
+
       if (data.type === 'seat_rotated') {
         const botName = data.botName || 'A player';
         const displayName = botDisplayName(botName);
@@ -5332,6 +5682,203 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }, durationMs);
     }
 
+    // --- Tournament State ---
+    const tournamentState = {
+      id: null,
+      phase: null,       // 'lobby' | 'playing' | 'results' | null
+      countdown: 0,
+      remaining: 0,
+      totalPlayers: 0,
+      blindLevel: 1,
+      blinds: { small: 10, big: 20 },
+      results: null,
+      nextIn: 0,
+      seatsOpen: 0,
+    };
+    let tournamentCountdownTimer = null;
+    let tournamentResultsDismissTimer = null;
+
+    function updateTournamentBanner() {
+      const banner = document.getElementById('tournament-banner');
+      const textEl = document.getElementById('tournament-banner-text');
+      if (!tournamentState.phase) {
+        banner.style.display = 'none';
+        return;
+      }
+      banner.style.display = '';
+      banner.className = 'tournament-banner phase-' + tournamentState.phase;
+      const tid = tournamentState.id ? '#' + tournamentState.id : '';
+
+      if (tournamentState.phase === 'lobby') {
+        const seats = tournamentState.seatsOpen;
+        const seatsText = seats > 0 ? seats + ' seat' + (seats !== 1 ? 's' : '') + ' open' : 'Full — queued for next';
+        textEl.innerHTML = 'Tournament ' + tid + ' starting in <span class="tb-countdown">' +
+          tournamentState.countdown + 's</span> <span class="tb-sep">—</span> ' + seatsText;
+      } else if (tournamentState.phase === 'playing') {
+        textEl.innerHTML = 'Tournament ' + tid +
+          ' <span class="tb-sep">—</span> ' + tournamentState.remaining + '/' + tournamentState.totalPlayers + ' remaining' +
+          ' <span class="tb-sep">—</span> Blinds ' + tournamentState.blinds.small + '/' + tournamentState.blinds.big +
+          ' <span class="tb-sep">—</span> Level ' + tournamentState.blindLevel;
+      } else if (tournamentState.phase === 'results') {
+        const winner = tournamentState.results?.[0]?.name || 'Unknown';
+        textEl.innerHTML = 'Tournament ' + tid + ' Complete <span class="tb-sep">—</span> Winner: ' +
+          escapeHtml(winner) + ' <span class="tb-sep">—</span> Next in <span class="tb-countdown">' +
+          tournamentState.nextIn + 's</span>';
+      }
+    }
+
+    function startTournamentCountdown(seconds) {
+      tournamentState.countdown = seconds;
+      clearInterval(tournamentCountdownTimer);
+      tournamentCountdownTimer = setInterval(() => {
+        tournamentState.countdown--;
+        if (tournamentState.countdown <= 0) {
+          clearInterval(tournamentCountdownTimer);
+          tournamentState.countdown = 0;
+        }
+        updateTournamentBanner();
+      }, 1000);
+    }
+
+    function startTournamentNextCountdown(seconds) {
+      tournamentState.nextIn = seconds;
+      clearInterval(tournamentCountdownTimer);
+      tournamentCountdownTimer = setInterval(() => {
+        tournamentState.nextIn--;
+        if (tournamentState.nextIn <= 0) {
+          clearInterval(tournamentCountdownTimer);
+          tournamentState.nextIn = 0;
+        }
+        updateTournamentBanner();
+        // Also update the results overlay countdown
+        const nextEl = document.getElementById('tournament-results-next');
+        if (nextEl && tournamentState.phase === 'results') {
+          nextEl.textContent = tournamentState.nextIn > 0
+            ? 'Next tournament in ' + tournamentState.nextIn + 's...'
+            : 'Next tournament starting...';
+        }
+      }, 1000);
+    }
+
+    function showTournamentResults(data) {
+      const overlay = document.getElementById('tournament-results-overlay');
+      const titleEl = document.getElementById('tournament-results-title');
+      const bodyEl = document.getElementById('tournament-results-body');
+      const nextEl = document.getElementById('tournament-results-next');
+
+      const tid = data.tournamentId ? '#' + data.tournamentId : '';
+      titleEl.textContent = 'Tournament ' + tid + ' Complete';
+
+      const placements = data.placements || data.results || [];
+      bodyEl.innerHTML = placements.map((p, i) => {
+        const placeClass = i === 0 ? 'winner place-1' : (i === 1 ? 'place-2' : (i === 2 ? 'place-3' : ''));
+        return '<tr class="' + placeClass + '">' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td>' + escapeHtml(p.name || p.displayName || 'Unknown') + '</td>' +
+          '<td>' + (p.points || 0) + '</td>' +
+          '</tr>';
+      }).join('');
+
+      nextEl.textContent = data.nextIn > 0
+        ? 'Next tournament in ' + data.nextIn + 's...'
+        : '';
+
+      overlay.classList.add('open');
+
+      // Auto-dismiss after 25s
+      clearTimeout(tournamentResultsDismissTimer);
+      tournamentResultsDismissTimer = setTimeout(() => {
+        dismissTournamentResults();
+      }, 25000);
+    }
+
+    function dismissTournamentResults() {
+      document.getElementById('tournament-results-overlay').classList.remove('open');
+      clearTimeout(tournamentResultsDismissTimer);
+    }
+
+    // --- Strategies Browser ---
+    function toggleStrategies() {
+      const overlay = document.getElementById('strategies-overlay');
+      overlay.classList.toggle('open');
+      if (overlay.classList.contains('open')) fetchStrategies();
+    }
+
+    async function fetchStrategies() {
+      const listEl = document.getElementById('strategy-list');
+      listEl.innerHTML = '<div style="color:var(--text-muted);font-style:italic;text-align:center;padding:20px 0">Loading strategies...</div>';
+      try {
+        const res = await fetch(apiBase + '/strategies', { credentials: 'include' });
+        if (!res.ok) {
+          listEl.innerHTML = '<div style="color:var(--text-muted);font-style:italic;text-align:center;padding:20px 0">Strategies not available yet.</div>';
+          return;
+        }
+        const data = await res.json();
+        const strategies = data.strategies || data || [];
+        if (!strategies.length) {
+          listEl.innerHTML = '<div style="color:var(--text-muted);font-style:italic;text-align:center;padding:20px 0">No strategies in the pool yet.</div>';
+          return;
+        }
+        listEl.innerHTML = strategies.map((s, i) => {
+          const wins = s.wins || 0;
+          const tournaments = s.tournaments || 0;
+          const points = s.points || 0;
+          const gen = s.generation != null ? s.generation : '?';
+          const lineage = s.lineage || (s.parents ? 'Evolved from ' + s.parents.join(' x ') : (s.author ? 'Community submission by ' + escapeHtml(s.author) : ''));
+          const text = s.strategy || s.text || '';
+          const isWinner = wins > 0 && i === 0;
+          return '<div class="strategy-card' + (isWinner ? ' winner-card' : '') + '">' +
+            '<div class="strategy-name">' + escapeHtml(s.name || s.botName || 'Bot ' + (i + 1)) + '</div>' +
+            '<div class="strategy-meta">Gen ' + gen + ' — ' + tournaments + ' tournaments — ' + wins + ' wins — ' + points + ' pts</div>' +
+            (lineage ? '<div class="strategy-lineage">' + escapeHtml(lineage) + '</div>' : '') +
+            '<div class="strategy-text" id="strat-text-' + i + '" onclick="toggleStrategyText(' + i + ')">' + escapeHtml(text) + '</div>' +
+            (text.length > 100 ? '<div class="strategy-text-toggle" onclick="toggleStrategyText(' + i + ')">show more</div>' : '') +
+            '</div>';
+        }).join('');
+      } catch (e) {
+        listEl.innerHTML = '<div style="color:var(--text-muted);font-style:italic;text-align:center;padding:20px 0">Failed to load strategies.</div>';
+      }
+    }
+
+    function toggleStrategyText(idx) {
+      const el = document.getElementById('strat-text-' + idx);
+      if (!el) return;
+      el.classList.toggle('expanded');
+      const toggle = el.nextElementSibling;
+      if (toggle && toggle.classList.contains('strategy-text-toggle')) {
+        toggle.textContent = el.classList.contains('expanded') ? 'show less' : 'show more';
+      }
+    }
+
+    // Update join bar for tournament lobby
+    function updateJoinBarForTournament() {
+      const joinBar = document.getElementById('join-bar');
+      const formEl = document.getElementById('join-bar-form');
+      const labelEl = formEl?.querySelector('.join-bar-label');
+      if (tournamentState.phase === 'lobby') {
+        joinBar.classList.add('tournament-lobby');
+        if (labelEl) {
+          const tid = tournamentState.id ? '#' + tournamentState.id : '';
+          const seats = tournamentState.seatsOpen;
+          const seatsText = seats > 0 ? seats + ' seat' + (seats !== 1 ? 's' : '') + ' open' : 'Full — queued for next';
+          labelEl.textContent = 'join tournament';
+          // Add or update seats info
+          let seatsInfo = formEl.querySelector('.tournament-seats-info');
+          if (!seatsInfo) {
+            seatsInfo = document.createElement('span');
+            seatsInfo.className = 'tournament-seats-info';
+            formEl.appendChild(seatsInfo);
+          }
+          seatsInfo.textContent = seatsText;
+        }
+      } else {
+        joinBar.classList.remove('tournament-lobby');
+        if (labelEl) labelEl.textContent = 'join game';
+        const seatsInfo = formEl?.querySelector('.tournament-seats-info');
+        if (seatsInfo) seatsInfo.remove();
+      }
+    }
+
     // --- My Hands (authenticated users) ---
 
     // Initialize
@@ -5349,6 +5896,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
   </script>
 
   <div class="fab-group">
+    <div class="fab-pill" onclick="toggleStrategies()">/strategies</div>
     <div class="fab-pill" onclick="toggleLeaderboard()">/leaderboard</div>
     <div class="fab-pill" onclick="showAbout()">/about</div>
   </div>

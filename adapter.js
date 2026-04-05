@@ -353,7 +353,10 @@ function emitSay(bot, params, state) {
 export const tools = {
   poker_check(bot, params, state) {
     const active = getActivePlayer(state, bot);
-    if (!active) return null;
+    if (!active) {
+      console.error(`[poker] CHECK rejected for ${bot.name}: not active player or already acted`);
+      return null;
+    }
     const { hand, player } = active;
     // If facing a bet, treat check as a call (LLMs often pick check when they mean call)
     if (player.bet < hand.currentBet) {
