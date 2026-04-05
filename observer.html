@@ -3097,8 +3097,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // Community card reveal animation state
     let prevCommunityLength = 0;        // track how many cards were shown last frame
     let cardRevealAnim = null;          // { startTime, newCardStartIdx, totalCards }
-    const CARD_REVEAL_DURATION = 600;   // ms for the full flip animation
-    const CARD_REVEAL_STAGGER = 120;    // ms stagger between cards on flop
+    const CARD_REVEAL_DURATION = 800;   // ms for the full flip animation
+    const CARD_REVEAL_STAGGER = 200;    // ms stagger between cards
 
     // Card dealing animation state (hole cards from deck to players)
     let dealAnim = null;                // { startTime, playerCount, seatPositions: [{x,y}] }
@@ -3667,9 +3667,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           } else if (elapsed < CARD_REVEAL_DURATION) {
             progress = elapsed / CARD_REVEAL_DURATION;
           }
-          // Slide up from below table during first half
-          if (progress < 0.5) {
-            slideOffsetY = Math.floor((1 - progress * 2) * 12);
+          // Slide up from below table with bounce
+          if (progress < 0.4) {
+            slideOffsetY = Math.floor((1 - progress / 0.4) * 25);
+          } else if (progress < 0.55) {
+            // Small bounce up
+            slideOffsetY = Math.floor(-3 * Math.sin((progress - 0.4) / 0.15 * Math.PI));
           }
           // Clear finished animation
           if (i === anim.totalCards - 1 && progress >= 1) {
@@ -3738,11 +3741,20 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           }
         }
 
-        // Subtle glow on newly revealed card
-        if (isFlipping && progress > 0.5) {
-          const glowAlpha = (1 - progress) * 0.4;
+        // Shadow during flip
+        if (isFlipping) {
+          const shadowAlpha = (1 - progress) * 0.3;
+          ctx.globalAlpha = shadowAlpha;
+          pxRect(ctx, cx + offsetX + 2, drawY + 3, scaledW, cardH, '#000');
+          ctx.globalAlpha = 1.0;
+        }
+        // Bright glow on card face reveal
+        if (isFlipping && progress > 0.45) {
+          const glowT = (progress - 0.45) / 0.55;
+          const glowAlpha = (1 - glowT) * 0.6;
           ctx.globalAlpha = glowAlpha;
-          pxRect(ctx, cx + offsetX - 2, drawY - 2, scaledW + 4, cardH + 4, '#FFD700');
+          const glowSize = Math.floor(4 + 6 * (1 - glowT));
+          pxRect(ctx, cx + offsetX - glowSize, drawY - glowSize, scaledW + glowSize * 2, cardH + glowSize * 2, '#FFD700');
           ctx.globalAlpha = 1.0;
         }
       });
