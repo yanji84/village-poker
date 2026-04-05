@@ -306,8 +306,6 @@
     .leaderboard-table .expandable { cursor: pointer; }
     .leaderboard-table .expandable:hover td { background: rgba(255,255,255,0.02); }
     .leaderboard-table .viewer-row td { background: rgba(68,170,255,0.04); color: var(--text-primary); }
-    .leaderboard-table .username-col { color: var(--text-secondary); font-size: 10px; font-style: italic; }
-    .leaderboard-table .winrate { color: var(--text-secondary); }
     .leaderboard-detail { display: none; }
     .leaderboard-detail.open { display: table-row; }
     .leaderboard-detail td {
@@ -324,10 +322,6 @@
     .leaderboard-detail .detail-item { display: flex; gap: 4px; }
     .leaderboard-detail .detail-label { color: var(--text-muted); }
     .leaderboard-detail .detail-value { color: var(--text-secondary); font-weight: 600; }
-
-    @media (max-width: 700px) {
-      .leaderboard-table .hide-mobile { display: none; }
-    }
 
     /* --- Pixel Poker Canvas --- */
     #poker-canvas {
@@ -524,7 +518,6 @@
     .tb-past-title { color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
     .tb-past-entry { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 11px; }
     .tb-past-entry:last-child { border-bottom: none; }
-    .tb-place { color: var(--text-muted); display: inline-block; width: 20px; }
     .tb-1st { color: #e8c840; font-weight: 700; }
     .tb-2nd { color: #c0c0c0; }
     .tb-3rd { color: #cd7f32; }
@@ -663,14 +656,6 @@
       user-select: none;
     }
     .prompt-example summary:hover { color: #6bf; }
-    .prompt-example-content {
-      background: #0a0a0a;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 10px 12px;
-      margin-top: 6px;
-      margin-bottom: 8px;
-    }
     .prompt-example-desc {
       font-size: 11px;
       color: var(--text-secondary);
@@ -694,7 +679,6 @@
       overflow-y: auto;
     }
     .prompt-example-code b { color: #bbb; font-weight: 600; }
-    .prompt-hl { color: var(--accent); font-weight: 600; }
 
     /* --- Char counter --- */
     .char-counter {
@@ -1150,70 +1134,6 @@
       font-weight: 600;
     }
 
-    /* --- Hand Strength Label (showdown) --- */
-    .hand-strength-label {
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
-      color: #f0d060;
-      background: rgba(240, 208, 96, 0.08);
-      border: 1px solid rgba(240, 208, 96, 0.25);
-      border-radius: 4px;
-      padding: 2px 8px;
-      margin-top: 4px;
-      display: inline-block;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      animation: hand-strength-appear 0.5s ease-out;
-    }
-    @keyframes hand-strength-appear {
-      0% { opacity: 0; transform: scale(0.8); }
-      60% { opacity: 1; transform: scale(1.05); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    .elimination-toast {
-      position: fixed;
-      top: 140px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-20px);
-      z-index: 9998;
-      background: linear-gradient(135deg, #1a0808 0%, #110404 100%);
-      border: 1px solid #cc000066;
-      border-radius: 8px;
-      padding: 14px 28px;
-      font-family: var(--mono);
-      text-align: center;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 40px rgba(204,0,0,0.12);
-      max-width: 500px;
-    }
-    .elimination-toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-    .elimination-toast.fade-out {
-      opacity: 0;
-      transform: translateX(-50%) translateY(-10px);
-    }
-    .elimination-toast .elim-icon {
-      font-size: 22px;
-      margin-bottom: 4px;
-    }
-    .elimination-toast .elim-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: #cc0000;
-      margin-bottom: 2px;
-      letter-spacing: 0.5px;
-    }
-    .elimination-toast .elim-detail {
-      font-size: 12px;
-      color: #888;
-    }
-
     /* --- Intro Banner --- */
     .intro-banner {
       position: fixed;
@@ -1333,19 +1253,6 @@
         max-height: 50vh;
         padding: 12px;
       }
-      .reasoning-scene {
-        font-size: 10px;
-        padding: 8px 10px;
-      }
-      .reasoning-text {
-        font-size: 11px;
-        padding: 10px 12px;
-      }
-      .reasoning-action {
-        font-size: 12px;
-        padding: 6px 10px;
-      }
-
       /* Leaderboard: compact */
       .leaderboard {
         padding: 10px 12px;
@@ -1372,13 +1279,6 @@
       }
       .hand-result-toast .toast-detail {
         font-size: 11px;
-      }
-
-      /* Elimination toast: fit on mobile */
-      .elimination-toast {
-        max-width: calc(100vw - 32px);
-        padding: 10px 16px;
-        top: 120px;
       }
 
       /* Toast container: position for mobile */
@@ -1709,9 +1609,6 @@
 
   <!-- Hand Result Toast -->
   <div class="hand-result-toast" id="hand-result-toast"></div>
-
-  <!-- Elimination Toast -->
-  <div class="elimination-toast" id="elimination-toast"></div>
 
   <!-- Top Header -->
   <div class="top-bar">
@@ -2962,7 +2859,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     let lastToastResult = null;
     let toastTimeout = null;
-    let eliminationToastTimeout = null;
     let _prevBets = {};
 
 
@@ -3011,107 +2907,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         toastEl.classList.add('fade-out');
         toastEl.classList.remove('visible');
       }, 3000);
-    }
-
-    // --- Player Elimination ---
-
-    function showEliminationToast(playerName, handsPlayed, handsWon) {
-      const toastEl = document.getElementById('elimination-toast');
-      if (!toastEl) return;
-
-      if (eliminationToastTimeout) {
-        clearTimeout(eliminationToastTimeout);
-        eliminationToastTimeout = null;
-      }
-
-      const remainingCount = state.bots.filter(b => {
-        const c = state.chips[b.name];
-        return typeof c === 'number' && c > 0;
-      }).length;
-
-      toastEl.innerHTML = `
-        <div class="elim-icon">&#128128;</div>
-        <div class="elim-name">${escapeHtml(playerName)} ELIMINATED</div>
-        <div class="elim-detail">
-          ${handsPlayed > 0 ? `${handsWon}/${handsPlayed} hands won` : 'No hands played'}
-          &middot; ${remainingCount} player${remainingCount !== 1 ? 's' : ''} remain
-        </div>
-      `;
-
-      toastEl.classList.remove('fade-out');
-      void toastEl.offsetWidth;
-      toastEl.classList.add('visible');
-
-      eliminationToastTimeout = setTimeout(() => {
-        toastEl.classList.add('fade-out');
-        toastEl.classList.remove('visible');
-      }, 4000);
-    }
-
-    function drawEliminationEffect(ctx, px, py, charScale, startTime) {
-      const elapsed = (Date.now() - startTime) / 1000;
-
-      // Phase 1 (0-0.5s): Red flash ring expanding outward
-      if (elapsed < 0.5) {
-        const progress = elapsed / 0.5;
-        const ringRadius = 8 * charScale * progress;
-        ctx.globalAlpha = 1.0 - progress;
-        ctx.strokeStyle = '#cc0000';
-        ctx.lineWidth = 2 * charScale;
-        ctx.beginPath();
-        ctx.arc(px, py, ringRadius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = 1.0;
-      }
-
-      // Phase 2 (0.2s+): Red X drawn over the character, fades in
-      if (elapsed > 0.2) {
-        const xProgress = Math.min(1, (elapsed - 0.2) / 0.3);
-        const xSize = 7 * charScale;
-        ctx.globalAlpha = 0.7 * xProgress;
-        ctx.strokeStyle = '#cc0000';
-        ctx.lineWidth = 2.5 * charScale;
-        ctx.lineCap = 'round';
-
-        // First stroke of the X
-        if (xProgress > 0) {
-          const p1 = Math.min(1, xProgress * 2);
-          ctx.beginPath();
-          ctx.moveTo(px - xSize, py - xSize);
-          ctx.lineTo(px - xSize + 2 * xSize * p1, py - xSize + 2 * xSize * p1);
-          ctx.stroke();
-        }
-        // Second stroke
-        if (xProgress > 0.5) {
-          const p2 = Math.min(1, (xProgress - 0.5) * 2);
-          ctx.beginPath();
-          ctx.moveTo(px + xSize, py - xSize);
-          ctx.lineTo(px + xSize - 2 * xSize * p2, py - xSize + 2 * xSize * p2);
-          ctx.stroke();
-        }
-        ctx.globalAlpha = 1.0;
-        ctx.lineCap = 'butt';
-      }
-
-      // Phase 3 (1s+): Persistent subtle red tint and "OUT" text
-      if (elapsed > 1.0) {
-        const fadeIn = Math.min(1, (elapsed - 1.0) / 0.5);
-        // Semi-transparent red overlay
-        ctx.globalAlpha = 0.15 * fadeIn;
-        ctx.fillStyle = '#cc0000';
-        ctx.beginPath();
-        ctx.arc(px, py, 10 * charScale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1.0;
-
-        // "OUT" label
-        ctx.globalAlpha = 0.8 * fadeIn;
-        ctx.font = `bold ${Math.floor(7 * charScale)}px monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#cc0000';
-        ctx.fillText('OUT', px, py - 14 * charScale);
-        ctx.globalAlpha = 1.0;
-      }
     }
 
     // --- Pixel Poker Canvas (pixel-agents style) ---
@@ -3591,30 +3386,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           ctx.globalAlpha = 1.0;
         }
       });
-    }
-
-    // --- Speech bubble: pixelated rectangle, no curves ---
-    function drawSpeechBubble(ctx, x, y, text) {
-      ctx.font = f(15) + ' monospace';
-      const maxLen = 20;
-      const trimmed = text.length > maxLen ? text.slice(0, maxLen - 2) + '..' : text;
-      const tw = ctx.measureText(trimmed).width;
-      const bw = Math.floor(tw + 10), bh = 14;
-      const bx = Math.floor(x - bw / 2), by = Math.floor(y - bh - 6);
-
-      // Border
-      pxRect(ctx, bx - 1, by - 1, bw + 2, bh + 2, '#333');
-      // Fill
-      pxRect(ctx, bx, by, bw, bh, '#F5F5F5');
-
-      // Pointer (small rectangle, not triangle)
-      pxRect(ctx, Math.floor(x - 2), by + bh, 4, 3, '#333');
-      pxRect(ctx, Math.floor(x - 1), by + bh, 2, 2, '#F5F5F5');
-
-      // Text
-      ctx.fillStyle = '#222';
-      ctx.textAlign = 'center';
-      ctx.fillText(trimmed, x, by + 10);
     }
 
     // --- Pot display ---
