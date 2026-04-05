@@ -638,9 +638,9 @@ export function onLeave(state, botName, displayName) {
   const chips = state.buyIns[botName] || 0;
 
   // If in a hand, fold them — but skip if hand is already resolved, no hand,
-  // or player is all-in (chips === 0: they've committed everything and stay eligible for the pot)
+  // or player is all-in (chips <= 0 or undefined: they've committed everything and stay eligible for the pot)
   const playerInHand = state.hand?.players?.[botName];
-  if (playerInHand && !playerInHand.folded && !state.hand.result && playerInHand.chips > 0) {
+  if (playerInHand && !playerInHand.folded && !state.hand.result && (playerInHand.chips ?? 0) > 0) {
     playerInHand.folded = true;
     if (state.hand.activePlayer === botName) {
       try {

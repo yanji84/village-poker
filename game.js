@@ -333,7 +333,11 @@ export function resolveHand(state, activePlayers) {
         cards: hand.players[s.botName].cards,
       }));
     if (contenders.length === 0) {
-      hand.result = { winners: [], handName: 'No contest', evaluations: [] };
+      // Fallback: award pot to first active player to avoid chip leak
+      const fallbackWinner = activePlayers[0].botName;
+      hand.players[fallbackWinner].chips += hand.pot;
+      state.buyIns[fallbackWinner] = hand.players[fallbackWinner].chips;
+      hand.result = { winners: [fallbackWinner], handName: 'No contest', evaluations: [] };
       hand.activePlayer = null;
       return;
     }
