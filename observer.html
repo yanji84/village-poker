@@ -1370,6 +1370,16 @@
       border-bottom-color: #2a3a5a;
       color: var(--accent);
     }
+    .tournament-banner.phase-quarterfinal {
+      background: linear-gradient(135deg, #0a0e1a 0%, #0e1420 100%);
+      border-bottom-color: #2a3a5a;
+      color: var(--accent);
+    }
+    .tournament-banner.phase-final {
+      background: linear-gradient(135deg, #1a0a1a 0%, #200e20 100%);
+      border-bottom-color: #5a2a5a;
+      color: #e080e0;
+    }
     .tournament-banner.phase-results {
       background: linear-gradient(135deg, #1a1a0a 0%, #201e0e 100%);
       border-bottom-color: #5a5a2a;
@@ -1392,6 +1402,19 @@
       color: var(--text-muted);
       opacity: 0.4;
     }
+
+    /* --- Bracket Visual --- */
+    .bracket-visual { font-family: var(--mono); font-size: 11px; }
+    .bracket-match { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .bracket-match.active { background: rgba(40,160,40,0.06); border-left: 2px solid var(--green); padding-left: 6px; }
+    .bracket-match.complete .bracket-winner { color: #e8c840; font-weight: 700; }
+    .bracket-final { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+    .bracket-match-label { color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .bracket-players { color: var(--text-primary); }
+    .bracket-arrow { color: var(--text-muted); margin: 0 4px; }
+    .bracket-champion { color: #e8c840; font-weight: 700; font-size: 13px; margin-top: 6px; }
+    .bracket-compact { font-size: 10px; color: var(--text-secondary); }
+    .bracket-compact .bracket-winner { color: #e8c840; font-weight: 600; }
 
     /* --- Tournament Results Overlay --- */
     .tournament-results-overlay {
@@ -1951,6 +1974,56 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       } catch (e) {}
     }
 
+    function renderBracketVisual(bracket, isCompact) {
+      if (!bracket || !bracket.matches) return '';
+      let html = '<div class="bracket-visual">';
+      const matches = bracket.matches || [];
+      const currentIdx = bracket.currentMatch || 0;
+      for (let i = 0; i < matches.length; i++) {
+        const m = matches[i];
+        const isActive = !isCompact && !m.winner && i === currentIdx;
+        const isComplete = !!m.winner;
+        const cls = 'bracket-match' + (isActive ? ' active' : '') + (isComplete ? ' complete' : '');
+        const players = (m.players || []).map(p => {
+          const name = typeof p === 'string' ? p : (p.botName || p.displayName || p.name || '?');
+          if (isComplete && name === m.winner) return '<span class="bracket-winner">' + escapeHtml(name) + '</span>';
+          return escapeHtml(name);
+        }).join(' vs ');
+        if (isCompact) {
+          html += '<div class="bracket-match complete"><span class="bracket-match-label">QF-' + (m.id || String.fromCharCode(65 + i)) + ':</span> ' + players;
+          if (m.winner) html += ' <span class="bracket-arrow">&rarr;</span> <span class="bracket-winner">' + escapeHtml(m.winner) + '</span>';
+          html += '</div>';
+        } else {
+          html += '<div class="' + cls + '">';
+          html += '<div class="bracket-match-label">QF-' + (m.id || String.fromCharCode(65 + i)) + '</div>';
+          html += '<div class="bracket-players">' + players + '</div>';
+          if (m.winner) html += '<div><span class="bracket-arrow">&rarr;</span> Winner: <span class="bracket-winner">' + escapeHtml(m.winner) + '</span></div>';
+          html += '</div>';
+        }
+      }
+      // Final
+      const finalists = (bracket.finalists || []).map(p => typeof p === 'string' ? p : (p.botName || p.name || '?'));
+      if (finalists.length > 0 || bracket.champion) {
+        html += '<div class="bracket-final">';
+        html += '<div class="bracket-match-label">FINAL</div>';
+        if (finalists.length > 0) {
+          const finalPlayers = finalists.map(f => {
+            if (bracket.champion && f === bracket.champion) return '<span class="bracket-winner">' + escapeHtml(f) + '</span>';
+            return escapeHtml(f);
+          }).join(' vs ');
+          html += '<div class="bracket-players">' + finalPlayers + '</div>';
+        } else {
+          html += '<div class="bracket-players" style="color:var(--text-muted)">TBD vs TBD vs TBD vs TBD</div>';
+        }
+        if (bracket.champion) {
+          html += '<div class="bracket-champion">CHAMPION: ' + escapeHtml(bracket.champion) + '</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+      return html;
+    }
+
     function renderTournamentBrowser(t) {
       const el = document.getElementById('tournament-browser');
       if (!el || !t) return;
@@ -1971,25 +2044,38 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       }
 
       // Current tournament
-      if (t.phase === 'playing' || t.phase === 'lobby') {
+      const isActive = t.phase === 'lobby' || t.phase === 'quarterfinal' || t.phase === 'final' || t.phase === 'playing';
+      if (isActive) {
         html += '<div class="tb-current">';
-        html += '<div class="tb-current-title">Tournament #' + t.number + (t.phase === 'lobby' ? ' — lobby' : ' — in progress') + '</div>';
-        const active = (t.activePlayers || []).slice().sort((a, b) => (b.chips || 0) - (a.chips || 0));
-        const eliminated = t.placements || [];
-        for (const p of active) {
-          const pct = Math.round((p.chips || 0) / (t.startingChips * (active.length + eliminated.length) || 1) * 100);
-          html += '<div class="tb-player"><span>' + escapeHtml(p.displayName || p.botName) + (p.isHuman ? ' <span class="human-badge">H</span>' : '') + '</span><span class="chips">' + (p.chips || 0) + ' <span style="color:var(--text-muted);font-size:9px">(' + pct + '%)</span></span></div>';
-        }
-        if (eliminated.length > 0) {
-          html += '<div style="font-size:9px;color:var(--text-muted);margin:6px 0 2px;text-transform:uppercase;letter-spacing:1px">Eliminated</div>';
-          for (const p of eliminated) {
-            html += '<div class="tb-player eliminated"><span>' + ordinal(p.position) + ' ' + escapeHtml(p.displayName || p.botName) + '</span></div>';
+        const phaseLabel = t.phase === 'lobby' ? 'lobby' : t.phase === 'quarterfinal' ? 'quarterfinals' : t.phase === 'final' ? 'final' : 'in progress';
+        html += '<div class="tb-current-title">Tournament #' + t.number + ' — ' + phaseLabel + '</div>';
+
+        // Show bracket if available
+        if (t.bracket) {
+          html += renderBracketVisual(t.bracket, false);
+        } else {
+          // Legacy: show active players
+          const active = (t.activePlayers || []).slice().sort((a, b) => (b.chips || 0) - (a.chips || 0));
+          const eliminated = t.placements || [];
+          for (const p of active) {
+            const pct = Math.round((p.chips || 0) / (t.startingChips * (active.length + eliminated.length) || 1) * 100);
+            html += '<div class="tb-player"><span>' + escapeHtml(p.displayName || p.botName) + (p.isHuman ? ' <span class="human-badge">H</span>' : '') + '</span><span class="chips">' + (p.chips || 0) + ' <span style="color:var(--text-muted);font-size:9px">(' + pct + '%)</span></span></div>';
+          }
+          if (eliminated.length > 0) {
+            html += '<div style="font-size:9px;color:var(--text-muted);margin:6px 0 2px;text-transform:uppercase;letter-spacing:1px">Eliminated</div>';
+            for (const p of eliminated) {
+              html += '<div class="tb-player eliminated"><span>' + ordinal(p.position) + ' ' + escapeHtml(p.displayName || p.botName) + '</span></div>';
+            }
           }
         }
         html += '</div>';
       } else if (t.phase === 'results') {
         html += '<div class="tb-current" style="border-color:#5a5a2a;background:rgba(232,200,64,0.04)">';
         html += '<div class="tb-current-title" style="color:#e8c840">Tournament #' + t.number + ' — complete</div>';
+        // Show bracket results if available
+        if (t.bracket) {
+          html += renderBracketVisual(t.bracket, false);
+        }
         (t.placements || []).forEach((p, i) => {
           const cls = i === 0 ? 'tb-1st' : i === 1 ? 'tb-2nd' : i === 2 ? 'tb-3rd' : '';
           html += '<div class="tb-player"><span class="' + cls + '">' + ordinal(p.position) + ' ' + escapeHtml(p.displayName || p.botName) + '</span><span style="color:#e8c840">+' + (p.points || 0) + 'pts</span></div>';
@@ -2005,13 +2091,18 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         [...history].reverse().forEach(h => {
           html += '<div class="tb-past-entry">';
           html += '<span class="th-num">#' + h.number + '</span> ';
-          (h.placements || []).forEach((p, i) => {
-            const cls = i === 0 ? 'tb-1st' : i === 1 ? 'tb-2nd' : i === 2 ? 'tb-3rd' : '';
-            html += '<span class="' + cls + '">' + escapeHtml(p.displayName || p.botName) + '</span> ';
-          });
+          // Show compact bracket if available
+          if (h.bracket) {
+            html += '<div class="bracket-compact">' + renderBracketVisual(h.bracket, true) + '</div>';
+          } else {
+            (h.placements || []).forEach((p, i) => {
+              const cls = i === 0 ? 'tb-1st' : i === 1 ? 'tb-2nd' : i === 2 ? 'tb-3rd' : '';
+              html += '<span class="' + cls + '">' + escapeHtml(p.displayName || p.botName) + '</span> ';
+            });
+          }
           html += '</div>';
         });
-      } else if (t.phase !== 'playing' && t.phase !== 'lobby' && t.phase !== 'results') {
+      } else if (!isActive && t.phase !== 'results') {
         html += '<div style="color:var(--text-muted);font-size:11px">No tournaments completed yet.</div>';
       }
 
@@ -4069,12 +4160,14 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const el = document.getElementById('tournament-history');
       if (!el || !t) return;
       const history = t.history || [];
-      const current = t.phase === 'playing' ? t : null;
+      const isActive = t.phase === 'playing' || t.phase === 'quarterfinal' || t.phase === 'final';
+      const current = isActive ? t : null;
 
       let html = '<h3>Tournaments</h3>';
       if (current) {
+        const phaseLabel = t.phase === 'quarterfinal' ? 'quarterfinals' : t.phase === 'final' ? 'final' : 'in progress';
         const remaining = (t.activePlayers || []).length;
-        html += '<div class="th-current">#' + t.number + ' in progress — ' + remaining + ' remaining</div>';
+        html += '<div class="th-current">#' + t.number + ' ' + phaseLabel + (remaining ? ' — ' + remaining + ' remaining' : '') + '</div>';
       }
       if (history.length === 0 && !current) {
         html += '<div style="color:var(--text-muted);font-size:11px">No tournaments completed yet.</div>';
@@ -4742,8 +4835,9 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       if (data.type === 'tournament_lobby') {
         tournamentState.id = data.tournamentId || tournamentState.id;
         tournamentState.phase = 'lobby';
-        tournamentState.seatsOpen = data.seatsOpen != null ? data.seatsOpen : (data.maxPlayers || 6) - (data.playerCount || 0);
-        tournamentState.totalPlayers = data.maxPlayers || 6;
+        tournamentState.seatsOpen = data.seatsOpen != null ? data.seatsOpen : (data.maxPlayers || 16) - (data.playerCount || 0);
+        tournamentState.totalPlayers = data.maxPlayers || 16;
+        if (data.bracket) tournamentState.bracket = data.bracket;
         startTournamentCountdown(data.countdown || data.startsIn || 60);
         updateTournamentBanner();
         updateJoinBarForTournament();
@@ -4752,13 +4846,48 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (data.type === 'tournament_update') {
         tournamentState.id = data.tournamentId || tournamentState.id;
-        tournamentState.phase = 'playing';
+        tournamentState.phase = data.phase || tournamentState.phase || 'playing';
         tournamentState.remaining = data.remaining != null ? data.remaining : tournamentState.remaining;
         tournamentState.totalPlayers = data.totalPlayers || tournamentState.totalPlayers;
         tournamentState.blindLevel = data.blindLevel || tournamentState.blindLevel;
         tournamentState.blinds = data.blinds || tournamentState.blinds;
+        if (data.bracket) tournamentState.bracket = data.bracket;
         updateTournamentBanner();
         updateJoinBarForTournament();
+        return;
+      }
+
+      if (data.type === 'tournament_bracket') {
+        tournamentState.id = data.tournamentId || tournamentState.id;
+        tournamentState.phase = data.phase || 'quarterfinal';
+        tournamentState.bracket = data.bracket || null;
+        tournamentState.totalPlayers = data.totalPlayers || tournamentState.totalPlayers;
+        updateTournamentBanner();
+        updateJoinBarForTournament();
+        broadcastNotable('Bracket drawn! ' + (data.bracket?.matches?.length || 4) + ' quarterfinal groups');
+        return;
+      }
+
+      if (data.type === 'tournament_match_start') {
+        tournamentState.id = data.tournamentId || tournamentState.id;
+        tournamentState.phase = data.phase || tournamentState.phase;
+        if (data.bracket) tournamentState.bracket = data.bracket;
+        const matchId = data.matchId || '';
+        const players = (data.players || []).map(p => typeof p === 'string' ? p : (p.botName || p.name || '?')).join(', ');
+        tournamentState.remaining = data.remaining != null ? data.remaining : tournamentState.remaining;
+        updateTournamentBanner();
+        broadcastNotable((data.phase === 'final' ? 'FINAL' : 'QF Match ' + matchId) + ' starting: ' + players);
+        return;
+      }
+
+      if (data.type === 'tournament_match_end') {
+        tournamentState.id = data.tournamentId || tournamentState.id;
+        tournamentState.phase = data.phase || tournamentState.phase;
+        if (data.bracket) tournamentState.bracket = data.bracket;
+        const matchId = data.matchId || '';
+        const winner = data.winner || '?';
+        updateTournamentBanner();
+        broadcastNotable((data.phase === 'final' ? 'FINAL' : 'Match ' + matchId) + ' winner: ' + winner);
         return;
       }
 
@@ -4766,6 +4895,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         tournamentState.id = data.tournamentId || tournamentState.id;
         tournamentState.phase = 'results';
         tournamentState.results = data.placements || data.results || [];
+        if (data.bracket) tournamentState.bracket = data.bracket;
         tournamentState.nextIn = data.nextIn || 30;
         startTournamentNextCountdown(tournamentState.nextIn);
         updateTournamentBanner();
@@ -4866,7 +4996,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // --- Tournament State ---
     const tournamentState = {
       id: null,
-      phase: null,       // 'lobby' | 'playing' | 'results' | null
+      phase: null,       // 'lobby' | 'quarterfinal' | 'final' | 'results' | null
       countdown: 0,
       remaining: 0,
       totalPlayers: 0,
@@ -4875,6 +5005,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       results: null,
       nextIn: 0,
       seatsOpen: 0,
+      bracket: null,     // { round, matches, currentMatch, finalists, champion }
     };
     let tournamentCountdownTimer = null;
     let tournamentResultsDismissTimer = null;
@@ -4892,18 +5023,39 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (tournamentState.phase === 'lobby') {
         const seats = tournamentState.seatsOpen;
-        const seatsText = seats > 0 ? seats + ' seat' + (seats !== 1 ? 's' : '') + ' open' : 'Full — queued for next';
-        textEl.innerHTML = 'Tournament ' + tid + ' starting in <span class="tb-countdown">' +
-          tournamentState.countdown + 's</span> <span class="tb-sep">—</span> ' + seatsText;
+        const total = tournamentState.totalPlayers || 16;
+        const groups = tournamentState.bracket?.matches?.length || 4;
+        textEl.innerHTML = 'Bracket Tournament ' + tid +
+          ' <span class="tb-sep">—</span> ' + total + ' bots, ' + groups + ' groups' +
+          ' <span class="tb-sep">—</span> starting in <span class="tb-countdown">' +
+          tournamentState.countdown + 's</span>';
+      } else if (tournamentState.phase === 'quarterfinal') {
+        const b = tournamentState.bracket;
+        if (b && b.matches && b.matches[b.currentMatch]) {
+          const m = b.matches[b.currentMatch];
+          const players = (m.players || []).map(p => escapeHtml(typeof p === 'string' ? p : (p.botName || p.name || '?'))).join(' vs ');
+          const remaining = tournamentState.remaining || '?';
+          textEl.innerHTML = 'QF Match ' + (m.id || '') +
+            ' <span class="tb-sep">—</span> ' + players +
+            ' <span class="tb-sep">—</span> ' + remaining + ' remaining';
+        } else {
+          textEl.innerHTML = 'Quarterfinals ' + tid + ' in progress';
+        }
+      } else if (tournamentState.phase === 'final') {
+        const b = tournamentState.bracket;
+        const finalists = (b?.finalists || []).map(p => escapeHtml(typeof p === 'string' ? p : (p.botName || p.name || '?'))).join(' vs ');
+        textEl.innerHTML = 'FINAL <span class="tb-sep">—</span> ' + (finalists || 'TBD');
       } else if (tournamentState.phase === 'playing') {
+        // Legacy fallback
         textEl.innerHTML = 'Tournament ' + tid +
           ' <span class="tb-sep">—</span> ' + tournamentState.remaining + '/' + tournamentState.totalPlayers + ' remaining' +
           ' <span class="tb-sep">—</span> Blinds ' + tournamentState.blinds.small + '/' + tournamentState.blinds.big +
           ' <span class="tb-sep">—</span> Level ' + tournamentState.blindLevel;
       } else if (tournamentState.phase === 'results') {
-        const winner = tournamentState.results?.[0]?.name || 'Unknown';
-        textEl.innerHTML = 'Tournament ' + tid + ' Complete <span class="tb-sep">—</span> Winner: ' +
-          escapeHtml(winner) + ' <span class="tb-sep">—</span> Next in <span class="tb-countdown">' +
+        const champion = tournamentState.bracket?.champion;
+        const winner = champion || tournamentState.results?.[0]?.name || 'Unknown';
+        textEl.innerHTML = 'Champion: ' + escapeHtml(winner) + '!' +
+          ' <span class="tb-sep">—</span> Next in <span class="tb-countdown">' +
           tournamentState.nextIn + 's</span>';
       }
     }
@@ -4948,7 +5100,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const nextEl = document.getElementById('tournament-results-next');
 
       const tid = data.tournamentId ? '#' + data.tournamentId : '';
-      titleEl.textContent = 'Tournament ' + tid + ' Complete';
+      const champion = data.bracket?.champion;
+      titleEl.textContent = champion
+        ? 'Champion: ' + champion + '!'
+        : 'Tournament ' + tid + ' Complete';
 
       const placements = data.placements || data.results || [];
       bodyEl.innerHTML = placements.map((p, i) => {
@@ -5005,12 +5160,22 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const tournaments = s.tournaments || 0;
           const points = s.points || 0;
           const gen = s.generation != null ? s.generation : '?';
+          // Tier badge
+          const tier = s.tier || (s.isElite ? 'ELITE' : (s.parents ? 'CHILD' : (s.author ? 'COMMUNITY' : '')));
+          let tierBadge = '';
+          if (tier === 'ELITE') tierBadge = '<span style="color:#e8c840;font-weight:700;font-size:10px;letter-spacing:1px">ELITE</span> (Gen ' + gen + ')';
+          else if (tier === 'CHILD' && s.parents) tierBadge = '<span style="color:var(--accent);font-size:10px">CHILD</span> of ' + s.parents.map(p => escapeHtml(p)).join(' × ');
+          else if (tier === 'COMMUNITY' || s.author) tierBadge = '<span style="color:var(--green);font-size:10px">COMMUNITY</span> by ' + escapeHtml(s.author || 'unknown');
+          else tierBadge = 'Gen ' + gen;
+          // Lineage description
           const lineage = s.lineage || (s.parents ? 'Evolved from ' + s.parents.join(' x ') : (s.author ? 'Community submission by ' + escapeHtml(s.author) : ''));
+          // Last placement
+          const lastPlacement = s.lastPlacement ? ' — Last: ' + ordinal(s.lastPlacement) + ' place' : '';
           const text = s.strategy || s.text || '';
           const isWinner = wins > 0 && i === 0;
           return '<div class="strategy-card' + (isWinner ? ' winner-card' : '') + '">' +
             '<div class="strategy-name">' + escapeHtml(s.name || s.botName || 'Bot ' + (i + 1)) + '</div>' +
-            '<div class="strategy-meta">Gen ' + gen + ' — ' + tournaments + ' tournaments — ' + wins + ' wins — ' + points + ' pts</div>' +
+            '<div class="strategy-meta">' + tierBadge + ' — ' + tournaments + ' tournaments — ' + wins + ' wins — ' + points + ' pts' + lastPlacement + '</div>' +
             (lineage ? '<div class="strategy-lineage">' + escapeHtml(lineage) + '</div>' : '') +
             '<div class="strategy-text" id="strat-text-' + i + '" onclick="toggleStrategyText(' + i + ')">' + escapeHtml(text) + '</div>' +
             (text.length > 100 ? '<div class="strategy-text-toggle" onclick="toggleStrategyText(' + i + ')">show more</div>' : '') +
