@@ -5045,8 +5045,8 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const b = tournamentState.bracket;
         const finalists = (b?.finalists || []).map(p => escapeHtml(typeof p === 'string' ? p : (p.botName || p.name || '?'))).join(' vs ');
         textEl.innerHTML = 'FINAL <span class="tb-sep">—</span> ' + (finalists || 'TBD');
-      } else if (tournamentState.phase === 'playing') {
-        // Legacy fallback
+      } else if (tournamentState.phase === 'playing' || tournamentState.phase === 'quarterfinal' || tournamentState.phase === 'final') {
+        // Legacy/generic fallback
         textEl.innerHTML = 'Tournament ' + tid +
           ' <span class="tb-sep">—</span> ' + tournamentState.remaining + '/' + tournamentState.totalPlayers + ' remaining' +
           ' <span class="tb-sep">—</span> Blinds ' + tournamentState.blinds.small + '/' + tournamentState.blinds.big +
