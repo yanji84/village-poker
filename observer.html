@@ -407,7 +407,8 @@
     }
     .leaderboard-table tr:last-child td { border-bottom: none; }
     .leaderboard-table .wins { color: var(--green); font-weight: 600; }
-    .leaderboard-table .rank { color: var(--text-muted); width: 30px; }
+    .leaderboard-table .rank { color: var(--text-muted); width: 28px; }
+    .leaderboard-table .num { text-align: right; font-family: var(--mono); }
     .leaderboard-table .stat-dim { color: var(--text-muted); }
     .leaderboard-table .type-badge { font-size: 11px; }
     .leaderboard-table .expandable { cursor: pointer; }
@@ -4966,41 +4967,35 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
           const humanBadge = isHumanLb ? ' <span class="human-badge">HUMAN</span>' : '';
 
+          const bb100Display = handsPlayed >= 10 ? bb100Raw.toFixed(1) : '-';
+          const bb100Color = bb100Raw > 0 ? '#4a6' : bb100Raw < 0 ? '#a44' : 'var(--text-muted)';
+
           return `
             <tr class="${rowClass}" onclick="toggleLeaderboardDetail('lb-detail-${i}')">
               <td class="rank">${i + 1}</td>
               <td>${esc(lbDisplayName)}${humanBadge}${e.atTable ? ' <span style="color:var(--green);font-size:9px">\u25CF</span>' : ''}</td>
-              <td>${tTournaments}</td>
-              <td style="color:#f0d060;font-weight:700">${tPoints}</td>
-              <td>${tAvgPlaceDisplay}</td>
-              <td>${tBest}</td>
-              <td class="winrate">${tWinPct}</td>
+              <td class="num">${handsPlayed}</td>
+              <td class="num" style="color:${bb100Color};font-weight:600">${bb100Display}</td>
+              <td class="num">${sdWinPct}</td>
             </tr>
             <tr class="leaderboard-detail" id="lb-detail-${i}">
-              <td colspan="7">
+              <td colspan="5">
                 <div class="detail-grid">
-                  <div class="detail-item"><span class="detail-label">T Wins:</span> <span class="detail-value">${tWins}</span></div>
-                  <div class="detail-item"><span class="detail-label">Hands:</span> <span class="detail-value">${handsPlayed}</span></div>
-                  <div class="detail-item"><span class="detail-label">Hand Win%:</span> <span class="detail-value">${winPct}</span></div>
-                  <div class="detail-item"><span class="detail-label">BB/100:</span> <span class="detail-value" style="color:${bb100Raw > 0 ? '#4a6' : bb100Raw < 0 ? '#a44' : 'var(--text-muted)'}">${handsPlayed > 0 ? bb100Raw.toFixed(1) : '-'}</span></div>
-                  <div class="detail-item"><span class="detail-label">VPIP:</span> <span class="detail-value">${vpip}</span></div>
-                  <div class="detail-item"><span class="detail-label">AF:</span> <span class="detail-value">${af}</span></div>
-                  <div class="detail-item"><span class="detail-label">Chip P/L:</span> <span class="detail-value" style="color:${chipProfit >= 0 ? '#4a6' : '#a44'}">${chipProfit >= 0 ? '+' : ''}${chipProfit.toLocaleString()}</span></div>
-                  <div class="detail-item"><span class="detail-label">W$SD:</span> <span class="detail-value">${sdWinPct}</span></div>
-                  <div class="detail-item"><span class="detail-label">Showdowns:</span> <span class="detail-value">${showdownsReached}</span></div>
-                  <div class="detail-item"><span class="detail-label">All-ins:</span> <span class="detail-value">${allIns}</span></div>
-                  <div class="detail-item"><span class="detail-label">Biggest pot:</span> <span class="detail-value">${biggestPot}</span></div>
-                  <div class="detail-item"><span class="detail-label">Streak:</span> <span class="detail-value">${streakCurrent > 0 ? '\uD83D\uDD25 ' + streakCurrent + ' wins' : lossStreakCurrent > 0 ? '\u2744\uFE0F ' + lossStreakCurrent + ' losses' : '0'} / ${streakBest} best</span></div>
-                  ${totalBluffs > 0 ? `<div class="detail-item"><span class="detail-label">Bluffs:</span> <span class="bluff-success-rate">${bluffSuccessRate} (${bluffsWon}/${totalBluffs})</span></div>` : ''}
+                  <div class="detail-item"><span class="detail-label">Win%</span><span class="detail-value">${winPct}</span></div>
+                  <div class="detail-item"><span class="detail-label">VPIP</span><span class="detail-value">${vpip}</span></div>
+                  <div class="detail-item"><span class="detail-label">AF</span><span class="detail-value">${af}</span></div>
+                  <div class="detail-item"><span class="detail-label">Chip P/L</span><span class="detail-value" style="color:${chipProfit >= 0 ? '#4a6' : '#a44'}">${chipProfit >= 0 ? '+' : ''}${chipProfit.toLocaleString()}</span></div>
+                  <div class="detail-item"><span class="detail-label">Showdowns</span><span class="detail-value">${showdownsReached} (${sdWinPct} won)</span></div>
+                  <div class="detail-item"><span class="detail-label">Biggest Pot</span><span class="detail-value">${biggestPot.toLocaleString()}</span></div>
                 </div>
               </td>
             </tr>
           `;
         }).join('');
         leaderboardEl.innerHTML = `
-          <h2>Leaderboard${state.gamesPlayed ? ' \u00b7 Game ' + state.gamesPlayed : ''}</h2>
+          <h2>Leaderboard</h2>
           <table class="leaderboard-table">
-            <tr><th class="rank">#</th><th>Player</th><th>Tournaments</th><th>Points</th><th>Avg Place</th><th>Best</th><th>Win%</th></tr>
+            <tr><th class="rank">#</th><th>Player</th><th class="num">Hands</th><th class="num">BB/100</th><th class="num">W$SD</th></tr>
             ${rows}
           </table>
         `;
