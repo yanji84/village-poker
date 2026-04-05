@@ -152,21 +152,6 @@
       line-height: 1.2;
     }
     .card.red { color: #e55; }
-    .card.empty {
-      background: transparent;
-      border: 1px dashed #2a2a2a;
-      color: #333;
-    }
-    .card.face-down {
-      background: #1a1a2e;
-      border-color: #333;
-      color: transparent;
-      min-width: 28px;
-    }
-    .card.face-down::after {
-      content: '?';
-      color: #444;
-    }
 
     /* --- Main Dashboard Grid --- */
     .dashboard {
@@ -674,7 +659,7 @@
       font-family: var(--mono);
       font-size: 18px;
       font-weight: 700;
-      color: var(--yellow);
+      color: #f0d060;
       min-width: 40px;
     }
     .action-timer.urgent { color: var(--red); }
@@ -1008,10 +993,6 @@
       line-height: 1.5;
     }
 
-    @keyframes strategy-flash {
-      0% { background: rgba(68,170,255,0.08); }
-      100% { background: var(--bg-card); }
-    }
     /* --- Dramatic Moment: All-In --- */
     @keyframes allin-flash {
       0% { background: var(--bg-elevated); }
@@ -1079,18 +1060,6 @@
     ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
-    /* --- Bluff Tags --- */
-    .bluff-tag {
-      display: inline-block;
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: 3px;
-      font-weight: 600;
-      font-family: var(--mono);
-    }
-    .bluff-tag.won { background: #1a3a1a; color: #4a6; }
-    .bluff-tag.caught { background: #3a1a1a; color: #a44; }
-
     /* --- Streak Indicators --- */
     .streak-indicator {
       display: inline-flex;
@@ -1108,11 +1077,6 @@
       background: linear-gradient(135deg, #4a2000, #6b3000);
       color: #ff8c42;
       text-shadow: 0 0 6px rgba(255, 140, 66, 0.5);
-    }
-    .streak-indicator.cold {
-      background: linear-gradient(135deg, #0a2040, #1a3050);
-      color: #6cb4ee;
-      text-shadow: 0 0 6px rgba(108, 180, 238, 0.5);
     }
     @keyframes streak-pulse {
       0%, 100% { opacity: 0.85; }
@@ -1150,23 +1114,6 @@
       to { opacity: 0; }
     }
 
-
-    /* --- Leaderboard score column --- */
-    .leaderboard-table .score-col {
-      color: #4af;
-      font-weight: 700;
-    }
-    .leaderboard-table .chip-profit-pos { color: #4a6; font-weight: 600; }
-    .leaderboard-table .chip-profit-neg { color: #a44; font-weight: 600; }
-    .leaderboard-table .provisional-tag { color: var(--text-muted); font-size: 9px; font-style: italic; }
-    .leaderboard-table .bluffs-col .bluff-tag {
-      font-size: 9px;
-      padding: 0 4px;
-    }
-    .leaderboard-detail .bluff-success-rate {
-      color: var(--text-secondary);
-      font-weight: 600;
-    }
 
     /* --- Chat Feed (table talk conversation log) --- */
     .chat-feed {
@@ -1314,32 +1261,6 @@
       0% { opacity: 0; transform: scale(0.8); }
       60% { opacity: 1; transform: scale(1.05); }
       100% { opacity: 1; transform: scale(1); }
-    }
-
-    .elimination-stamp {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-12deg);
-      font-family: var(--mono);
-      font-size: 18px;
-      font-weight: 900;
-      color: #cc0000;
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      border: 3px solid #cc0000;
-      padding: 2px 12px;
-      pointer-events: none;
-      opacity: 0;
-      animation: stamp-in 0.4s ease-out 0.2s forwards;
-      text-shadow: 0 0 10px rgba(204,0,0,0.6);
-      box-shadow: 0 0 15px rgba(204,0,0,0.3);
-      z-index: 10;
-    }
-    @keyframes stamp-in {
-      0% { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(2.5); }
-      60% { opacity: 1; transform: translate(-50%, -50%) rotate(-12deg) scale(0.9); }
-      100% { opacity: 0.85; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
     }
 
     .elimination-toast {
@@ -1596,14 +1517,6 @@
         font-size: 11px;
       }
 
-      /* Elimination stamp: scale down */
-      .elimination-stamp {
-        font-size: 14px;
-        letter-spacing: 2px;
-        padding: 2px 8px;
-        border-width: 2px;
-      }
-
       /* Pot emphasis: tone down font bump */
       .pot-value.big-pot {
         font-size: 12px !important;
@@ -1676,8 +1589,8 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.88);
-      z-index: 2500;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 2000;
       align-items: center;
       justify-content: center;
       padding: 40px 20px;
@@ -1685,12 +1598,12 @@
     }
     .tournament-results-overlay.open { display: flex; }
     .tournament-results-content {
-      max-width: 500px;
+      max-width: 640px;
       width: 100%;
       background: var(--bg-card);
-      border: 1px solid #3a3a1a;
+      border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 28px 32px;
+      padding: 24px;
       text-align: center;
       box-shadow: 0 0 60px rgba(240, 208, 96, 0.08);
     }
@@ -3138,119 +3051,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       return `<span class="card${isRed ? ' red' : ''}">${card}</span>`;
     }
 
-    function renderEmptyCard() {
-      return `<span class="card empty">\u00b7</span>`;
-    }
-
-    function renderFaceDownCard() {
-      return `<span class="card face-down"></span>`;
-    }
-
-    // --- Winner Celebration Particle System ---
-    let celebrationParticles = [];
-    let celebrationActive = false;
-    let celebrationStartFrame = 0;
-    const CELEBRATION_DURATION = 180; // frames (~3 seconds at 60fps)
-    const CELEBRATION_COLORS = ['#f0d060', '#ff6b6b', '#4af', '#4a6', '#ff9f43', '#ee5a24', '#a29bfe', '#fd79a8'];
-
-    function spawnCelebration(cx, cy, canvasW, canvasH) {
-      celebrationParticles = [];
-      celebrationActive = true;
-      celebrationStartFrame = pokerAnimFrame;
-
-      // Burst of confetti from the winner's position
-      for (let i = 0; i < 60; i++) {
-        const angle = (Math.PI * 2 * i) / 60 + (Math.random() - 0.5) * 0.5;
-        const speed = 1.5 + Math.random() * 3;
-        celebrationParticles.push({
-          x: cx,
-          y: cy,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 2, // upward bias
-          size: 2 + Math.random() * 3,
-          color: CELEBRATION_COLORS[Math.floor(Math.random() * CELEBRATION_COLORS.length)],
-          rotation: Math.random() * Math.PI * 2,
-          rotSpeed: (Math.random() - 0.5) * 0.2,
-          gravity: 0.04 + Math.random() * 0.03,
-          life: 1.0,
-          decay: 0.004 + Math.random() * 0.004,
-          type: Math.random() > 0.5 ? 'rect' : 'diamond',
-        });
-      }
-
-      // Shower from top of canvas
-      for (let i = 0; i < 40; i++) {
-        celebrationParticles.push({
-          x: Math.random() * canvasW,
-          y: -10 - Math.random() * 40,
-          vx: (Math.random() - 0.5) * 1.5,
-          vy: 1 + Math.random() * 2,
-          size: 2 + Math.random() * 2,
-          color: CELEBRATION_COLORS[Math.floor(Math.random() * CELEBRATION_COLORS.length)],
-          rotation: Math.random() * Math.PI * 2,
-          rotSpeed: (Math.random() - 0.5) * 0.15,
-          gravity: 0.02,
-          life: 1.0,
-          decay: 0.003 + Math.random() * 0.003,
-          type: Math.random() > 0.5 ? 'rect' : 'diamond',
-        });
-      }
-    }
-
-    function updateAndDrawCelebration(ctx, w, h) {
-      if (!celebrationActive || celebrationParticles.length === 0) return;
-
-      const elapsed = pokerAnimFrame - celebrationStartFrame;
-      if (elapsed > CELEBRATION_DURATION) {
-        celebrationActive = false;
-        celebrationParticles = [];
-        return;
-      }
-
-      for (let i = celebrationParticles.length - 1; i >= 0; i--) {
-        const p = celebrationParticles[i];
-        p.x += p.vx;
-        p.vy += p.gravity;
-        p.y += p.vy;
-        p.rotation += p.rotSpeed;
-        p.life -= p.decay;
-
-        if (p.life <= 0 || p.y > h + 20) {
-          celebrationParticles.splice(i, 1);
-          continue;
-        }
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.life);
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.fillStyle = p.color;
-
-        if (p.type === 'rect') {
-          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-        } else {
-          // Diamond shape
-          ctx.beginPath();
-          ctx.moveTo(0, -p.size / 2);
-          ctx.lineTo(p.size / 2, 0);
-          ctx.lineTo(0, p.size / 2);
-          ctx.lineTo(-p.size / 2, 0);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      // Gold glow flash at start
-      if (elapsed < 30) {
-        ctx.globalAlpha = 0.15 * (1 - elapsed / 30);
-        ctx.fillStyle = '#f0d060';
-        ctx.fillRect(0, 0, w, h);
-        ctx.globalAlpha = 1.0;
-      }
-    }
-
-    let lastCelebrationResult = null;
     let lastToastResult = null;
     let toastTimeout = null;
     let eliminationToastTimeout = null;
@@ -3731,34 +3531,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const sparkX = baseX + Math.sin(pokerAnimFrame * 0.3) * 2 * s;
         ctx.globalAlpha = 0.5 + 0.3 * Math.sin(pokerAnimFrame * 0.25);
         pxRect(ctx, sparkX, sparkY, 1 * s, 1 * s, '#ffeb3b');
-      }
-      ctx.globalAlpha = 1.0;
-    }
-
-    function drawStreakIce(ctx, cx, cy, scale, streakLen) {
-      const s = scale || 3;
-      // Animated pixelated ice crystal above head
-      const baseY = cy - 15 * s;
-      const baseX = cx;
-      const shimmer = Math.sin(pokerAnimFrame * 0.08);
-
-      // Ice crystal shape (small cross/diamond)
-      ctx.globalAlpha = 0.6 + 0.25 * shimmer;
-      // Vertical bar
-      pxRect(ctx, baseX, baseY - 3 * s, 1 * s, 3 * s, '#90caf9');
-      // Horizontal bar
-      pxRect(ctx, baseX - 1 * s, baseY - 2 * s, 3 * s, 1 * s, '#bbdefb');
-      // Corner accents
-      ctx.globalAlpha = 0.4 + 0.2 * Math.sin(pokerAnimFrame * 0.12 + 1);
-      pxRect(ctx, baseX - 1 * s, baseY - 3 * s, 1 * s, 1 * s, '#e3f2fd');
-      pxRect(ctx, baseX + 1 * s, baseY - 3 * s, 1 * s, 1 * s, '#e3f2fd');
-      pxRect(ctx, baseX - 1 * s, baseY - 1 * s, 1 * s, 1 * s, '#e3f2fd');
-      pxRect(ctx, baseX + 1 * s, baseY - 1 * s, 1 * s, 1 * s, '#e3f2fd');
-      // Extra crystals for deep cold streaks
-      if (streakLen >= 5) {
-        ctx.globalAlpha = 0.3 + 0.2 * Math.sin(pokerAnimFrame * 0.1 + 2);
-        pxRect(ctx, baseX - 2 * s, baseY - 2 * s, 1 * s, 1 * s, '#64b5f6');
-        pxRect(ctx, baseX + 2 * s, baseY - 2 * s, 1 * s, 1 * s, '#64b5f6');
       }
       ctx.globalAlpha = 1.0;
     }
@@ -4391,27 +4163,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         pokerCtx.globalAlpha = 1.0;
       }
 
-      // --- Winner celebration (disabled — too flashy) ---
-      if (false && state.phase === 'showdown' && state.lastResult && state.lastResult !== lastCelebrationResult && !state._isInitReplay) {
-        lastCelebrationResult = state.lastResult;
-        const winners = state.lastResult.winners || [];
-        if (winners.length > 0) {
-          // Find winner's position on canvas
-          const winnerIdx = bots.findIndex(b => b.name === winners[0]);
-          if (winnerIdx >= 0) {
-            const seatIdx = winnerIdx % SEAT_POSITIONS.length;
-            const seat = SEAT_POSITIONS[seatIdx];
-            spawnCelebration(Math.floor(seat.x * w), Math.floor(seat.y * h), w, h);
-          } else {
-            // Fallback: center of table
-            spawnCelebration(w / 2, h / 2, w, h);
-          }
-        }
-      }
-
-      // Draw active celebration particles
-      updateAndDrawCelebration(pokerCtx, w, h);
-
       // Chip toss animations (only draw, triggering is done from result event)
       drawChipAnims(pokerCtx, w, h);
 
@@ -4821,8 +4572,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
     // (Game Stats rendering removed — no DOM element)
 
-    // No-op stubs (feed UI removed, but callers remain)
-    function addFeedEntry() {}
 
     // Process events to reconstruct state
     function processEvent(entry) {
@@ -5379,7 +5128,6 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
 
       if (data.type?.startsWith('poker_')) {
         processEvent(data);
-        addFeedEntry(data, false);
         render();
 
         // Dramatic moment: all-in flash + canvas shake
