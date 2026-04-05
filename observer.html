@@ -658,9 +658,9 @@
       inset: 0;
       background: rgba(0,0,0,0.85);
       z-index: 2000;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 60px 20px 40px;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
       overflow-y: auto;
     }
     .leaderboard-overlay.open { display: flex; }
@@ -680,17 +680,30 @@
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: var(--text-muted);
-      margin: 0 0 12px;
+      margin: 0 0 10px;
     }
-    .th-entry {
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+    .th-table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 11px;
     }
-    .th-entry:last-child { border-bottom: none; }
-    .th-num { color: var(--text-muted); }
-    .th-winner { color: #e8c840; font-weight: 700; }
-    .th-placements { color: var(--text-secondary); margin-top: 2px; font-size: 10px; }
+    .th-table th {
+      text-align: left;
+      color: var(--text-muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 8px 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .th-table td {
+      padding: 6px 8px 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      vertical-align: top;
+    }
+    .th-num { color: var(--text-muted); width: 30px; }
+    .th-winner { color: #e8c840; font-weight: 700; white-space: nowrap; }
+    .th-standings { color: var(--text-secondary); font-size: 10px; line-height: 1.5; }
     .th-current { color: var(--green); font-size: 10px; margin-bottom: 8px; }
     .leaderboard-overlay .leaderboard {
       max-width: 640px;
@@ -4830,22 +4843,28 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
       const history = t.history || [];
       const current = t.phase === 'playing' ? t : null;
 
-      let html = '<h3>Tournament History</h3>';
+      let html = '<h3>Tournaments</h3>';
       if (current) {
         const remaining = (t.activePlayers || []).length;
-        html += '<div class="th-current">Tournament #' + t.number + ' in progress — ' + remaining + ' players remaining</div>';
+        html += '<div class="th-current">#' + t.number + ' in progress — ' + remaining + ' remaining</div>';
       }
       if (history.length === 0 && !current) {
         html += '<div style="color:var(--text-muted);font-size:11px">No tournaments completed yet.</div>';
+      } else if (history.length > 0) {
+        html += '<table class="th-table"><tr><th>#</th><th>Winner</th><th>Final Standings</th></tr>';
+        [...history].reverse().forEach(h => {
+          const standings = (h.placements || []).map((p, i) => {
+            const name = escapeHtml(p.displayName || p.botName);
+            return i === 0 ? '<span class="th-winner">' + name + '</span>' : name;
+          }).join(', ');
+          html += '<tr>';
+          html += '<td class="th-num">' + h.number + '</td>';
+          html += '<td class="th-winner">' + escapeHtml(h.winner || '?') + '</td>';
+          html += '<td class="th-standings">' + standings + '</td>';
+          html += '</tr>';
+        });
+        html += '</table>';
       }
-      [...history].reverse().forEach(h => {
-        const placements = (h.placements || []).map((p, i) => (i + 1) + '. ' + escapeHtml(p.displayName || p.botName)).join(' | ');
-        html += '<div class="th-entry">';
-        html += '<span class="th-num">#' + h.number + '</span> ';
-        html += '<span class="th-winner">' + escapeHtml(h.winner || '?') + '</span>';
-        html += '<div class="th-placements">' + placements + '</div>';
-        html += '</div>';
-      });
       el.innerHTML = html;
     }
 
