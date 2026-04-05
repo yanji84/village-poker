@@ -153,6 +153,7 @@
     }
     .card.red { color: #e55; }
 
+
     /* --- Main Dashboard Grid --- */
     .dashboard {
       display: flex;
@@ -241,101 +242,11 @@
       font-weight: 700;
       color: var(--text-primary);
     }
-    .reasoning-header .tick-num {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
     .reasoning-body {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
     }
-
-    .reasoning-section {
-      margin-bottom: 16px;
-    }
-    .reasoning-section-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #555;
-      margin-bottom: 6px;
-    }
-
-    .reasoning-scene {
-      font-family: var(--mono);
-      font-size: 11px;
-      background: #0c0c0c;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 10px 12px;
-      color: var(--text-primary);
-      line-height: 1.6;
-    }
-
-    .reasoning-text {
-      font-family: var(--mono);
-      font-size: 12px;
-      background: #0c0c0c;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 12px 14px;
-      color: #bbb;
-      line-height: 1.7;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .reasoning-action {
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--accent);
-      background: rgba(68, 170, 255, 0.05);
-      border: 1px solid rgba(68, 170, 255, 0.15);
-      border-radius: 4px;
-      padding: 8px 12px;
-    }
-
-    .reasoning-talk {
-      font-size: 12px;
-      font-style: italic;
-      color: var(--text-secondary);
-      padding: 6px 12px;
-      border-left: 2px solid var(--text-muted);
-    }
-
-    .reasoning-history {
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
-    }
-    .reasoning-history-title {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #555;
-      margin-bottom: 8px;
-    }
-    .reasoning-history-entries {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-secondary);
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    .reasoning-history-entry {
-      padding: 2px 0;
-      display: flex;
-      gap: 8px;
-    }
-    .reasoning-history-entry .rh-tick { color: var(--text-muted); min-width: 40px; }
-    .reasoning-history-entry .rh-name { color: var(--text-primary); min-width: 70px; }
-    .reasoning-history-entry .rh-action { color: var(--text-secondary); }
-    .reasoning-history-entry.rh-current .rh-action { color: var(--accent); }
 
     .reasoning-empty {
       color: var(--text-muted);
@@ -392,8 +303,6 @@
     .leaderboard-table .wins { color: var(--green); font-weight: 600; }
     .leaderboard-table .rank { color: var(--text-muted); width: 28px; }
     .leaderboard-table .num { text-align: right; font-family: var(--mono); }
-    .leaderboard-table .stat-dim { color: var(--text-muted); }
-    .leaderboard-table .type-badge { font-size: 11px; }
     .leaderboard-table .expandable { cursor: pointer; }
     .leaderboard-table .expandable:hover td { background: rgba(255,255,255,0.02); }
     .leaderboard-table .viewer-row td { background: rgba(68,170,255,0.04); color: var(--text-primary); }
