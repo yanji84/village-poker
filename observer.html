@@ -1776,7 +1776,7 @@
         <div><strong>/bot</strong> — Write a strategy prompt. Your AI bot follows your instructions and plays for you.</div>
         <div><strong>Table Talk</strong> — Bots trash-talk automatically. Humans can chat anytime while seated.</div>
         <div><strong>Strategy Editor</strong> — Templates, custom code, full system prompt preview. Use /strategy while seated to tweak mid-game.</div>
-        <div><strong>Leaderboard</strong> — Elo ratings and stats tracked per player. Check /leaderboard.</div>
+        <div><strong>Leaderboard</strong> — BB/100, win rate, and poker stats tracked per player. Check /leaderboard.</div>
       </div>
     </div>
   </div>
@@ -4523,11 +4523,21 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const sorted = lbEntries
           .map(([name, d]) => ({ name, ...d }))
           .sort((a, b) => {
-            const eloA = a.stats?.elo || 1200;
-            const eloB = b.stats?.elo || 1200;
-            return eloB - eloA;
+            const stats_a = a.stats || {};
+            const stats_b = b.stats || {};
+            const BIG_BLIND = 80;
+            const hpA = stats_a.handsPlayed || 0;
+            const hpB = stats_b.handsPlayed || 0;
+            const profitA = (stats_a.totalChipsWon || 0) - (stats_a.totalChipsLost || 0);
+            const profitB = (stats_b.totalChipsWon || 0) - (stats_b.totalChipsLost || 0);
+            const bb100A = hpA > 0 ? (profitA / hpA) / BIG_BLIND * 100 : -Infinity;
+            const bb100B = hpB > 0 ? (profitB / hpB) / BIG_BLIND * 100 : -Infinity;
+            // Provisional players (< 10 hands) sort to bottom
+            if (hpA < 10 && hpB >= 10) return 1;
+            if (hpB < 10 && hpA >= 10) return -1;
+            return bb100B - bb100A;
           });
-        const BB = 640;
+        const BIG_BLIND = 80;
         const rows = sorted.map((e, i) => {
           const isViewer = myBot === e.name;
           const rowClass = isViewer ? 'viewer-row expandable' : 'expandable';
@@ -4538,13 +4548,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const handsPlayed = stats.handsPlayed || e.gamesPlayed || 0;
           const handsWon = stats.handsWon || e.wins || 0;
           const winPct = handsPlayed > 0 ? ((handsWon / handsPlayed) * 100).toFixed(1) + '%' : '-';
+          const isProvisional = handsPlayed < 10;
 
-          // Elo & tier
-          const elo = stats.elo || 1200;
-          const tier = getEloTier(elo);
-
-          // Chip profit
-          const chipProfit = stats.chipProfit || 0;
+          // Chip profit from totalChipsWon/Lost
+          const chipProfit = (stats.totalChipsWon || 0) - (stats.totalChipsLost || 0);
 
           // Showdown win rate
           const showdownsReached = stats.showdownsReached || 0;
@@ -4552,19 +4559,23 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const sdWinPct = showdownsReached > 0 ? ((showdownsWon / showdownsReached) * 100).toFixed(1) + '%' : '-';
 
           // BB/100
-          const bbPer100 = handsPlayed > 0 ? ((chipProfit / handsPlayed) * 100 / BB).toFixed(1) : '-';
+          const bb100Raw = handsPlayed > 0 ? (chipProfit / handsPlayed) / BIG_BLIND * 100 : 0;
+          const bb100Display = isProvisional ? '\u2014' : bb100Raw.toFixed(1);
+          const bb100Color = isProvisional ? 'var(--text-muted)' : (bb100Raw > 0 ? '#4a6' : bb100Raw < 0 ? '#a44' : 'var(--text-muted)');
 
-          // Hands with provisional tag (shown as tooltip to avoid column truncation)
-          const handsDisplay = handsPlayed < 100
-            ? `${handsPlayed} <span class="provisional-tag" title="Fewer than 100 hands — stats are provisional">*</span>`
-            : `${handsPlayed}`;
+          // Aggression factor
+          const calls = stats.calls || 0;
+          const raises = stats.raises || 0;
+          const allIns = stats.allIns || 0;
+          const af = ((raises + allIns) / (calls || 1)).toFixed(1);
+
+          // VPIP
+          const preflopFolds = stats.preflopFolds || 0;
+          const vpip = handsPlayed > 0 ? (((handsPlayed - preflopFolds) / handsPlayed) * 100).toFixed(1) + '%' : '-';
 
           // Expand detail stats
           const folds = stats.folds || 0;
-          const calls = stats.calls || 0;
-          const raises = stats.raises || 0;
           const checks = stats.checks || 0;
-          const allIns = stats.allIns || 0;
           const biggestPot = stats.biggestPot || 0;
           const streakCurrent = stats.streakCurrent || 0;
           const streakBest = stats.streakBest || 0;
@@ -4573,25 +4584,25 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           const bluffsCaught = stats.bluffsCaught || 0;
           const totalBluffs = bluffsWon + bluffsCaught;
           const bluffSuccessRate = totalBluffs > 0 ? ((bluffsWon / totalBluffs) * 100).toFixed(0) + '%' : '-';
-          const vpip = handsPlayed > 0 ? (((calls + raises) / handsPlayed) * 100).toFixed(0) + '%' : '-';
+
+          const mutedClass = isProvisional ? ' style="color:var(--text-muted)"' : '';
 
           return `
-            <tr class="${rowClass}" onclick="toggleLeaderboardDetail('lb-detail-${i}')">
+            <tr class="${rowClass}"${mutedClass} onclick="toggleLeaderboardDetail('lb-detail-${i}')">
               <td class="rank">${i + 1}</td>
-              <td>${esc(lbDisplayName)}${e.atTable ? ' <span style="color:var(--green);font-size:9px">● playing</span>' : ''}</td>
-              <td><span class="tier-badge" style="background:${tier.color};color:#000">${tier.icon} ${tier.name}</span></td>
-              <td class="score-col">${elo.toFixed(1)}</td>
-              <td style="color:${chipProfit >= 0 ? '#4a6' : '#a44'};font-weight:600">${chipProfit >= 0 ? '+' : ''}${chipProfit.toLocaleString()}</td>
+              <td>${esc(lbDisplayName)}${e.atTable ? ' <span style="color:var(--green);font-size:9px">\u25CF playing</span>' : ''}</td>
+              <td>${handsPlayed}</td>
+              <td style="color:${bb100Color};font-weight:600">${bb100Display}</td>
               <td class="winrate">${winPct}</td>
-              <td class="hide-mobile">${sdWinPct}</td>
-              <td class="hide-mobile">${bbPer100}</td>
-              <td>${handsDisplay}</td>
+              <td>${sdWinPct}</td>
+              <td>${af}</td>
             </tr>
             <tr class="leaderboard-detail" id="lb-detail-${i}">
-              <td colspan="9">
+              <td colspan="7">
                 <div class="detail-grid">
                   <div class="detail-item"><span class="detail-label">W/L:</span> <span class="detail-value">${handsWon}/${handsPlayed - handsWon}</span></div>
                   <div class="detail-item"><span class="detail-label">VPIP:</span> <span class="detail-value">${vpip}</span></div>
+                  <div class="detail-item"><span class="detail-label">Chip P/L:</span> <span class="detail-value" style="color:${chipProfit >= 0 ? '#4a6' : '#a44'}">${chipProfit >= 0 ? '+' : ''}${chipProfit.toLocaleString()}</span></div>
                   <div class="detail-item"><span class="detail-label">Folds:</span> <span class="detail-value">${folds}</span></div>
                   <div class="detail-item"><span class="detail-label">Calls:</span> <span class="detail-value">${calls}</span></div>
                   <div class="detail-item"><span class="detail-label">Raises:</span> <span class="detail-value">${raises}</span></div>
@@ -4609,7 +4620,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         leaderboardEl.innerHTML = `
           <h2>Leaderboard${state.gamesPlayed ? ' \u00b7 Game ' + state.gamesPlayed : ''}</h2>
           <table class="leaderboard-table">
-            <tr><th class="rank">#</th><th>Player</th><th>Tier</th><th>Elo</th><th>Chips Won</th><th>Win%</th><th class="hide-mobile">SD Win%</th><th class="hide-mobile">BB/100</th><th>Hands</th></tr>
+            <tr><th class="rank">#</th><th>Player</th><th>Hands</th><th>BB/100</th><th>Win%</th><th>W$SD</th><th>AF</th></tr>
             ${rows}
           </table>
         `;
