@@ -192,7 +192,7 @@ export function advanceAction(state) {
     hand.players[hand.activePlayer].lastActedTick = state.clock.tick;
   }
 
-  const activePlayers = seats.filter(s => !hand.players[s.botName].folded);
+  const activePlayers = seats.filter(s => hand.players[s.botName] && !hand.players[s.botName].folded);
 
   // One player left — they win
   if (activePlayers.length === 1) {
@@ -236,7 +236,7 @@ function advanceStreet(state) {
 
   if (currentStreetIdx >= 3) {
     // After river — showdown
-    const activePlayers = hand.seats.filter(s => !hand.players[s.botName].folded);
+    const activePlayers = hand.seats.filter(s => hand.players[s.botName] && !hand.players[s.botName].folded);
     resolveHand(state, activePlayers);
     return 'showdown';
   }
@@ -263,8 +263,8 @@ function advanceStreet(state) {
   });
 
   // Check if all remaining players are all-in (or at most one has chips) — skip to showdown
-  const activePlayers = hand.seats.filter(s => !hand.players[s.botName].folded);
-  const playersWithChips = activePlayers.filter(s => hand.players[s.botName].chips > 0);
+  const activePlayers = hand.seats.filter(s => hand.players[s.botName] && !hand.players[s.botName].folded);
+  const playersWithChips = activePlayers.filter(s => hand.players[s.botName]?.chips > 0);
   if (playersWithChips.length <= 1) {
     // Deal remaining streets and resolve
     while (hand.community.length < 5) {
