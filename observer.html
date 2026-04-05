@@ -4275,7 +4275,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         // In human mode, only show your own cards — others get face-down backs
         const myBot = getMyBotCookie();
         const isMyCards = myBot && bot.name === myBot;
-        const rawCards = state.holeCards[bot.name];
+        const rawCards = dealAnim ? undefined : state.holeCards[bot.name]; // hide cards during deal animation
         const isShowdown = state.phase === 'showdown' || state.phase === 'finished';
         const hCards = (isHumanPlayer && !isMyCards && !isWinner && !isShowdown) ? (rawCards ? true : undefined) : rawCards;
         // hCards = true means "has cards but hidden" (show face-down)
@@ -5186,7 +5186,7 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
               const canvasEl = document.getElementById('poker-canvas');
               const cw = canvasEl ? canvasEl.width / (window.devicePixelRatio || 1) : 600;
               const ch = canvasEl ? canvasEl.height / (window.devicePixelRatio || 1) : 250;
-              if (!state._isInitReplay) {
+              if (!state._isInitReplay && !dealAnim) {
                 dealAnim = {
                   startTime: Date.now(),
                   playerCount: bots.length,

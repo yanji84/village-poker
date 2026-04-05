@@ -217,6 +217,7 @@ function advanceStreet(state) {
     p.bet = 0;
     p.acted = false;
   }
+  hand._streetChecks = {};
   hand.currentBet = 0;
 
   const streets = ['preflop', 'flop', 'turn', 'river'];

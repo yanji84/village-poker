@@ -358,6 +358,14 @@ export const tools = {
       return null;
     }
     const { hand, player } = active;
+    // Nuclear double-check guard: track checks per player per street
+    if (!hand._streetChecks) hand._streetChecks = {};
+    const key = bot.name + ':' + hand.street;
+    if (hand._streetChecks[key]) {
+      console.error(`[poker] NUCLEAR GUARD: ${bot.name} already checked on ${hand.street}`);
+      return null;
+    }
+    hand._streetChecks[key] = true;
     // If facing a bet, treat check as a call (LLMs often pick check when they mean call)
     if (player.bet < hand.currentBet) {
       const toCall = Math.min(hand.currentBet - player.bet, player.chips);
