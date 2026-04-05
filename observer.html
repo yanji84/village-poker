@@ -663,6 +663,34 @@
       overflow-y: auto;
     }
     .leaderboard-overlay.open { display: flex; }
+    .tournament-history {
+      max-width: 640px;
+      width: 100%;
+      margin: 16px 0 0;
+      padding: 20px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--mono);
+    }
+    .tournament-history:empty { display: none; }
+    .tournament-history h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin: 0 0 12px;
+    }
+    .th-entry {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 11px;
+    }
+    .th-entry:last-child { border-bottom: none; }
+    .th-num { color: var(--text-muted); }
+    .th-winner { color: #e8c840; font-weight: 700; }
+    .th-placements { color: var(--text-secondary); margin-top: 2px; font-size: 10px; }
+    .th-current { color: var(--green); font-size: 10px; margin-bottom: 8px; }
     .leaderboard-overlay .leaderboard {
       max-width: 640px;
       width: 100%;
@@ -2119,6 +2147,7 @@
   <!-- Leaderboard Overlay -->
   <div class="leaderboard-overlay" id="leaderboard-overlay" onclick="if(event.target===this)this.classList.remove('open')">
     <div class="leaderboard" id="leaderboard"></div>
+    <div class="tournament-history" id="tournament-history"></div>
   </div>
 
   <!-- Tournament Results Overlay -->
@@ -4771,14 +4800,47 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
     // Fetch full leaderboard from API (includes historical players)
     async function fetchLeaderboard() {
       try {
-        const res = await fetch(apiBase + '/leaderboard', { credentials: 'include' });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.leaderboard) {
-          state._fullLeaderboard = data.leaderboard;
-          renderLeaderboard();
+        const [lbRes, tRes] = await Promise.all([
+          fetch(apiBase + '/leaderboard', { credentials: 'include' }),
+          fetch(apiBase + '/tournament', { credentials: 'include' }),
+        ]);
+        if (lbRes.ok) {
+          const data = await lbRes.json();
+          if (data.leaderboard) {
+            state._fullLeaderboard = data.leaderboard;
+            renderLeaderboard();
+          }
+        }
+        if (tRes.ok) {
+          const tData = await tRes.json();
+          renderTournamentHistory(tData.tournament);
         }
       } catch (e) {}
+    }
+
+    function renderTournamentHistory(t) {
+      const el = document.getElementById('tournament-history');
+      if (!el || !t) return;
+      const history = t.history || [];
+      const current = t.phase === 'playing' ? t : null;
+
+      let html = '<h3>Tournament History</h3>';
+      if (current) {
+        const remaining = (t.activePlayers || []).length;
+        html += '<div class="th-current">Tournament #' + t.number + ' in progress — ' + remaining + ' players remaining</div>';
+      }
+      if (history.length === 0 && !current) {
+        html += '<div style="color:var(--text-muted);font-size:11px">No tournaments completed yet.</div>';
+      }
+      [...history].reverse().forEach(h => {
+        const placements = (h.placements || []).map((p, i) => (i + 1) + '. ' + escapeHtml(p.displayName || p.botName)).join(' | ');
+        html += '<div class="th-entry">';
+        html += '<span class="th-num">#' + h.number + '</span> ';
+        html += '<span class="th-winner">' + escapeHtml(h.winner || '?') + '</span>';
+        html += '<div class="th-placements">' + placements + '</div>';
+        html += '</div>';
+      });
+      el.innerHTML = html;
     }
 
     function renderLeaderboard() {
