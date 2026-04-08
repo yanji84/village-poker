@@ -4695,6 +4695,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             state.foldedPlayers.add(botName);
           }
         }
+        // Seed SB/BB positions from authoritative hand state so the indicators
+        // show correctly even past preflop (when blind actions aged out of log).
+        if (data.blindPositions) {
+          if (data.blindPositions.smallBlind) state.blinds[data.blindPositions.smallBlind] = 'small';
+          if (data.blindPositions.bigBlind) state.blinds[data.blindPositions.bigBlind] = 'big';
+        }
         if (data.buyIns) {
           for (const [name, chips] of Object.entries(data.buyIns)) {
             state.chips[name] = chips;
