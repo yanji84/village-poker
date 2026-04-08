@@ -2169,11 +2169,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
             if (s.playMode === 'human') isHumanPlayer = true;
           }
         }
-        // Clear stale arena_bot cookie if it points to a bot not at the table
+        // Clear stale arena_bot cookie if it points to a bot not at the table.
+        // Keep arena_token — it's the persistent user identity and shouldn't
+        // be nuked just because a seat disappeared between tournaments.
         const myBot = getMyBotCookie();
         if (myBot && !seatsObj[myBot]) {
           document.cookie = 'arena_bot=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-          document.cookie = 'arena_token=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
           isHumanPlayer = false;
         } else if (myBot && seatsObj[myBot]?.playMode === 'human') {
           isHumanPlayer = true;
