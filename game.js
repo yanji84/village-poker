@@ -206,6 +206,7 @@ export function advanceAction(state) {
     const idx = (currentIndex + i) % seats.length;
     const seat = seats[idx];
     const p = hand.players[seat.botName];
+    if (!p) continue; // seat present but no player entry (e.g. mid-hand roster drift)
     if (p.folded) continue;
     // Skip all-in players — they can't act
     if (p.chips === 0) continue;

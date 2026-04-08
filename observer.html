@@ -2144,6 +2144,10 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         const seatsObj = data.seats || data;
         state.maxPlayers = data.maxPlayers || 6;
         state.playerCount = data.playerCount || Object.keys(seatsObj).length;
+        // Drop stale seatData entries for bots no longer at the table
+        for (const botName of Object.keys(seatData)) {
+          if (!seatsObj[botName]) delete seatData[botName];
+        }
         for (const [botName, s] of Object.entries(seatsObj)) {
           seatData[botName] = {
             username: s.username || s.claimedBy || null,
@@ -4684,6 +4688,12 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
           processEvent(entry);
         }
         state._isInitReplay = false;
+        // Seed folded state from authoritative server snapshot (log slice may miss earlier folds)
+        if (Array.isArray(data.foldedPlayers)) {
+          for (const botName of data.foldedPlayers) {
+            state.foldedPlayers.add(botName);
+          }
+        }
         if (data.buyIns) {
           for (const [name, chips] of Object.entries(data.buyIns)) {
             state.chips[name] = chips;
