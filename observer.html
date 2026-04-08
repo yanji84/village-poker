@@ -4891,6 +4891,27 @@ Runs in a sandbox with 100ms timeout and 8MB memory limit.
         return;
       }
 
+      if (data.type === 'tournament_playing') {
+        // Atomic table reset: rebuild state.bots from the authoritative
+        // player list so observers don't see the table flicker empty between
+        // the player_left cleanup and the per-bot join events during
+        // seatBracketMatch.
+        if (Array.isArray(data.players) && data.players.length > 0) {
+          state.bots = data.players.map(p => ({
+            name: p.botName || p.name,
+            displayName: p.displayName || p.botName || p.name,
+          }));
+          state.playerCount = data.players.length;
+          state.foldedPlayers.clear();
+          fetchSeats();
+          render();
+        }
+        tournamentState.phase = data.phase || tournamentState.phase || 'playing';
+        if (data.bracket) tournamentState.bracket = data.bracket;
+        updateTournamentBanner();
+        return;
+      }
+
       if (data.type === 'tournament_match_end') {
         tournamentState.id = data.tournamentId || tournamentState.id;
         tournamentState.phase = data.phase || tournamentState.phase;
