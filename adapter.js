@@ -60,7 +60,12 @@ export const phases = {
     tools: ['poker_check', 'poker_call', 'poker_raise', 'poker_fold'],
     scene: bettingScene,
     onEnter(state) {
-      dealNewHand(state);
+      // waiting.onEnter already dealt the hand on the waiting→betting transition.
+      // Only deal here if we entered betting without a live hand (e.g. recovery
+      // from stale state where hand is null or already resolved).
+      if (!state.hand || state.hand.result) {
+        dealNewHand(state);
+      }
     },
     getActiveBot(state) {
       const hand = state.hand;
